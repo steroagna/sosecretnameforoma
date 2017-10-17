@@ -2,10 +2,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
 
@@ -27,7 +24,7 @@ public class Main {
     /**
      * Matrix of conflicts (STUD/EXAM)
      */
-    static List<Integer> conflicts = new ArrayList<>();
+    static Stack<Integer> conflicts = new Stack<>();
 
     /**
      * Matrix of conflicts (STUD/EXAM)
@@ -76,11 +73,14 @@ public class Main {
             examsNumber++;
         }
         scanner.close();
-        System.out.println(examsNumber);
         /**
          * Matrix of conflicts (EXAM/EXAM)
          */
         int[][] examsGraph = new int[examsNumber][examsNumber];
+        int i,j;
+        for (i = 0; i < examsNumber; i++)
+            for (j = 0; j < examsNumber; j++)
+                examsGraph[i][j] = 0;
 
         scanner  = new Scanner(studentsFile);
         String  stud, actualStud = null;
@@ -89,21 +89,28 @@ public class Main {
             stud = scanner.next();
             if (actualStud != null && !conflicts.isEmpty()) {
                 if (!actualStud.equals(stud)) {
-                    System.out.println(exam);
-                    examsGraph[exam-1][exam-1] = 0;
+                    while (!conflicts.empty()) {
+                        exam = conflicts.pop();
+                        for(Integer examTemp : conflicts) {
+                            examsGraph[exam-1][examTemp-1]++;
+                        }
+                    }
                 }
             }
             actualStud = stud;
             exam = scanner.nextInt();
-            conflicts.add(exam);
+            conflicts.push(exam);
         }
         scanner.close();
+        for (i = 0; i < examsNumber; i++) {
+            for (j = 0; j < examsNumber; j++)
+                System.out.print(examsGraph[i][j] + " ");
+            System.out.println();
+        }
         return;
     }
 
     private static void writeOutput(long time) {
-
         System.out.println("Elaborazione dati in " + time + " millisec");
-
     }
 }
