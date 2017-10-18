@@ -73,6 +73,7 @@ public class Main {
             examsNumber++;
         }
         scanner.close();
+
         /**
          * Matrix of conflicts (EXAM/EXAM)
          */
@@ -93,6 +94,7 @@ public class Main {
                         exam = conflicts.pop();
                         for(Integer examTemp : conflicts) {
                             examsGraph[exam-1][examTemp-1]++;
+                            examsGraph[examTemp-1][exam-1]++;
                         }
                     }
                 }
@@ -102,6 +104,7 @@ public class Main {
             conflicts.push(exam);
         }
         scanner.close();
+
         for (i = 0; i < examsNumber; i++) {
             for (j = 0; j < examsNumber; j++)
                 System.out.print(examsGraph[i][j] + " ");
