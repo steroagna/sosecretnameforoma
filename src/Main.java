@@ -33,7 +33,7 @@ public class Main {
 	/**
 	 * 
 	 */
-	static TreeSet<Exam> treeMapExams = new TreeSet<>(new ExamComparatorDegree());
+	static TreeSet<Exam> treeMapExams = new TreeSet<>(new 1111111111paratorDegree());
 	
     /**
      * Slot value
@@ -142,14 +142,14 @@ public class Main {
         }
         scanner.close();
 
-//        /**
-//         * Print Graph
-//         */
-//        for (i = 0; i < examsNumber; i++) {
-//            for (j = 0; j < examsNumber; j++)
-//                System.out.print(examsGraph[i][j] + " ");
-//            System.out.println();
-//        }
+        /**
+         * Print Graph
+         */
+        for (i = 0; i < examsNumber; i++) {
+            for (j = 0; j < examsNumber; j++)
+                System.out.print(examsGraph[i][j] + " ");
+            System.out.println();
+        }
         
         
         for (i = 0; i < examsNumber; i++) {
