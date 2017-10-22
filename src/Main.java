@@ -31,9 +31,9 @@ public class Main {
 	static int degreeCounter = 0;
 	
 	/**
-	 * 
+	 * Ordered Exam List based on Vertex number
 	 */
-	static TreeSet<Exam> treeMapExams = new TreeSet<>(new 1111111111paratorDegree());
+	static TreeSet<Exam> treeMapExams = new TreeSet<>(new ExamComparatorDegree());
 	
     /**
      * Slot value
@@ -146,6 +146,7 @@ public class Main {
          * Print Graph
          */
         for (i = 0; i < examsNumber; i++) {
+        	System.out.print("Line " + i + ": ");
             for (j = 0; j < examsNumber; j++)
                 System.out.print(examsGraph[i][j] + " ");
             System.out.println();
@@ -166,9 +167,9 @@ public class Main {
         while (!treeMapExams.isEmpty()) {
             examId = treeMapExams.pollFirst().getId();
             for (j = 0; j < examsNumber; j++)
-            	if (examsGraph[examId-1][j] > 0)
+            	if (examsGraph[examId-1][j] == 0)
             		if(!colored.contains(j+1)) {
-            			while (i >= slots.size())
+            			while (i > slots.size())
             				slots.add(new ArrayList<Exam>());
             			
             			Iterator<Exam> iterator = slots.get(i-1).iterator();
