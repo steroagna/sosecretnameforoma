@@ -3,8 +3,14 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+
 public class Main {
 
+	/**
+	 * Problem data
+	 **/
+	static Data data;
+	
 	/**
 	 * Exam
 	 */
@@ -21,6 +27,11 @@ public class Main {
 	static boolean conflictFound;
 	
 	/**
+     * Stack of conflicts (STUD/EXAM)
+     */
+    static ArrayList<ArrayList<Integer>> conflicts = new ArrayList<>();
+    
+	/**
 	 * Array to sort based on degree of Graph coloring 
 	 */
 	static ArrayList<Integer> colored = new ArrayList<>();
@@ -34,50 +45,21 @@ public class Main {
 	 * Ordered Exam List based on Vertex number
 	 */
 	static TreeSet<Exam> treeMapExams = new TreeSet<>(new ExamComparatorDegree());
-	
-    /**
-     * Slot value
-     */
-    static int examsNumber = 0;
 
     /**
      * Slot list of Exams
      */
     static ArrayList<Exam> slot = new ArrayList<>();
-    
-    /**
-     * Slot value
-     */
-    static int slotsNumber;
-
-    /**
-     * List of Exams for each slot
-     */
-    static ArrayList<ArrayList<Exam>> slots = new ArrayList<ArrayList<Exam>>();
-
-    /**
-     * Matrix of conflicts (STUD/EXAM)
-     */
-    static Stack<Integer> conflicts = new Stack<>();
-
-    /**
-     * Matrix of conflicts (STUD/EXAM)
-     */
-    static HashMap<Integer, Exam> exams = new HashMap<>();
-
-    /**
-     * Objective function value
-     */
-    static int objFunc = Integer.MAX_VALUE;
-
 
     public static void main(String[] args) {
 
         long startTime = System.currentTimeMillis(), elapsedTime;
         try {
-            readInputFilesAndCreateFeasible(args[0]);
+        	Data data = new Data();
+            data = readInputFiles(args[0]);
+            makeFeasible(data);
             elapsedTime = (System.currentTimeMillis() - startTime);
-            writeOutput(elapsedTime);
+            writeOutput(elapsedTime, data);
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -88,113 +70,119 @@ public class Main {
     }
 
     @SuppressWarnings("unused")
-    private static void readInputFilesAndCreateFeasible(String filename) throws FileNotFoundException {
+    private static Data readInputFiles(String filename) throws FileNotFoundException {
 
-        File examsFile    = new File(filename.concat(".exm"));
-        File slotsFile    = new File(filename.concat(".slo"));
-        File studentsFile = new File(filename.concat(".stu"));
+    	int i,j,k;
+        File examsFile    	= new File(filename.concat(".exm"));
+        File slotsFile    	= new File(filename.concat(".slo"));
+        File studentsFile 	= new File(filename.concat(".stu"));
+        Data data 			= new Data();
 
+        /**
+         * Read slot number
+         */
         Scanner scanner  = new Scanner(slotsFile);
-        slotsNumber = scanner.nextInt();
+        data.slotsNumber = scanner.nextInt();
         scanner.close();
-
-        scanner  = new Scanner(examsFile);
+		
+        /**
+		 * Read exams
+		 */
+        scanner = new Scanner(examsFile);
         while (scanner.hasNextLine() && scanner.hasNext()) {
             examId = scanner.nextInt();
             numberOfStudents = scanner.nextInt();
             exam = new Exam(examId, numberOfStudents);
-            exams.put(examId, exam);
-            examsNumber++;
+            data.addExam(exam);
+            data.examsNumber++;
         }
         scanner.close();
-
+        data.examsNumber++;
         /**
          * Matrix of conflicts (EXAM/EXAM)
          */
-        int[][] examsGraph = new int[examsNumber][examsNumber];
-        int i,j;
-        for (i = 0; i < examsNumber; i++)
-            for (j = 0; j < examsNumber; j++)
-                examsGraph[i][j] = 0;
-
+        int[][] conflictExamsZero = new int[data.examsNumber+1][data.examsNumber+1];
+        for (i = 1; i < data.examsNumber; i++)
+            for (j = 1; j < data.examsNumber; j++)
+                conflictExamsZero[i][j] = 0;
+        
+        data.conflictExams = conflictExamsZero;
+        
         /**
-         * Reading students file
+         * Reading students file --> conflicts
          */
         scanner  = new Scanner(studentsFile);
-        String  stud, actualStud = null;
+        String[] student;
+        int  stud = 0;
         examId = 0;
         while (scanner.hasNextLine() && scanner.hasNext()) {
-            stud = scanner.next();
-            if (actualStud != null && !conflicts.isEmpty()) {
-                if (!actualStud.equals(stud)) {
-                    while (!conflicts.empty()) {
-                        examId = conflicts.pop();
-                        for(Integer examTemp : conflicts) {
-                            examsGraph[examId-1][examTemp-1]++;
-                            examsGraph[examTemp-1][examId-1]++;
-                        }
-                    }
-                }
-            }
-            actualStud = stud;
+            student = scanner.next().split("s");
+    		stud = Integer.parseInt(student[1]);
             examId = scanner.nextInt();
-            conflicts.push(examId);
+            while (stud >= conflicts.size()) {
+            	conflicts.add(new ArrayList<Integer>());
+            }
+            conflicts.get(stud).add(examId);
         }
         scanner.close();
 
-        /**
-         * Print Graph
-         */
-        for (i = 0; i < examsNumber; i++) {
-        	System.out.print("Line " + i + ": ");
-            for (j = 0; j < examsNumber; j++)
-                System.out.print(examsGraph[i][j] + " ");
-            System.out.println();
+//        int[][] studentExams = new int[conflicts.size()][data.examsNumber];
+//        for (i = 1; i <= conflicts.size(); i++)
+//            for (j = 0; j < data.examsNumber; j++)
+//            	studentExams[i][j] = 0;
+        
+        for(i = 1; i < conflicts.size() ; i++) {
+        	for(j = 1; j < conflicts.get(i).size(); j++) {
+        		int e1 = conflicts.get(i).get(j);
+        		for(k = 1; k < conflicts.get(i).size(); k++) {
+        			int e2 = conflicts.get(i).get(k);
+        			if (e1 != e2)
+        				data.conflictExams[e1][e2]++;
+        		}
+        	}
         }
         
+        return data;
+        }
         
-        for (i = 0; i < examsNumber; i++) {
-            for (j = 0; j < examsNumber; j++)
-            	if (examsGraph[i][j] > 0)
+        private static void makeFeasible(Data data) {
+        	
+        int i,j;
+        for (i = 1; i < data.examsNumber; i++) {
+            for (j = 1; j < data.examsNumber; j++)
+            	if (data.conflictExams[i][j] > 0)
             		degreeCounter++;
-            exam = exams.get(i+1);
+            exam = data.examsMap.get(i);
             exam.setConnectedExamsNumber(degreeCounter);
             treeMapExams.add(exam);
             degreeCounter = 0;
         }
         
-        i = 1;
+        i = 0;
         while (!treeMapExams.isEmpty()) {
             examId = treeMapExams.pollFirst().getId();
-            for (j = 0; j < examsNumber; j++)
-            	if (examsGraph[examId-1][j] == 0)
-            		if(!colored.contains(j+1)) {
-            			while (i > slots.size())
-            				slots.add(new ArrayList<Exam>());
+            for (j = 1; j < data.examsNumber; j++)
+            	if (data.conflictExams[examId][j] == 0)
+            		if(!colored.contains(j)) {
+            			while (i >= data.timeSlots.size())
+            				data.timeSlots.add(new ArrayList<Exam>());
             			
-            			Iterator<Exam> iterator = slots.get(i-1).iterator();
+            			Iterator<Exam> iterator = data.timeSlots.get(i).iterator();
             			conflictFound = false;
             			while(iterator.hasNext() && !conflictFound) {
             				examIdSlot = iterator.next().getId();
-            				if (examsGraph[examIdSlot+1][j] > 0)
+            				if (data.conflictExams[examIdSlot][j] > 0)
             					conflictFound = true;
             			}
 	            			
             			if (!conflictFound) {
-		        			slots.get(i-1).add(exams.get(j+1));
-		        			colored.add(j+1);
+            				data.timeSlots.get(i).add(data.examsMap.get(j));
+		        			colored.add(j);
             			}
             		}
             i++;
         }
         
-        i = 0; 
-        while(!(slot = slots.get(i)).isEmpty()) {
-        	i++;
-        	System.out.print("Slot " + i + ": ");
-        	slot.stream().forEach(e -> System.out.print(e.getId() + " "));
-        	System.out.println();
-        }
         
 //        while (!treeMapExams.isEmpty()) {
 //              System.out.print(treeMapExams.pollFirst().getId() + " ");
@@ -204,7 +192,32 @@ public class Main {
         return;
     }
 
-    private static void writeOutput(long time) {
-        System.out.println("Elaborazione dati in " + time + " millisec");
+    private static void writeOutput(long time, Data data) {
+    	int i;
+    	/**
+		   * Print Graph
+		   */
+		for (i = 1; i < data.examsNumber; i++) {
+			System.out.print("Line " + i + ": ");
+			for (int j = 1; j < data.examsNumber; j++) 
+				System.out.print(data.conflictExams[i][j] + " ");
+			System.out.println();
+			
+		}
+		
+		/**
+		 * Print Slots
+		 */
+		i = 0; 
+		while(i < data.timeSlots.size()) {
+			if (!(slot = data.timeSlots.get(i)).isEmpty()) {
+				System.out.print("Slot " + i + ": ");
+				slot.stream().forEach(e -> System.out.print(e.getId() + " "));
+				System.out.println();
+			}
+			i++;
+		}
+		
+		System.out.println("Elaborazione dati in " + time + " millisec");
     }
 }
