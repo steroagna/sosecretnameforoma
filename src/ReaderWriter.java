@@ -62,9 +62,6 @@ public class ReaderWriter {
          * Matrix of conflicts (EXAM/EXAM)
          */
         int[][] conflictExamsZero = new int[data.examsNumber+1][data.examsNumber+1];
-        for (i = 1; i < data.examsNumber; i++)
-            for (j = 1; j < data.examsNumber; j++)
-                conflictExamsZero[i][j] = 0;
         
         data.conflictExams = conflictExamsZero;
         
