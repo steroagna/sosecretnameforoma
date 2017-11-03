@@ -29,7 +29,7 @@ public class ReaderWriter {
      */
     static ArrayList<Integer> slot = new ArrayList<>();
     
-	public Data readInputFiles(String filename) throws FileNotFoundException 
+	public static Data readInputFiles(String filename) throws FileNotFoundException
     {
 
     	int i,j,k;
@@ -104,9 +104,9 @@ public class ReaderWriter {
         return data;
     }
 
-    public void writeOutput(long time, Data data, String filename) {
+    public static void writeOutput(long time, Data data) {
     	Tools tools = new Tools();
-    	int i, j;
+    	int i, j, e;
     	
     	/**
 		   * Print Graph
@@ -122,36 +122,45 @@ public class ReaderWriter {
 		/**
 		 * Print Slots
 		 */
-		i = 0; 
+		i = 0;
 		while(i < data.timeSlots.size()) {
 //			if (!(slot = data.timeSlots.get(i)).isEmpty()) {
 			slot = data.timeSlots.get(i);
-				System.out.print("Slot " + i + ": ");
-				slot.stream().forEach(e -> { 
-					System.out.print(e + " ");
-				});
-				System.out.println();
+			System.out.print("Slot " + i + ": ");
+			for (j = 0 ; j < slot.size() ; j ++) {
+				e = slot.get(j);
+				System.out.print(e + " ");
+			}
+			System.out.println();
 //			}
 			i++;
 		}
-//		
-//		/**
-//		 * Print sol file
-//		 */
-//		try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
-//			int slotNumber = i+1;
-//			String content = e + " " + slotNumber;
-//			bw.write(content);	
-//		} catch (IOException ex) {
-//
-//			ex.printStackTrace();
-//
-//		}
 
-		
-		
+		System.out.println("Used timeslots: " + data.timeSlots.size());
 		System.out.println("Feasible? " + tools.feasibilityChecker(data));
 //		System.out.println("OF? " + tools.ofCalculator(data));
 		System.out.println("Elaborazione dati in " + time + " millisec");
 	}
+
+	public static void writeOutputToFile(Data data, String filename) {
+
+		int i = 0, j, e;
+		/**
+		 * Print sol file
+		 */
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename + "_OMAMZ_group02.sol"))) {
+			while(i < data.timeSlots.size()) {
+				slot = data.timeSlots.get(i);
+				for (j = 0 ; j < slot.size() ; j ++) {
+					e = slot.get(j);
+					String content = e + " " + i + "\n";
+					bw.write(content);
+				}
+				i++;
+			}
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+
 }

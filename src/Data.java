@@ -21,7 +21,7 @@ public class Data {
     /**
      * HashMap of Exams
      */
-    public HashMap<Integer, Exam> examsMap;
+    public ArrayList<Exam> examsList;
     
     /**
      * Matrix of conflicts (EXAM/EXAM)
@@ -48,7 +48,7 @@ public class Data {
 		this.examsNumber 	= 0;
 		this.studentsNumber = 0;
 		this.slotsNumber 	= 0;
-		this.examsMap  		= new HashMap<>();
+		this.examsList  	= new ArrayList<>();
 		this.conflictExams 	= null;
 		this.studentExams	= null;
 		this.timeSlots 		= new ArrayList<ArrayList<Integer>>();
@@ -79,12 +79,12 @@ public class Data {
 		this.slotsNumber = slotsNumber;
 	}
 
-	public HashMap<Integer, Exam> getExamsMap() {
-		return examsMap;
+	public ArrayList<Exam> getExamsList() {
+		return examsList;
 	}
 
-	public void setExamsMap(HashMap<Integer, Exam> examsMap) {
-		this.examsMap = examsMap;
+	public void setExamsMap(ArrayList<Exam> examsList) {
+		this.examsList = examsList;
 	}
 
 
@@ -121,14 +121,11 @@ public class Data {
 	}
 
 	public Exam getExam(int examId) {
-		if (this.examsMap.containsKey(examId))
-			return this.examsMap.get(examId);
-		else
-			return null;
+		return this.examsList.get(examId);
 	}
 
 	public void addExam(Exam exam) {
-		this.examsMap.put(exam.getId(), exam);
+		this.examsList.add(exam);
 		return;
 	}
 
