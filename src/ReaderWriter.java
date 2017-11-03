@@ -42,7 +42,7 @@ public class ReaderWriter {
          * Read slot number
          */
         Scanner scanner  = new Scanner(slotsFile);
-        data.slotsNumber = scanner.nextInt();
+        data.timeSlotsNumber = scanner.nextInt();
         scanner.close();
 		
         /**
@@ -136,9 +136,10 @@ public class ReaderWriter {
 			i++;
 		}
 
-		System.out.println("Used timeslots: " + data.timeSlots.size());
 		System.out.println("Feasible? " + tools.feasibilityChecker(data));
-//		System.out.println("OF? " + tools.ofCalculator(data));
+		System.out.println("Used timeslots: " + data.timeSlots.size());
+		System.out.println("OF? " + data.objFunc);
+
 		System.out.println("Elaborazione dati in " + time + " millisec");
 	}
 

@@ -10,12 +10,12 @@ public class Main {
         	FeasibleCostructor fb = new FeasibleCostructor();
         	Tools tools = new Tools();
             data = ReaderWriter.readInputFiles(args[0]);
-            data = fb.makeFeasibleGraphColoring(data);
+            data = fb.makeFeasibleGraphGreedy(data);
             
-//        	Timetable timetable = new Timetable(data.timeSlots, tools.ofCalculator(data));
+        	Timetable timetable = new Timetable(data.timeSlots, tools.ofCalculator(data));
             elapsedTime = (System.currentTimeMillis() - startTime);
             ReaderWriter.writeOutput(elapsedTime, data);
-            ReaderWriter.writeOutputToFile(data, args[0]);
+//            ReaderWriter.writeOutputToFile(data, args[0]);
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

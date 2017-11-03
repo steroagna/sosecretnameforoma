@@ -40,6 +40,19 @@ public class FeasibleCostructor {
 		}
 	});
 
+	/**
+	 * Ordered Exam List based on Vertex number
+	 */
+	static TreeSet<Integer> treeMapExamsRandom = new TreeSet<>(new Comparator<Integer>() {
+		@Override
+		public int compare(Integer o1, Integer o2) {
+			if (Math.random() < 0.5)
+				return -1;
+			else
+				return 1;
+		}
+	});
+
 	public static Data makeFeasibleGraphColoring(Data data) {
     	
         int i,j;
@@ -88,4 +101,46 @@ public class FeasibleCostructor {
         
         return data;
     }
+
+	public static Data makeFeasibleGraphGreedy(Data data) {
+
+		int tempSlot, colorCounter, colorCounterMin, i, j;
+		boolean conflict;
+		for ( i = 0; i < data.examsList.size() ; i++ ) {
+			treeMapExamsRandom.add(data.examsList.get(i).getId());
+		}
+
+		examId = treeMapExamsRandom.pollFirst();
+		data.timeSlots.add(new ArrayList<>());
+		data.timeSlots.get(0).add(examId);
+
+		while (!treeMapExamsRandom.isEmpty()) {
+			examId = treeMapExamsRandom.pollFirst();
+			colorCounterMin = Integer.MAX_VALUE;
+			tempSlot = -1;
+			for ( i = 0; i < data.timeSlots.size(); i++ ) {
+				conflict = false;
+				colorCounter = 0;
+				for ( j = 0; j < data.timeSlots.get(i).size() && !conflict; j++ ) {
+					colorCounter++;
+					if ( data.conflictExams[examId][data.timeSlots.get(i).get(j)] > 0 )
+						conflict = true;
+				}
+				if (colorCounter < colorCounterMin && !conflict) {
+					colorCounterMin = colorCounter;
+					tempSlot = i;
+				}
+			}
+			if (tempSlot == -1 && data.timeSlots.size() < data.timeSlotsNumber) {
+				tempSlot = i;
+				data.timeSlots.add(new ArrayList<>());
+			}
+			if (tempSlot == -1)
+				tempSlot = (int) Math.floor(Math.random() * (data.timeSlotsNumber));
+			data.timeSlots.get(tempSlot).add(examId);
+		}
+
+		return data;
+	}
+
 }

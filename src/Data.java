@@ -16,7 +16,7 @@ public class Data {
     /**
      * Slot value
      */
-    public int slotsNumber;
+    public int timeSlotsNumber;
 
     /**
      * HashMap of Exams
@@ -41,13 +41,13 @@ public class Data {
     /**
      * Objective function value ---> penalty to minimize
      */
-    public int objFunc;
+    public double objFunc;
 
 	public Data() {
 		super();
 		this.examsNumber 	= 0;
 		this.studentsNumber = 0;
-		this.slotsNumber 	= 0;
+		this.timeSlotsNumber 	= 0;
 		this.examsList  	= new ArrayList<>();
 		this.conflictExams 	= null;
 		this.studentExams	= null;
@@ -71,12 +71,12 @@ public class Data {
 		this.studentsNumber = studentsNumber;
 	}
 
-	public int getSlotsNumber() {
-		return slotsNumber;
+	public int gettimeSlotsNumber() {
+		return timeSlotsNumber;
 	}
 
-	public void setSlotsNumber(int slotsNumber) {
-		this.slotsNumber = slotsNumber;
+	public void settimeSlotsNumber(int timeSlotsNumber) {
+		this.timeSlotsNumber = timeSlotsNumber;
 	}
 
 	public ArrayList<Exam> getExamsList() {
@@ -112,7 +112,7 @@ public class Data {
 		this.timeSlots = timeSlots;
 	}
 
-	public int getObjFunc() {
+	public double getObjFunc() {
 		return objFunc;
 	}
 

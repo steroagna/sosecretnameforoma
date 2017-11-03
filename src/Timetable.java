@@ -10,9 +10,9 @@ public class Timetable {
     /**
      * Objective function value ---> penalty to minimize
      */
-    public int objFunc;
+    public double objFunc;
 
-	public Timetable(ArrayList<ArrayList<Integer>> timeSlots, int objFunc) {
+	public Timetable(ArrayList<ArrayList<Integer>> timeSlots, double objFunc) {
 		super();
 		this.timeSlots = timeSlots;
 		this.objFunc = objFunc;
