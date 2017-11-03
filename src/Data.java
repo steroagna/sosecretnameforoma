@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Stack;
 
 public class Data {
 
@@ -8,6 +7,11 @@ public class Data {
      * Number of exams value
      */
     public int examsNumber = 0;
+    
+    /**
+     * Number of students value
+     */
+    public int studentsNumber = 0;
     
     /**
      * Slot value
@@ -32,26 +36,24 @@ public class Data {
     /**
      * List of Exams for each slot ---> final solution
      */
-    public ArrayList<ArrayList<Exam>> timeSlots;
+    public ArrayList<ArrayList<Integer>> timeSlots;
 
     /**
      * Objective function value ---> penalty to minimize
      */
     public int objFunc;
 
-    
 	public Data() {
 		super();
 		this.examsNumber 	= 0;
+		this.studentsNumber = 0;
 		this.slotsNumber 	= 0;
 		this.examsMap  		= new HashMap<>();
 		this.conflictExams 	= null;
 		this.studentExams	= null;
-		this.timeSlots 		= new ArrayList<ArrayList<Exam>>();
+		this.timeSlots 		= new ArrayList<ArrayList<Integer>>();
 		this.objFunc		= Integer.MAX_VALUE;
 	}
-
-	
 
 	public int getExamsNumber() {
 		return examsNumber;
@@ -59,6 +61,14 @@ public class Data {
 
 	public void setExamsNumber(int examsNumber) {
 		this.examsNumber = examsNumber;
+	}
+
+	public int getStudentsNumber() {
+		return studentsNumber;
+	}
+
+	public void setStudentsNumber(int studentsNumber) {
+		this.studentsNumber = studentsNumber;
 	}
 
 	public int getSlotsNumber() {
@@ -86,11 +96,19 @@ public class Data {
 		this.conflictExams = conflictExams;
 	}
 
-	public ArrayList<ArrayList<Exam>> getTimeSlots() {
+	public int[][] getStudentExams() {
+		return studentExams;
+	}
+
+	public void setStudentExams(int[][] studentExams) {
+		this.studentExams = studentExams;
+	}
+
+	public ArrayList<ArrayList<Integer>> getTimeSlots() {
 		return timeSlots;
 	}
 
-	public void setTimeSlots(ArrayList<ArrayList<Exam>> timeSlots) {
+	public void setTimeSlots(ArrayList<ArrayList<Integer>> timeSlots) {
 		this.timeSlots = timeSlots;
 	}
 
@@ -101,8 +119,6 @@ public class Data {
 	public void setObjFunc(int objFunc) {
 		this.objFunc = objFunc;
 	}
-
-
 
 	public Exam getExam(int examId) {
 		if (this.examsMap.containsKey(examId))
