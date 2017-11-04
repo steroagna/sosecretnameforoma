@@ -1,6 +1,3 @@
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.TreeSet;
 import java.util.*;
 
 public class FeasibleCostructor {
@@ -143,4 +140,94 @@ public class FeasibleCostructor {
 		return data;
 	}
 
+	public static Data makeFeasibleStudentBased(Data data) {
+		
+		int i, j, a, b;
+		
+		colored.clear();
+		
+		//Lista provvisoria di esami in conflitto
+		ArrayList<Integer> conflictExams = new ArrayList<>();
+		
+		//Creo gli slot
+		for(i = 0; i < data.gettimeSlotsNumber(); i++) {
+			data.timeSlots.add(new ArrayList<>());
+		}
+		
+		//Scorro la matrice STUDENTE/ESAMI; per ogni studente scorro la lista dei suoi esami e li metto ognuno in un timeslot diverso.
+		//Se un esame è già stato inserito lo salto. Se nello slot in cui sto per mettere un esame ne esiste almeno uno con cui è in conflitto,
+		//lo aggiungo alla lista provvisoria conflictExams. Alla fine di ogni iterazione ricontrollo la lista e inserisco nello slot corrente 
+		//tutti gli esami in lista che non hanno conflitti in quello slot.
+		for(i = 0; i < data.getConflicts().size(); i++)
+		{
+			a = 0;
+			for(j = 0; j < data.getConflicts().get(i).size(); j++)
+			{
+				if(!colored.contains(data.conflicts.get(i).get(j)))
+				{
+					Iterator<Integer> iterator = data.timeSlots.get(a).iterator();
+					conflictFound = false;
+					while (iterator.hasNext() && !conflictFound) {
+						examIdSlot = iterator.next();
+						if (data.conflictExams[examIdSlot][data.conflicts.get(i).get(j)] > 0)
+							conflictFound = true;
+					}
+					if (!conflictFound) {
+         				data.timeSlots.get(a).add(data.conflicts.get(i).get(j));
+						colored.add(data.conflicts.get(i).get(j));
+						
+						//Controllo eventuali esami compatibili tra quelli saltati precedentemente.
+						for(b = 0; b < conflictExams.size(); b++)
+						{
+							Iterator<Integer> iterator1 = data.timeSlots.get(a).iterator();
+							conflictFound = false;
+							while (iterator1.hasNext() && !conflictFound) {
+								examIdSlot = iterator1.next();
+								if (data.conflictExams[examIdSlot][conflictExams.get(b)] > 0)
+									conflictFound = true;
+							}
+							//Se non ci sono conflitti, li inserisco e aggiorno la lista.
+							if(!conflictFound)
+							{
+								data.timeSlots.get(a).add(conflictExams.get(b));
+								colored.add(conflictExams.get(b));
+								conflictExams.remove(b);
+							}
+						}
+						a++;
+					}
+					else{
+						conflictExams.add(data.conflicts.get(i).get(j));
+					}	
+				}
+			}
+		}
+		
+		//Se ci sono ancora esami non assegnati nella lista conflictExams, scorro gli slot e inserisco gli esami rimanenti dove non 
+		//ci sono conflitti.
+		for(i = 0; i < data.gettimeSlotsNumber() && !conflictExams.isEmpty(); i++)
+		{
+			for(j = 0; j < conflictExams.size(); j++)
+			{
+				if(!colored.contains(conflictExams.get(j)))
+				{
+					Iterator<Integer> iterator = data.timeSlots.get(i).iterator();
+					conflictFound = false;
+					while (iterator.hasNext() && !conflictFound) {
+						examIdSlot = iterator.next();
+						if (data.conflictExams[examIdSlot][conflictExams.get(j)] > 0)
+							conflictFound = true;
+					}
+					if (!conflictFound) {
+         				data.timeSlots.get(i).add(conflictExams.get(j));
+						colored.add(conflictExams.get(j));
+						conflictExams.remove(j);
+					}
+				}
+			}
+		}
+		
+		return data;
+	}
+	
 }

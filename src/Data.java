@@ -37,7 +37,12 @@ public class Data {
      * List of Exams for each slot ---> final solution
      */
     public ArrayList<ArrayList<Integer>> timeSlots;
-
+    
+    /**
+     *  List of exams for each student
+     */
+    public ArrayList<ArrayList<Integer>> conflicts;
+    
     /**
      * Objective function value ---> penalty to minimize
      */
@@ -53,6 +58,7 @@ public class Data {
 		this.studentExams	= null;
 		this.timeSlots 		= new ArrayList<ArrayList<Integer>>();
 		this.objFunc		= Integer.MAX_VALUE;
+		this.conflicts		= new ArrayList<>();
 	}
 
 	public int getExamsNumber() {
@@ -87,6 +93,13 @@ public class Data {
 		this.examsList = examsList;
 	}
 
+	public ArrayList<ArrayList<Integer>> getConflicts() {
+		return conflicts;
+	}
+
+	public void setConflicts(ArrayList<ArrayList<Integer>> conflicts) {
+		this.conflicts = conflicts;
+	}
 
 	public int[][] getConflictExams() {
 		return conflictExams;

@@ -83,12 +83,16 @@ public class ReaderWriter {
         }
         data.studentsNumber = stud;
         scanner.close();
-
-        // MAtrix of students/exams
+        
+        data.setConflicts(conflicts);
+        
+     // Matrix of students/exams
 //        int[][] studentExams = new int[conflicts.size()][data.examsNumber];
-//        for (i = 1; i <= conflicts.size(); i++)
-//            for (j = 0; j < data.examsNumber; j++)
-//            	studentExams[i][j] = 0;
+//        	for (i = 0; i < conflicts.size(); i++)
+//        		for (j = 0; j < data.examsNumber; j++)
+//        			studentExams[i][j] = 0;
+//          
+//        data.setStudentExams(studentExams);
         
         for(i = 1; i < conflicts.size() ; i++) {
         	for(j = 1; j < conflicts.get(i).size(); j++) {
