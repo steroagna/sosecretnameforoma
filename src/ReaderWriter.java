@@ -115,30 +115,30 @@ public class ReaderWriter {
     	/**
 		   * Print Graph
 		   */
-//		for (i = 1; i <= data.examsNumber; i++) {
-//			System.out.print("Line " + i + ": ");
-//			for (j = 1; j <= data.examsNumber; j++)
-//				System.out.print(data.conflictExams[i][j] + " ");
-//			System.out.println();
-//
-//		}
-//
-//		/**
-//		 * Print Slots
-//		 */
-//		i = 0;
-//		while(i < data.timeSlots.size()) {
-////			if (!(slot = data.timeSlots.get(i)).isEmpty()) {
-//			slot = data.timeSlots.get(i);
-//			System.out.print("Slot " + i + ": ");
-//			for (j = 0 ; j < slot.size() ; j ++) {
-//				e = slot.get(j);
-//				System.out.print(e + " ");
+		for (i = 1; i <= data.examsNumber; i++) {
+			System.out.print("Line " + i + ": ");
+			for (j = 1; j <= data.examsNumber; j++)
+				System.out.print(data.conflictExams[i][j] + " ");
+			System.out.println();
+
+		}
+
+		/**
+		 * Print Slots
+		 */
+		i = 0;
+		while(i < data.timeSlots.size()) {
+//			if (!(slot = data.timeSlots.get(i)).isEmpty()) {
+			slot = data.timeSlots.get(i);
+			System.out.print("Slot " + i + ": ");
+			for (j = 0 ; j < slot.size() ; j ++) {
+				e = slot.get(j);
+				System.out.print(e + " ");
+			}
+			System.out.println();
 //			}
-//			System.out.println();
-////			}
-//			i++;
-//		}
+			i++;
+		}
 
 		System.out.println("Feasible? " + tools.feasibilityChecker(data));
 		System.out.println("Used timeslots: " + data.timeSlots.size());
