@@ -42,7 +42,17 @@ public class Data {
      *  List of exams for each student
      */
     public ArrayList<ArrayList<Integer>> conflicts;
-    
+
+	/**
+	 *  List of exams for each student
+	 */
+	public ArrayList<Integer> conflictList;
+
+	/**
+     *  Map of exams that have a conflict and timeslot in which they are
+     */
+    public HashMap<Integer, Integer> conflictMap;
+
     /**
      * Objective function value ---> penalty to minimize
      */
@@ -56,9 +66,11 @@ public class Data {
 		this.examsList  	= new ArrayList<>();
 		this.conflictExams 	= null;
 		this.studentExams	= null;
-		this.timeSlots 		= new ArrayList<ArrayList<Integer>>();
+		this.timeSlots 		= new ArrayList<>();
 		this.objFunc		= Integer.MAX_VALUE;
 		this.conflicts		= new ArrayList<>();
+		this.conflictList	= new ArrayList<>();
+		this.conflictMap	= new HashMap<>();
 	}
 
 	public int getExamsNumber() {
@@ -134,7 +146,7 @@ public class Data {
 	}
 
 	public Exam getExam(int examId) {
-		return this.examsList.get(examId);
+		return this.examsList.get(examId -1);
 	}
 
 	public void addExam(Exam exam) {

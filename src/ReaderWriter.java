@@ -94,10 +94,10 @@ public class ReaderWriter {
 //          
 //        data.setStudentExams(studentExams);
         
-        for(i = 1; i < conflicts.size() ; i++) {
-        	for(j = 1; j < conflicts.get(i).size(); j++) {
+        for(i = 0; i < conflicts.size() ; i++) {
+        	for(j = 0; j < conflicts.get(i).size(); j++) {
         		int e1 = conflicts.get(i).get(j);
-        		for(k = 1; k < conflicts.get(i).size(); k++) {
+        		for(k = 0; k < conflicts.get(i).size(); k++) {
         			int e2 = conflicts.get(i).get(k);
         			if (e1 != e2)
         				data.conflictExams[e1][e2]++;
@@ -115,30 +115,30 @@ public class ReaderWriter {
     	/**
 		   * Print Graph
 		   */
-		for (i = 1; i < data.examsNumber; i++) {
-			System.out.print("Line " + i + ": ");
-			for (j = 1; j < data.examsNumber; j++) 
-				System.out.print(data.conflictExams[i][j] + " ");
-			System.out.println();
-			
-		}
-		
-		/**
-		 * Print Slots
-		 */
-		i = 0;
-		while(i < data.timeSlots.size()) {
-//			if (!(slot = data.timeSlots.get(i)).isEmpty()) {
-			slot = data.timeSlots.get(i);
-			System.out.print("Slot " + i + ": ");
-			for (j = 0 ; j < slot.size() ; j ++) {
-				e = slot.get(j);
-				System.out.print(e + " ");
-			}
-			System.out.println();
+//		for (i = 1; i <= data.examsNumber; i++) {
+//			System.out.print("Line " + i + ": ");
+//			for (j = 1; j <= data.examsNumber; j++)
+//				System.out.print(data.conflictExams[i][j] + " ");
+//			System.out.println();
+//
+//		}
+//
+//		/**
+//		 * Print Slots
+//		 */
+//		i = 0;
+//		while(i < data.timeSlots.size()) {
+////			if (!(slot = data.timeSlots.get(i)).isEmpty()) {
+//			slot = data.timeSlots.get(i);
+//			System.out.print("Slot " + i + ": ");
+//			for (j = 0 ; j < slot.size() ; j ++) {
+//				e = slot.get(j);
+//				System.out.print(e + " ");
 //			}
-			i++;
-		}
+//			System.out.println();
+////			}
+//			i++;
+//		}
 
 		System.out.println("Feasible? " + tools.feasibilityChecker(data));
 		System.out.println("Used timeslots: " + data.timeSlots.size());

@@ -32,7 +32,7 @@ public class Tools {
 
 		objectiveFunction = objectiveFunction / data.studentsNumber;
 		data.objFunc = objectiveFunction;
-		System.out.println("Students :" + data.studentsNumber);
+//		System.out.println("Students :" + data.studentsNumber);
 		return objectiveFunction;
 	}
 	
