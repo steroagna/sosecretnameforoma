@@ -121,7 +121,7 @@ public class FeasibleCostructor {
 		/**
 		 * creo treemap ordinata casualmente
 		 */
-		for ( i = 0; i < data.examsList.size() ; i++ ) {
+		for (i = 0; i < data.examsList.size(); i++) {
 			treeMapExamsRandom.add(data.examsList.get(i).getId());
 		}
 
@@ -143,13 +143,13 @@ public class FeasibleCostructor {
 			 * Conto tra i timeslot quello con minore numero di esami
 			 * e che non abbia conflitti con l'attuale esame in considerazione
 			 */
-			for ( i = 0; i < data.timeSlots.size(); i++ ) {
+			for (i = 0; i < data.timeSlots.size(); i++) {
 				conflict = false;
 				colorCounter = 0;
-				for ( j = 0; j < data.timeSlots.get(i).size() && !conflict; j++ ) {
+				for (j = 0; j < data.timeSlots.get(i).size() && !conflict; j++) {
 					colorCounter++;
 					int examId2 = data.timeSlots.get(i).get(j);
-					if ( data.conflictExams[examId][examId2] > 0 ) {
+					if (data.conflictExams[examId][examId2] > 0) {
 						conflict = true;
 					}
 				}
@@ -179,7 +179,7 @@ public class FeasibleCostructor {
 				tempSlot = (int) Math.floor(Math.random() * (data.timeSlotsNumber));
 				data.getExam(examId).setSlot(tempSlot);
 				data.conflictList.add(examId);
-				for ( j = 0; j < data.timeSlots.get(tempSlot).size(); j++ ) {
+				for (j = 0; j < data.timeSlots.get(tempSlot).size(); j++) {
 					int examId2 = data.timeSlots.get(tempSlot).get(j);
 					//conflitto
 					if (data.conflictExams[examId][examId2] > 0) {
@@ -196,27 +196,67 @@ public class FeasibleCostructor {
 			data.timeSlots.get(tempSlot).add(examId);
 		}
 
-		/**
-		 * Slot list of Exams
-		 */
-		 ArrayList<Integer> slot = new ArrayList<>();
+		return data;
+	}
 
-		i = 0;
-		while(i < data.timeSlots.size()) {
-			if (!(slot = data.timeSlots.get(i)).isEmpty()) {
-			slot = data.timeSlots.get(i);
-			System.out.print("Slot " + i + ": \n");
-			for (j = 0 ; j < slot.size() ; j ++) {
-				int e = slot.get(j);
-				System.out.print("Esame:" + e + " - conflitti: " + data.getExam(e).conflicts + "\n");
-			}
-			System.out.println();
-			}
-			i++;
+	public static Data makeInitialRandom(Data data) {
+
+		int tempSlot, colorCounter, colorCounterMin, i, j;
+		boolean conflict, notFeasible = false;
+		conflictsNumber = 0;
+
+		/**
+		 * creo treemap ordinata casualmente
+		 */
+		for ( i = 0; i < data.examsList.size() ; i++ ) {
+			treeMapExamsRandom.add(data.examsList.get(i).getId());
 		}
 
-		if (notFeasible)
-			data = makeFeasibleTabu(data);
+		/**
+		 * creo timeslots
+		 */
+		for ( i = 0; i < data.timeSlotsNumber; i++ )
+			data.timeSlots.add(new ArrayList<>());
+
+		/**
+		 * inserimento altri elementi
+		 */
+		while (!treeMapExamsRandom.isEmpty()) {
+			examId = treeMapExamsRandom.pollFirst();
+			tempSlot = (int) Math.floor(Math.random() * (data.timeSlotsNumber));
+			data.getExam(examId).setSlot(tempSlot);
+			for ( j = 0; j < data.timeSlots.get(tempSlot).size(); j++ ) {
+				int examId2 = data.timeSlots.get(tempSlot).get(j);
+				//conflitto
+				if (data.conflictExams[examId][examId2] > 0) {
+					data.getExam(examId).conflicts++;
+					data.getExam(examId2).conflicts++;
+					conflictsNumber++;
+				}
+			}
+			data.timeSlots.get(tempSlot).add(examId);
+		}
+
+//		/**
+//		 * Print timeslot of Exams
+//		 */
+//		 ArrayList<Integer> slot = new ArrayList<>();
+//
+//		i = 0;
+//		while(i < data.timeSlots.size()) {
+//			if (!(slot = data.timeSlots.get(i)).isEmpty()) {
+//			slot = data.timeSlots.get(i);
+//			System.out.print("Slot " + i + ": \n");
+//			for (j = 0 ; j < slot.size() ; j ++) {
+//				int e = slot.get(j);
+//				System.out.print("Esame:" + e + " - conflitti: " + data.getExam(e).conflicts + "\n");
+//			}
+//			System.out.println();
+//			}
+//			i++;
+//		}
+
+		data = makeFeasibleTabu(data);
 
 		return data;
 	}
