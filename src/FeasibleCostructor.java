@@ -177,7 +177,7 @@ public class FeasibleCostructor {
 			 */
 			if (tempSlot == -1) {
 				tempSlot = (int) Math.floor(Math.random() * (data.timeSlotsNumber));
-				data.getExam(examId).slot = tempSlot;
+				data.getExam(examId).setSlot(tempSlot);
 				data.conflictList.add(examId);
 				for ( j = 0; j < data.timeSlots.get(tempSlot).size(); j++ ) {
 					int examId2 = data.timeSlots.get(tempSlot).get(j);
@@ -192,6 +192,7 @@ public class FeasibleCostructor {
 				}
 				notFeasible = true;
 			}
+			data.getExam(examId).setSlot(tempSlot);
 			data.timeSlots.get(tempSlot).add(examId);
 		}
 
@@ -227,7 +228,7 @@ public class FeasibleCostructor {
 	 */
 	public static Data makeFeasibleTabu(Data data) {
 
-		int timeslot, i, conflictsNumberMin = conflictsNumber;
+		int timeslot, i, conflictsNumberMin = conflictsNumber, cyclecounter = 0, cyclechecker;
 		Move moveTemp, actualMove = new Move(0,0, Integer.MAX_VALUE);
 		ArrayList<Move> tabuList = new ArrayList<>();
 
@@ -238,11 +239,17 @@ public class FeasibleCostructor {
 			 */
 			for (i = 0; i < data.examsNumber/2 && conflictsNumber > 0; i++ ) {
 				/**
-				 * prendo esame a caso da quelli che hanno un conflitto
+				 * se non ho trovato cicli prendo esame a caso da quelli che hanno un conflitto
+				 * altrimenti provo a spostare uno che non ne ha per movimentare la soluzione
 				 */
-				int random = (int) Math.floor((Math.random() * data.conflictList.size()));
-				int id = data.conflictList.get((random));
-				exam = data.getExam(id);
+//				if (cyclecounter < 3 ) {
+//					int random = (int) Math.floor((Math.random() * data.conflictList.size()));
+//					int id = data.conflictList.get((random));
+//					exam = data.getExam(id);
+//				} else {
+					int random = (int) Math.floor((Math.random() * data.examsNumber)) + 1;
+					exam = data.getExam(random);
+//				}
 
 				/**
 				 * timeslot a caso per inserire
@@ -274,13 +281,21 @@ public class FeasibleCostructor {
 
 			if (tabuList.size() >= 7)
 				tabuList.remove(0);
-//			for (i = 0; i < tabuList.size(); i++) {
-//				System.out.println("tabu " + tabuList.get(i).exam + ": " + tabuList.get(i).timeslot);
-//			}
+
+			cyclechecker = conflictsNumber;
 
 			if (!tabuList.contains(actualMove))
 				tabuList.add(new Move(actualMove.exam, exam.slot, 0));
 			moveExam(data, actualMove);
+
+			if (cyclechecker != conflictsNumber)
+				cyclecounter = 0;
+			else
+				cyclecounter++;
+
+//			//stampa tabulist
+//			for (i = 0; i < tabuList.size(); i++)
+//				System.out.println("tabumove exam " + tabuList.get(i).exam + " to timeslot --> " + tabuList.get(i).timeslot);
 		}
 
 		return data;
@@ -310,58 +325,56 @@ public class FeasibleCostructor {
 
 		int j;
 		Integer examId, examId2;
-		int slotPartenza = data.getExam(move.exam).slot;
+		int slotPartenza = data.getExam(move.exam.intValue()).getSlot();
 		boolean foundConflict = false;
-
-		System.out.println("Conflitti: " + conflictsNumber);
-		System.out.println("esame da spostare: " + move.exam);
-
 		conflictsNumber = move.conflicts;
+
+//		System.out.println("esame da spostare: " + move.exam);
 
 		/*svuoto conflict list dell'esame che sto spostando*/
 		data.timeSlots.get(slotPartenza).remove(move.exam);
-		data.getExam(move.exam).conflicts = 0;
-		data.getExam(move.exam).slot = move.timeslot;
+		data.getExam(move.exam.intValue()).conflicts = 0;
 		data.conflictList.remove(move.exam);
 
 		for ( j = 0; j < data.timeSlots.get(slotPartenza).size(); j++ ) {
 			examId = data.timeSlots.get(slotPartenza).get(j);
 			//conflitto --> rimuovo
-			if (data.conflictExams[move.exam][examId] > 0) {
+			if (data.conflictExams[move.exam.intValue()][examId] > 0) {
 				data.getExam(examId).conflicts--;
 				if (data.getExam(examId).conflicts == 0 )
 					data.conflictList.remove(examId);
-				System.out.println("esami in conflitto slot di partenza: " + examId);
+//				System.out.println("esame in conflitto: " + examId + " slot di partenza: " + slotPartenza);
 			}
 		}
 
 		for ( j = 0; j < data.timeSlots.get(move.timeslot).size(); j++ ) {
 			examId2 = data.timeSlots.get(move.timeslot).get(j);
 			//conflitto
-			if (data.conflictExams[move.exam][examId2] > 0) {
-				data.getExam(move.exam).conflicts++;
+			if (data.conflictExams[move.exam.intValue()][examId2] > 0) {
+				data.getExam(move.exam.intValue()).conflicts++;
 				data.getExam(examId2).conflicts++;
 				if (!data.conflictList.contains(examId2))
 					data.conflictList.add(examId2);
 				foundConflict = true;
-				System.out.println("esami in conflitto slot di arrivo: " + examId2);
+//				System.out.println("esame in conflitto: " + examId2 + " slot di arrivo: " + move.timeslot);
 			}
 		}
 		if (foundConflict)
 			data.conflictList.add(move.exam);
 
-		System.out.println("Conflitti: " + conflictsNumber);
 //		System.out.println("Move: " + move.exam + " ---> " + move.timeslot);
 
-		data.timeSlots.get(move.timeslot).add(move.exam);
+		data.timeSlots.get(move.timeslot).add(move.exam.intValue());
+		data.getExam(move.exam.intValue()).setSlot(move.timeslot);
+//		System.out.println("Conflitti: " + conflictsNumber);
 
-		for ( j = 0; j < data.timeSlots.get(slotPartenza).size(); j++ ) {
-			examId = data.timeSlots.get(slotPartenza).get(j);
-			//conflitto --> rimuovo
-			if (move.exam == examId) {
-				System.out.println("Errore in timeslot: due esami con stesso id" + examId + " - " + move.exam);
-			}
-		}
+//		for ( j = 0; j < data.timeSlots.get(slotPartenza).size(); j++ ) {
+//			examId = data.timeSlots.get(slotPartenza).get(j);
+//			//conflitto --> rimuovo
+//			if (move.exam == examId) {
+//				System.out.println("Errore in timeslot: due esami con stesso id" + examId + " - " + move.exam);
+//			}
+//		}
 
 		return;
 	}
