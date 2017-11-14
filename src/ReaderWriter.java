@@ -1,8 +1,5 @@
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -29,7 +26,7 @@ public class ReaderWriter {
      */
     static ArrayList<Integer> slot = new ArrayList<>();
     
-	public static Data readInputFiles(String filename) throws FileNotFoundException
+	public Data readInputFiles(String filename) throws FileNotFoundException 
     {
 
     	int i,j,k;
@@ -42,7 +39,7 @@ public class ReaderWriter {
          * Read slot number
          */
         Scanner scanner  = new Scanner(slotsFile);
-        data.timeSlotsNumber = scanner.nextInt();
+        data.slotsNumber = scanner.nextInt();
         scanner.close();
 		
         /**
@@ -83,16 +80,12 @@ public class ReaderWriter {
         }
         data.studentsNumber = stud;
         scanner.close();
-        
-        data.setConflicts(conflicts);
-        
-     // Matrix of students/exams
+
+        // MAtrix of students/exams
 //        int[][] studentExams = new int[conflicts.size()][data.examsNumber];
-//        	for (i = 0; i < conflicts.size(); i++)
-//        		for (j = 0; j < data.examsNumber; j++)
-//        			studentExams[i][j] = 0;
-//          
-//        data.setStudentExams(studentExams);
+//        for (i = 1; i <= conflicts.size(); i++)
+//            for (j = 0; j < data.examsNumber; j++)
+//            	studentExams[i][j] = 0;
         
         for(i = 0; i < conflicts.size() ; i++) {
         	for(j = 0; j < conflicts.get(i).size(); j++) {
@@ -108,64 +101,54 @@ public class ReaderWriter {
         return data;
     }
 
-    public static void writeOutput(long time, Data data) {
+    public void writeOutput(long time, Data data, String filename) {
     	Tools tools = new Tools();
-    	int i, j, e;
+    	int i, j;
     	
     	/**
 		   * Print Graph
 		   */
 		for (i = 1; i <= data.examsNumber; i++) {
 			System.out.print("Line " + i + ": ");
-			for (j = 1; j <= data.examsNumber; j++)
+			for (j = 1; j <= data.examsNumber; j++) 
 				System.out.print(data.conflictExams[i][j] + " ");
 			System.out.println();
-
+			
 		}
-
+		
 		/**
 		 * Print Slots
 		 */
-		i = 0;
+		i = 0; 
 		while(i < data.timeSlots.size()) {
 //			if (!(slot = data.timeSlots.get(i)).isEmpty()) {
 			slot = data.timeSlots.get(i);
-			System.out.print("Slot " + i + ": ");
-			for (j = 0 ; j < slot.size() ; j ++) {
-				e = slot.get(j);
-				System.out.print(e + " ");
-			}
-			System.out.println();
+				System.out.print("Slot " + i + ": ");
+				slot.stream().forEach(e -> { 
+					System.out.print(e + " ");
+				});
+				System.out.println();
 //			}
 			i++;
 		}
+//		
+//		/**
+//		 * Print sol file
+//		 */
+//		try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
+//			int slotNumber = i+1;
+//			String content = e + " " + slotNumber;
+//			bw.write(content);	
+//		} catch (IOException ex) {
+//
+//			ex.printStackTrace();
+//
+//		}
 
+		
+		
 		System.out.println("Feasible? " + tools.feasibilityChecker(data));
-		System.out.println("Used timeslots: " + data.timeSlots.size());
-		System.out.println("OF? " + data.objFunc);
-
+//		System.out.println("OF? " + tools.ofCalculator(data));
 		System.out.println("Elaborazione dati in " + time + " millisec");
 	}
-
-	public static void writeOutputToFile(Data data, String filename) {
-
-		int i = 0, j, e;
-		/**
-		 * Print sol file
-		 */
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename + "_OMAMZ_group02.sol"))) {
-			while(i < data.timeSlots.size()) {
-				slot = data.timeSlots.get(i);
-				for (j = 0 ; j < slot.size() ; j ++) {
-					e = slot.get(j);
-					String content = e + " " + i + "\n";
-					bw.write(content);
-				}
-				i++;
-			}
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
-
 }

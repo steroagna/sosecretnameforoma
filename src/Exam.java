@@ -1,18 +1,16 @@
 import java.util.ArrayList;
 
 public class Exam {
-    public int id;
-    public int connectedExamsNumber;
-	public int studentsEnrolled;
-    public int slot;
-    public int conflicts;
-    public ArrayList<Integer> conflictList = new ArrayList<>();
-    public ArrayList<Integer> possibleSlots = new ArrayList<>();
+    private int id;
+    private int connectedExamsNumber;
+	private int studentsEnrolled;
+    private int slot;
+    private ArrayList<Exam> conflicts = new ArrayList<>();
+    private ArrayList<Integer> possibleSlots = new ArrayList<>();
     
     public Exam(int id, int studentsEnrolled) {
         this.id = id;
         this.studentsEnrolled = studentsEnrolled;
-        this.conflicts = 0;
     }
 
     public int getConnectedExamsNumber() {
@@ -27,8 +25,8 @@ public class Exam {
         this.slot = slot;
     }
 
-    public void setConflicts(ArrayList<Integer> conflictList) {
-        this.conflictList = conflictList;
+    public void setConflicts(ArrayList<Exam> conflicts) {
+        this.conflicts = conflicts;
     }
 
     public void setPossibleSlots(ArrayList<Integer> possibleSlots) {
@@ -45,8 +43,8 @@ public class Exam {
 
     public int getSlot() { return slot; }
 
-    public ArrayList<Integer> getConflicts() {
-        return conflictList;
+    public ArrayList<Exam> getConflicts() {
+        return conflicts;
     }
 
     public ArrayList<Integer> getPossibleSlots() {

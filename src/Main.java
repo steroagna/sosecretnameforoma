@@ -2,21 +2,21 @@ import java.io.FileNotFoundException;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
         long startTime = System.currentTimeMillis(), elapsedTime;
         try {
         	Data data = new Data();
+        	ReaderWriter rw = new ReaderWriter();
         	FeasibleCostructor fb = new FeasibleCostructor();
         	Tools tools = new Tools();
-            data = ReaderWriter.readInputFiles(args[0]);
-            data = fb.makeInitialRandom(data);
-//            data = fb.makeFeasibleStudentBased(data);
-            
-        	Timetable timetable = new Timetable(data.timeSlots, tools.ofCalculator(data));
+            data = rw.readInputFiles(args[0]);
+            Timetable timetable = fb.makeFeasibleGraphColoringWithTabu(data);
             elapsedTime = (System.currentTimeMillis() - startTime);
-            ReaderWriter.writeOutput(elapsedTime, data);
-            ReaderWriter.writeOutputToFile(data, args[0]);
+            
+//            System.out.println(timetable.printOutput(args[0]));
+            System.out.println("Elaborazione dati in " + elapsedTime + " millisec");
+            System.out.println("Feasable: "+ Util.feasibilityChecker(timetable, data));
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

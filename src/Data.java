@@ -16,12 +16,12 @@ public class Data {
     /**
      * Slot value
      */
-    public int timeSlotsNumber;
+    public int slotsNumber;
 
     /**
      * HashMap of Exams
      */
-    public ArrayList<Exam> examsList;
+    public HashMap<Integer, Exam> examsMap;
     
     /**
      * Matrix of conflicts (EXAM/EXAM)
@@ -37,40 +37,22 @@ public class Data {
      * List of Exams for each slot ---> final solution
      */
     public ArrayList<ArrayList<Integer>> timeSlots;
-    
-    /**
-     *  List of exams for each student
-     */
-    public ArrayList<ArrayList<Integer>> conflicts;
-
-	/**
-	 *  List of exams for each student
-	 */
-	public ArrayList<Integer> conflictList;
-
-	/**
-     *  Map of exams that have a conflict and timeslot in which they are
-     */
-    public HashMap<Integer, Integer> conflictMap;
 
     /**
      * Objective function value ---> penalty to minimize
      */
-    public double objFunc;
+    public int objFunc;
 
 	public Data() {
 		super();
 		this.examsNumber 	= 0;
 		this.studentsNumber = 0;
-		this.timeSlotsNumber 	= 0;
-		this.examsList  	= new ArrayList<>();
+		this.slotsNumber 	= 0;
+		this.examsMap  		= new HashMap<>();
 		this.conflictExams 	= null;
 		this.studentExams	= null;
-		this.timeSlots 		= new ArrayList<>();
+		this.timeSlots 		= new ArrayList<ArrayList<Integer>>();
 		this.objFunc		= Integer.MAX_VALUE;
-		this.conflicts		= new ArrayList<>();
-		this.conflictList	= new ArrayList<>();
-		this.conflictMap	= new HashMap<>();
 	}
 
 	public int getExamsNumber() {
@@ -89,29 +71,22 @@ public class Data {
 		this.studentsNumber = studentsNumber;
 	}
 
-	public int gettimeSlotsNumber() {
-		return timeSlotsNumber;
+	public int getSlotsNumber() {
+		return slotsNumber;
 	}
 
-	public void settimeSlotsNumber(int timeSlotsNumber) {
-		this.timeSlotsNumber = timeSlotsNumber;
+	public void setSlotsNumber(int slotsNumber) {
+		this.slotsNumber = slotsNumber;
 	}
 
-	public ArrayList<Exam> getExamsList() {
-		return examsList;
+	public HashMap<Integer, Exam> getExamsMap() {
+		return examsMap;
 	}
 
-	public void setExamsMap(ArrayList<Exam> examsList) {
-		this.examsList = examsList;
+	public void setExamsMap(HashMap<Integer, Exam> examsMap) {
+		this.examsMap = examsMap;
 	}
 
-	public ArrayList<ArrayList<Integer>> getConflicts() {
-		return conflicts;
-	}
-
-	public void setConflicts(ArrayList<ArrayList<Integer>> conflicts) {
-		this.conflicts = conflicts;
-	}
 
 	public int[][] getConflictExams() {
 		return conflictExams;
@@ -137,7 +112,7 @@ public class Data {
 		this.timeSlots = timeSlots;
 	}
 
-	public double getObjFunc() {
+	public int getObjFunc() {
 		return objFunc;
 	}
 
@@ -146,11 +121,14 @@ public class Data {
 	}
 
 	public Exam getExam(int examId) {
-		return this.examsList.get(examId -1);
+		if (this.examsMap.containsKey(examId))
+			return this.examsMap.get(examId);
+		else
+			return null;
 	}
 
 	public void addExam(Exam exam) {
-		this.examsList.add(exam);
+		this.examsMap.put(exam.getId(), exam);
 		return;
 	}
 
