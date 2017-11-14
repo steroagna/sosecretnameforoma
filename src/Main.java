@@ -6,23 +6,21 @@ public class Main {
 
         long startTime = System.currentTimeMillis(), elapsedTime;
         try {
-        	
-        	Data data = new Data();
-        	ReaderWriter rw = new ReaderWriter();
+            ReaderWriter rw = new ReaderWriter();
         	FeasibleCostructor fb = new FeasibleCostructor();
-        	
-        	data = rw.readInputFiles(args[0]);
+//        	TabuSearchConflicts ts = new TabuSearchConflicts();
+        	Data data = rw.readInputFiles(args[0]);
         	
             Timetable timetable = fb.makeFeasibleGraphColoringWithTabu(data);
-            
-            elapsedTime = (System.currentTimeMillis() - startTime);
+            timetable.objFunc = Tools.ofCalculator(timetable, data);
+
+//            ts.TabuSearchConflicts(timetable, data);
 
             elapsedTime = System.currentTimeMillis() - startTime;
-            System.out.println(timetable.toString());
+            System.out.println(timetable.toString(args[0]));
             System.out.println("Feasable: "+ Util.feasibilityChecker(timetable, data));
             System.out.println("Elapsed time: " + elapsedTime);
-            //rw.writeOutput(elapsedTime, data, args[0]);
-            
+            System.out.println("OF? " + Tools.ofCalculator(timetable, data));
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

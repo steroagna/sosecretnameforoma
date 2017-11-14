@@ -1,7 +1,9 @@
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.BufferedWriter;
 
 public class Timetable {
 	
@@ -25,7 +27,7 @@ public class Timetable {
     /**
      * Objective function value ---> penalty to minimize
      */
-    public int objFunc;
+    public double objFunc;
 
 	public Timetable(int[][] G,int k) {
 		super();
@@ -59,7 +61,6 @@ public class Timetable {
 			}
 		}
 	}
-	
 
 	/**
 	 * Evaluates total number of conflicts after applying specified move.
@@ -112,20 +113,32 @@ public class Timetable {
     	
     }
     
-    @Override
-    public String toString() {
+
+    public String toString(String filename) {
+
     	StringBuffer out = new StringBuffer();
     	int s =0;
-    	for(Iterator<ArrayList<Integer>> its=timeSlots.iterator();its.hasNext();s++) {
-    		ArrayList<Integer> slot = its.next();
-    		out.append("Slot "+s+": ");
-    		
-    		for(Iterator<Integer> ite=slot.iterator();ite.hasNext();)
-    			out.append(ite.next()+", ");
-    		
-    		out.append("\n");
-    		
-    	}
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
+			for(Iterator<ArrayList<Integer>> its=timeSlots.iterator();its.hasNext();s++) {
+				int slotNumber = s+1;
+				ArrayList<Integer> slot = its.next();
+
+				out.append("Slot "+s+": ");
+
+				for(Iterator<Integer> ite=slot.iterator();ite.hasNext();) {
+					int e = ite.next();
+					out.append( e + ", ");
+					String content = e + " " + slotNumber;
+					bw.write(content);
+				}
+
+				out.append("\n");
+			}
+		} catch (IOException ex) {
+
+			ex.printStackTrace();
+
+		}
     	
     	out.append("\n");
     	out.append("Conflicts:"+this.conflictNumber);
