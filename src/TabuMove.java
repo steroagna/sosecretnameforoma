@@ -1,15 +1,13 @@
-
-
 /*
  * Class which rapresents a forbidden moving.
  * */
-public class TabuItem {
+public class TabuMove {
 	
 	public int sourceTimeSlot;
 	public int destinationTimeSlot;
 	public int idExam;
 	
-	public TabuItem(int idExam,int sourceTimeSlot, int destinationTimeSlot) {
+	public TabuMove(int idExam,int sourceTimeSlot, int destinationTimeSlot) {
 		this.destinationTimeSlot = destinationTimeSlot;
 		this.sourceTimeSlot = sourceTimeSlot;
 		this.idExam = idExam;
@@ -18,8 +16,8 @@ public class TabuItem {
 	@Override
 	public boolean equals(Object o) {
 		
-		if(o instanceof TabuItem) {
-			TabuItem ti = (TabuItem)o;
+		if(o instanceof TabuMove) {
+			TabuMove ti = (TabuMove)o;
 			if(ti.idExam==this.idExam && ti.destinationTimeSlot==this.destinationTimeSlot)
 				return true;
 		}

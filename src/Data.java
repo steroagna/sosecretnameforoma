@@ -4,6 +4,11 @@ import java.util.HashMap;
 public class Data {
 
 	/**
+     * Number of conflicts among exams
+     */
+	public int totalConflicts = 0;
+	
+	/**
      * Number of exams value
      */
     public int examsNumber = 0;

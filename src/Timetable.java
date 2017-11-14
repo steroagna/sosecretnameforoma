@@ -1,20 +1,25 @@
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
 
 public class Timetable {
 	
 	public int[][] G;
 	
 	/**
-     * List of Exams for each slot ---> final solution
+     * List of exams for each slot.
      */
     public ArrayList<ArrayList<Integer>> timeSlots;
+    
+	/**
+     * List of tuple conflicting exams.
+     */    
     public ArrayList<ArrayList<Tuple>> timeSlotsConflict;
-
+ 
+	/**
+     * Total number of conflicts.
+     */ 
     public int conflictNumber;
 
     /**
@@ -36,6 +41,9 @@ public class Timetable {
 		
 	}
 
+	/**
+	 * Add and exam to a specified timeslot updating tied data structures.
+	 * */
 	public void addExam(int timeslot, int idExam) {
 		timeSlots.get(timeslot).add(idExam);
 		List<Integer> slot = timeSlots.get(timeslot);
@@ -46,13 +54,16 @@ public class Timetable {
 			if(G[idExam][slot.get(ei)]!=0) {
 				this.conflictNumber++;
 				
-				Tuple conflict = new Tuple(slot.get(ei), idExam);
+				Tuple conflict = new Tuple(slot.get(ei),idExam);
 				this.timeSlotsConflict.get(timeslot).add(conflict);
 			}
 		}
 	}
 	
 
+	/**
+	 * Evaluates total number of conflicts after applying specified move.
+	 * */
     public int evaluatesSwitch(int examSelected, int timeslotSource, int timeslotDestination) {
     	
     	int currentLocalConflict=0;
@@ -73,6 +84,9 @@ public class Timetable {
     	return this.conflictNumber-currentLocalConflict+potentialLocalConflict;
     }
     
+	/**
+	 * Applies the specified move.
+	 * */
     public void doSwitch(int examSelected, int timeslotSource, int timeslotDestination) {
     	
     	int currentLocalConflict=0;
@@ -97,34 +111,24 @@ public class Timetable {
     	this.addExam(timeslotDestination, examSelected);
     	
     }
-
-	public String printOutput(String filename) {
+    
+    @Override
+    public String toString() {
     	StringBuffer out = new StringBuffer();
-    	int s =0, i;
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename + "_OMAMZ_group02.sol"))) {
-
-
-			for(Iterator<ArrayList<Integer>> its=timeSlots.iterator();its.hasNext();s++) {
-				i = s+1;
-				ArrayList<Integer> slot = its.next();
-				out.append("Slot "+i+": ");
-
-				for(Iterator<Integer> ite=slot.iterator();ite.hasNext();) {
-					int e = ite.next();
-					out.append(e + ", ");
-					String content = e + " " + i + "\n";
-					bw.write(content);
-    		}
+    	int s =0;
+    	for(Iterator<ArrayList<Integer>> its=timeSlots.iterator();its.hasNext();s++) {
+    		ArrayList<Integer> slot = its.next();
+    		out.append("Slot "+s+": ");
+    		
+    		for(Iterator<Integer> ite=slot.iterator();ite.hasNext();)
+    			out.append(ite.next()+", ");
+    		
     		out.append("\n");
-
-    		}
-
-			out.append("\n");
-			out.append("Conflicts:"+this.conflictNumber);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-
+    		
+    	}
+    	
+    	out.append("\n");
+    	out.append("Conflicts:"+this.conflictNumber);
     	return out.toString();
     }
     

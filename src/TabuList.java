@@ -5,7 +5,7 @@ import java.util.List;
 
 public class TabuList {
 
-	private List<TabuItem> list = new ArrayList<TabuItem>();
+	private List<TabuMove> list = new ArrayList<TabuMove>();
 	private int size;
 	private int currentSize;
 	private int head;
@@ -15,7 +15,7 @@ public class TabuList {
 		this.head = 0;
 	}
 	
-	public void addTabuItem(TabuItem item) {
+	public void addTabuItem(TabuMove item) {
 		
 		this.list.set((head+currentSize)%size, item);
 		currentSize++;
@@ -25,8 +25,8 @@ public class TabuList {
 		}
 	}
 	
-	public List<TabuItem> getTabuList() {
-		return new ArrayList<TabuItem>(list);
+	public List<TabuMove> getTabuList() {
+		return new ArrayList<TabuMove>(list);
 	}
 	
 }

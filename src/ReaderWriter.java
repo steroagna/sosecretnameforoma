@@ -1,5 +1,8 @@
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -92,12 +95,15 @@ public class ReaderWriter {
         		int e1 = conflicts.get(i).get(j);
         		for(k = 0; k < conflicts.get(i).size(); k++) {
         			int e2 = conflicts.get(i).get(k);
-        			if (e1 != e2)
+        			if (e1 != e2) {
         				data.conflictExams[e1][e2]++;
+        				if (data.conflictExams[e1][e2] == 1)
+        					data.totalConflicts++;
+        			}
         		}
         	}
         }
-        
+
         return data;
     }
 
