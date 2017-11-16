@@ -84,7 +84,27 @@ public class Timetable {
     	
     	return this.conflictNumber-currentLocalConflict+potentialLocalConflict;
     }
-    
+
+	public double evaluatesSwitch2(Data data, int examSelected, int timeslotSource, int timeslotDestination) {
+
+    	double penalty;
+    	this.doSwitch2(examSelected,timeslotSource,timeslotDestination);
+    	penalty = Tools.ofCalculator(this, data);
+		this.doSwitch2(examSelected,timeslotDestination,timeslotSource);
+
+		return penalty;
+	}
+
+	public double evaluatesSwitchTimeSlots(Data data, int timeslotSource, int timeslotDestination) {
+
+		double penalty;
+		this.doSwitchTimeslot(timeslotSource,timeslotDestination);
+		penalty = Tools.ofCalculator(this, data);
+		this.doSwitchTimeslot(timeslotDestination,timeslotSource);
+
+		return penalty;
+	}
+
 	/**
 	 * Applies the specified move.
 	 * */
@@ -112,7 +132,30 @@ public class Timetable {
     	this.addExam(timeslotDestination, examSelected);
     	
     }
-    
+
+	/**
+	 * Applies the specified move.
+	 * */
+	public void doSwitch2(int examSelected, int timeslotSource, int timeslotDestination) {
+
+		timeSlots.get(timeslotSource).remove((Integer) examSelected);
+		timeSlots.get(timeslotDestination).add(examSelected);
+
+		return;
+	}
+
+	public void doSwitchTimeslot(int timeslotSource, int timeslotDestination) {
+
+		ArrayList<Integer> temp = timeSlots.get(timeslotSource);
+		ArrayList<Tuple> temp2 = timeSlotsConflict.get(timeslotSource);
+
+		timeSlots.set(timeslotSource, timeSlots.get(timeslotDestination));
+		timeSlotsConflict.set(timeslotSource, timeSlotsConflict.get(timeslotDestination));
+		timeSlots.set(timeslotDestination, temp);
+		timeSlotsConflict.set(timeslotDestination, temp2);
+
+		return;
+	}
 
     public String toString(String filename) {
 

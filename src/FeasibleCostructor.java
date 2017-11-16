@@ -17,7 +17,7 @@ public class FeasibleCostructor {
 		int 		k = data.slotsNumber;
 		int			T = 7;
 //		int 		r = (int) (1/density);
-		int rep = 18;
+		int rep = 10;
 		//int	rep = (int) ((1/density)*(data.examsNumber)/7);
 //		int	rep = (int) ((1/density)*(Math.sqrt(data.examsNumber)));
 		//int rep = (int) (data.examsNumber/2);
