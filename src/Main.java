@@ -13,7 +13,7 @@ public class Main {
         	
         	data = rw.readInputFiles(args[0]);
         	
-            Timetable timetable = fb.makeFeasibleGraphColoringWithTabu(data);
+            Timetable timetable = fb.makeFeasibleHEA(data);
             
             elapsedTime = (System.currentTimeMillis() - startTime);
 

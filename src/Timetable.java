@@ -41,6 +41,13 @@ public class Timetable {
 		
 	}
 
+	public Timetable(Timetable original) {
+		this.G = original.G;
+		timeSlots = original.timeSlots;
+		timeSlotsConflict = original.timeSlotsConflict;
+		this.conflictNumber = original.conflictNumber;
+	}
+
 	/**
 	 * Add and exam to a specified timeslot updating tied data structures.
 	 * */
@@ -111,7 +118,7 @@ public class Timetable {
     	this.addExam(timeslotDestination, examSelected);
     	
     }
-    
+
     @Override
     public String toString() {
     	StringBuffer out = new StringBuffer();
@@ -119,14 +126,14 @@ public class Timetable {
     	for(Iterator<ArrayList<Integer>> its=timeSlots.iterator();its.hasNext();s++) {
     		ArrayList<Integer> slot = its.next();
     		out.append("Slot "+s+": ");
-    		
+
     		for(Iterator<Integer> ite=slot.iterator();ite.hasNext();)
     			out.append(ite.next()+", ");
-    		
+
     		out.append("\n");
-    		
+
     	}
-    	
+
     	out.append("\n");
     	out.append("Conflicts:"+this.conflictNumber);
     	return out.toString();
