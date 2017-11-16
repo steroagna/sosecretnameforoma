@@ -3,51 +3,68 @@ import java.util.Random;
 public class TabuSearchConflicts {
 
     double bestMinPenalty;
+    Timetable bestTimetable;
 
     public void TabuSearchConflicts(Timetable timetable, Data data) {
 
-        int i = 0;
         int	T = 7;
-        int rep = 10;
+        int rep = 50;
 
+        bestTimetable = new Timetable(timetable);
         TabuList tabulist = new TabuList(T);
         TabuList tabuListSlot = new TabuList(T);
         bestMinPenalty = timetable.objFunc;
         long startTime = System.currentTimeMillis(), elapsedTime = 0;
 
-        while(timetable.objFunc > 0 && elapsedTime < 120000) {
+        while (elapsedTime < 20000) {
+            TabuMove bestMove = generatesBestNeighbourExam(timetable, tabulist, rep, data);
 
-            switch (i%2) {
-                case 0:
-                    TabuMove bestMove = generatesBestNeighbourExam(timetable, tabulist, rep, data);
-
-                    if(bestMove==null) {
-                        /*
-                        ** Statement unreachable (in theory).
-                        */
-                        System.out.println("No better neighbour found !");
-                        break;
-                    }
-
-                    timetable.doSwitch2(bestMove.idExam, bestMove.sourceTimeSlot, bestMove.destinationTimeSlot);
-                    elapsedTime = System.currentTimeMillis() - startTime;
-                    break;
-                case 1:
-                    TabuSlotMove bestSlot = generatesBestNeighbourTimeslot(timetable, data, rep, tabuListSlot);
-
-                    if(bestSlot==null) {
-                        /*
-                        ** Statement unreachable (in theory).
-                        */
-                        System.out.println("No better neighbour found !");
-                        break;
-                    }
-
-                    timetable.doSwitchTimeslot(bestSlot.sourceTimeSlot, bestSlot.destinationTimeSlot);
-                    elapsedTime = System.currentTimeMillis() - startTime;
-                    break;
+            if (bestMove == null) {
+                /*
+                ** Statement unreachable (in theory).
+                */
+                System.out.println("No better neighbour found !");
+                break;
             }
-            i=(i++)%2;
+
+            timetable.doSwitch2(bestMove.idExam, bestMove.sourceTimeSlot, bestMove.destinationTimeSlot);
+
+            elapsedTime = System.currentTimeMillis() - startTime;
+
+            timetable.objFunc = Tools.ofCalculator(timetable, data);
+            if (timetable.objFunc < bestTimetable.objFunc) {
+                bestTimetable = new Timetable(timetable);
+                System.out.println("Elapsed time: " + elapsedTime);
+                System.out.println("OF? " + Tools.ofCalculator(timetable, data));
+            }
+        }
+
+        System.out.println("*** Second Part *** ");
+        System.out.println("Elapsed time: " + elapsedTime);
+        System.out.println("OF? " + Tools.ofCalculator(timetable, data));
+
+        while(elapsedTime < 300000) {
+
+            TabuSlotMove bestSlot = generatesBestNeighbourTimeslot(timetable, data, rep, tabuListSlot);
+
+            if (bestSlot == null) {
+                /*
+                ** Statement unreachable (in theory).
+                */
+                System.out.println("No better neighbour found !");
+                break;
+            }
+
+            timetable.doSwitchTimeslot(bestSlot.sourceTimeSlot, bestSlot.destinationTimeSlot);
+
+            elapsedTime = System.currentTimeMillis() - startTime;
+
+            timetable.objFunc = Tools.ofCalculator(timetable, data);
+            if (timetable.objFunc < bestTimetable.objFunc) {
+                bestTimetable = new Timetable(timetable);
+                System.out.println("Elapsed time: " + elapsedTime);
+                System.out.println("OF? " + Tools.ofCalculator(timetable, data));
+            }
         }
 
         return;

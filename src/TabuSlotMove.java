@@ -6,9 +6,7 @@ public class TabuSlotMove extends TabuMove {
     public int destination;
 
     public TabuSlotMove(int sourceTimeSlot, int destinationTimeSlot) {
-        super(0,0,0);
-        this.destination = destinationTimeSlot;
-        this.source = sourceTimeSlot;
+        super(0,sourceTimeSlot,destinationTimeSlot);
     }
 
     @Override

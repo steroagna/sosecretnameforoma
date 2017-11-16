@@ -32,15 +32,27 @@ public class Timetable {
 	public Timetable(int[][] G,int k) {
 		super();
 		this.G = G;
-		timeSlots = new ArrayList<ArrayList<Integer>>();
-		for(int i=0;i<k;i++) 
-			timeSlots.add(new ArrayList<Integer>());
-		timeSlotsConflict = new ArrayList<ArrayList<Tuple>>();
-		for(int i=0;i<k;i++) 
-			timeSlotsConflict.add(new ArrayList<Tuple>());
+		this.timeSlots = new ArrayList<ArrayList<Integer>>();
+		for(int i=0;i<k;i++)
+			this.timeSlots.add(new ArrayList<Integer>());
+		this.timeSlotsConflict = new ArrayList<ArrayList<Tuple>>();
+		for(int i=0;i<k;i++)
+			this.timeSlotsConflict.add(new ArrayList<Tuple>());
 		
 		this.conflictNumber = 0;
-		
+		this.objFunc = Integer.MAX_VALUE;
+	}
+
+	public Timetable(Timetable o) {
+		this.G = o.G.clone();
+		this.timeSlots = new ArrayList<>();
+		for(int i=0;i<o.timeSlots.size();i++)
+			this.timeSlots.add(o.timeSlots.get(i));
+		this.timeSlotsConflict = new ArrayList<>();
+		for(int i=0;i<o.timeSlotsConflict.size();i++)
+			this.timeSlotsConflict.add(o.timeSlotsConflict.get(i));
+		this.conflictNumber = o.conflictNumber;
+		this.objFunc = o.objFunc;
 	}
 
 	/**
