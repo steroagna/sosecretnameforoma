@@ -5,7 +5,7 @@ public class TabuSearchConflicts {
     double bestMinPenalty;
     Timetable bestTimetable;
 
-    public void TabuSearchConflicts(Timetable timetable, Data data) {
+    public Timetable TabuSearchConflicts(Timetable timetable, Data data) {
 
         int	T = 7;
         int rep = 50;
@@ -16,7 +16,7 @@ public class TabuSearchConflicts {
         bestMinPenalty = timetable.objFunc;
         long startTime = System.currentTimeMillis(), elapsedTime = 0;
 
-        while (elapsedTime < 20000) {
+        while (elapsedTime < 10000) {
             TabuMove bestMove = generatesBestNeighbourExam(timetable, tabulist, rep, data);
 
             if (bestMove == null) {
@@ -41,7 +41,7 @@ public class TabuSearchConflicts {
 
         System.out.println("*** Second Part *** ");
         System.out.println("Elapsed time: " + elapsedTime);
-        System.out.println("OF? " + Tools.ofCalculator(timetable, data));
+        System.out.println("OF? " + Tools.ofCalculator(bestTimetable, data));
 
         while(elapsedTime < 300000) {
 
@@ -67,7 +67,7 @@ public class TabuSearchConflicts {
             }
         }
 
-        return;
+        return bestTimetable;
     }
 
     private TabuSlotMove generatesBestNeighbourTimeslot(Timetable timetable, Data data, int rep, TabuList tabulist)

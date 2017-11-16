@@ -20,7 +20,7 @@ public class Main {
             System.out.println("Elapsed time: " + elapsedTime);
             System.out.println("OF? " + Tools.ofCalculator(timetable, data));
 
-            ts.TabuSearchConflicts(timetable, data);
+            timetable = ts.TabuSearchConflicts(timetable, data);
 
             elapsedTime = System.currentTimeMillis() - startTime;
             System.out.println("OF? " + Tools.ofCalculator(timetable, data));
