@@ -200,6 +200,9 @@ public class TabuSearchPenalty {
             }
 
             int conflictSelected = randConflict.nextInt(timetable.timeSlots.get(timeslotSource).size());
+
+//            int conflictSelected = selectWorst(timetable.timeSlots , timeslotSource, data);
+
             int examSelected = timetable.timeSlots.get(timeslotSource).get(conflictSelected);
 
             moving = new TabuMove(examSelected, timeslotSource, timeslotDestination);
@@ -233,5 +236,36 @@ public class TabuSearchPenalty {
 
         return moving;
     }
+
+    private int selectWorst(ArrayList<ArrayList<Integer>> timeSlots, int timeslotSource, Data data) {
+
+        int exam = 0, exam1, exam2;
+        double penality, worstPenality = 0;
+        int columnStart = timeslotSource - 5;
+        int columnEnd = timeslotSource + 5;
+
+        if (columnStart < 0)
+            columnStart = 0;
+        if (columnEnd > timeSlots.size())
+            columnEnd = timeSlots.size();
+
+        for (int i = 0; i < timeSlots.get(timeslotSource).size() ; i++) {
+            exam1 = timeSlots.get(timeslotSource).get(i);
+            penality = 0;
+            for (int j = columnStart; j < columnEnd ; j++) {
+                if ( j == timeslotSource) continue;
+                ArrayList<Integer> slot1 = timeSlots.get(j);
+                for (int k = 0; k < slot1.size(); k++) {
+                    exam2 = slot1.get(k);
+                    penality += Math.pow(2, (5 - (k - i))) * data.conflictExams[exam1][exam2];
+                }
+                if (penality > worstPenality)
+                    exam = i;
+            }
+        }
+
+        return exam;
+    }
+
 
 }
