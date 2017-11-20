@@ -2,13 +2,14 @@ import java.io.FileNotFoundException;
 
 public class Main {
 
+    public static boolean debug = true;
     public static void main(String[] args) throws Exception {
 
         long startTime = System.currentTimeMillis(), elapsedTime;
         try {
             ReaderWriter rw = new ReaderWriter();
         	FeasibleCostructor fb = new FeasibleCostructor();
-        	TabuSearchConflicts ts = new TabuSearchConflicts();
+            TabuSearchPenalty ts = new TabuSearchPenalty();
         	Data data = rw.readInputFiles(args[0]);
 
             Timetable timetable = fb.makeFeasibleGraphColoringWithTabu(data);
@@ -20,7 +21,7 @@ public class Main {
             System.out.println("Elapsed time: " + elapsedTime);
             System.out.println("OF? " + Tools.ofCalculator(timetable, data));
 
-            timetable = ts.TabuSearchConflicts(timetable, data);
+            timetable = ts.TabuSearch(timetable, data);
 
             elapsedTime = System.currentTimeMillis() - startTime;
             System.out.println("OF? " + Tools.ofCalculator(timetable, data));
