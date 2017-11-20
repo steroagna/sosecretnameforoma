@@ -8,10 +8,10 @@ public class Main {
         long startTime = System.currentTimeMillis(), elapsedTime;
         try {
             ReaderWriter rw = new ReaderWriter();
-        	FeasibleCostructor fb = new FeasibleCostructor();
-        	HEA hea = new HEA();
-        	Data data = rw.readInputFiles(args[0]);
-        	int populationSize = 20;
+            Data data = rw.readInputFiles(args[0]);
+            FeasibleCostructor fb = new FeasibleCostructor(data);
+            HEA hea = new HEA();
+            int populationSize = 20;
         	
             Population population = fb.makeFeasiblePopulation(data, populationSize);
 

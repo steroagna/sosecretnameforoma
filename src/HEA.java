@@ -2,7 +2,7 @@ public class HEA {
 
 	public Timetable heuristic(Population population, Data data) throws Exception {
 		
-		FeasibleCostructor fb = new FeasibleCostructor();
+		FeasibleCostructor fb = new FeasibleCostructor(data);
 		Timetable bestTimetable = null, newGen;
 		TabuSearchPenalty localSearch = new TabuSearchPenalty();
 		long startTime = System.currentTimeMillis(), elapsedTime = 0;

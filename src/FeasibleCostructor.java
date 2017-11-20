@@ -4,26 +4,67 @@ import java.util.List;
 import java.util.Random;
 
 public class FeasibleCostructor {
-	
+
+	public Data data;
+	/**
+	 * Private costructor.
+	 * */
+	public FeasibleCostructor(Data data) {
+		this.data = data;
+	}
+
+	/**
+	 * Internal class useful to generate more
+	 * than one feasible solutions in parallel
+	 * way.
+	 * */
+	static private class FeasibleCostructorThread extends Thread{
+
+		public Timetable timetable;
+		private FeasibleCostructor feasibleCostructor;
+
+		public FeasibleCostructorThread(FeasibleCostructor fc) {
+			this.feasibleCostructor = fc;
+		}
+
+		public void run() {
+			try {
+				this.timetable = this.feasibleCostructor.makeFeasibleGraphColoringWithTabu(feasibleCostructor.data, timetable);
+			} catch (Exception e) {
+				System.out.println("[FeasibleConstructor::FeasibleConstructorThread::run()] Some problem occurred.");
+			}
+		}
+	}
+
 	public Population makeFeasiblePopulation(Data data, int populationSize) throws Exception{
 
 		long startTime = System.currentTimeMillis(), elapsedTime;
 		double bestOF = Integer.MAX_VALUE;
 		Timetable t;
 		ArrayList<Timetable> population = new ArrayList<>();
+		List<FeasibleCostructorThread> fcts = new ArrayList<FeasibleCostructorThread>();
+
+		for (int i = 0; i < populationSize; i++)
+			fcts.add(new FeasibleCostructor.FeasibleCostructorThread(new FeasibleCostructor(data)));
+
+		for (int i = 0; i < populationSize; i++)
+			fcts.get(i).start();
+
 		for (int i = 0; i < populationSize; i++) {
-			t = this.makeFeasibleGraphColoringWithTabu(data, null);
-			if (Main.debug) {
-	            elapsedTime = System.currentTimeMillis() - startTime;
-	            System.out.println("Feasable: "+ Util.feasibilityChecker(t, data));
-	            System.out.println("Elapsed time: " + elapsedTime);
-	            System.out.println("OF? " + Tools.ofCalculator(t, data));
-			}
+			fcts.get(i).join();
+			t = fcts.get(i).timetable;
 			t.objFunc = Tools.ofCalculator(t, data);
 			if ( t.objFunc < bestOF)
 				bestOF = t.objFunc;
 			population.add(t);
+			if (Main.debug) {
+				elapsedTime = System.currentTimeMillis() - startTime;
+				System.out.println("Feasable: "+ Util.feasibilityChecker(t, data));
+				System.out.println("Elapsed time: " + elapsedTime);
+				System.out.println("OF? " + Tools.ofCalculator(t, data));
+			}
 		}
+
 		return new Population(population, bestOF);
 	}
 	
@@ -46,12 +87,12 @@ public class FeasibleCostructor {
 		//int rep = (int) (k*(2/density));
 		//int rep = data.examsNumber/k;
 		
-		if (timetable == null) 
-			timetable = new Timetable(G,k);
+		if (timetable == null) {
+			timetable = new Timetable(G, k);
+			// Random coloring.
+			randomSolution(timetable, new ArrayList<Integer>(data.examsMap.keySet()));
+		}
 		TabuList tabulist = new TabuList(T);
-		
-		// Random coloring.
-		randomSolution(timetable, new ArrayList<Integer>(data.examsMap.keySet()));
 
 		while(timetable.conflictNumber>0) {
 
