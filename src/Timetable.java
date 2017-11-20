@@ -1,9 +1,9 @@
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.BufferedWriter;
+import java.util.Map;
+import java.util.TreeMap;
+
 
 public class Timetable {
 	
@@ -20,6 +20,11 @@ public class Timetable {
     public ArrayList<ArrayList<Tuple>> timeSlotsConflict;
  
 	/**
+     * List of timeslot (id) which contain at least a conflict.
+     */  
+    public Map<Integer, Integer> timeSlotWithConflicts;
+    
+	/**
      * Total number of conflicts.
      */ 
     public int conflictNumber;
@@ -27,32 +32,25 @@ public class Timetable {
     /**
      * Objective function value ---> penalty to minimize
      */
-    public double objFunc;
+    public int objFunc;
 
 	public Timetable(int[][] G,int k) {
 		super();
 		this.G = G;
-		this.timeSlots = new ArrayList<ArrayList<Integer>>();
-		for(int i=0;i<k;i++)
-			this.timeSlots.add(new ArrayList<Integer>());
-		this.timeSlotsConflict = new ArrayList<ArrayList<Tuple>>();
-		for(int i=0;i<k;i++)
-			this.timeSlotsConflict.add(new ArrayList<Tuple>());
+		timeSlots = new ArrayList<ArrayList<Integer>>();
 		
-		this.conflictNumber = 0;
-		this.objFunc = Integer.MAX_VALUE;
-	}
-
-	public Timetable(Timetable o) {
-		this.G = o.G.clone();
-		this.timeSlots = new ArrayList<>();
-		for(int i=0;i<o.timeSlots.size();i++)
-			this.timeSlots.add(o.timeSlots.get(i));
-		this.timeSlotsConflict = new ArrayList<>();
-		for(int i=0;i<o.timeSlotsConflict.size();i++)
-			this.timeSlotsConflict.add(o.timeSlotsConflict.get(i));
-		this.conflictNumber = o.conflictNumber;
-		this.objFunc = o.objFunc;
+		for(int i=0;i<k;i++) 
+			timeSlots.add(new ArrayList<Integer>());
+		
+		timeSlotsConflict = new ArrayList<ArrayList<Tuple>>();
+		
+		for(int i=0;i<k;i++) 
+			timeSlotsConflict.add(new ArrayList<Tuple>());
+		
+		timeSlotWithConflicts = new TreeMap<Integer,Integer>();
+		
+		conflictNumber = 0;
+		
 	}
 
 	/**
@@ -70,9 +68,12 @@ public class Timetable {
 				
 				Tuple conflict = new Tuple(slot.get(ei),idExam);
 				this.timeSlotsConflict.get(timeslot).add(conflict);
+				
+				this.timeSlotWithConflicts.put(timeslot, timeslot);
 			}
 		}
 	}
+	
 
 	/**
 	 * Evaluates total number of conflicts after applying specified move.
@@ -96,27 +97,7 @@ public class Timetable {
     	
     	return this.conflictNumber-currentLocalConflict+potentialLocalConflict;
     }
-
-	public double evaluatesSwitch2(Data data, int examSelected, int timeslotSource, int timeslotDestination) {
-
-    	double penalty;
-    	this.doSwitch2(examSelected,timeslotSource,timeslotDestination);
-    	penalty = Tools.ofCalculator(this, data);
-		this.doSwitch2(examSelected,timeslotDestination,timeslotSource);
-
-		return penalty;
-	}
-
-	public double evaluatesSwitchTimeSlots(Data data, int timeslotSource, int timeslotDestination) {
-
-		double penalty;
-		this.doSwitchTimeslot(timeslotSource,timeslotDestination);
-		penalty = Tools.ofCalculator(this, data);
-		this.doSwitchTimeslot(timeslotDestination,timeslotSource);
-
-		return penalty;
-	}
-
+    
 	/**
 	 * Applies the specified move.
 	 * */
@@ -140,60 +121,30 @@ public class Timetable {
     	this.timeSlots.get(timeslotSource).remove(i);
     	this.timeSlotsConflict.set(timeslotSource,newConflicts);
     	
+    	if(this.timeSlotsConflict.get(timeslotSource).size()>0)
+    		this.timeSlotWithConflicts.put(timeslotSource, timeslotSource);
+    	else
+    		this.timeSlotWithConflicts.remove(timeslotSource);
+    	
     	this.conflictNumber = this.conflictNumber-currentLocalConflict;
     	this.addExam(timeslotDestination, examSelected);
     	
     }
-
-	/**
-	 * Applies the specified move.
-	 * */
-	public void doSwitch2(int examSelected, int timeslotSource, int timeslotDestination) {
-
-		timeSlots.get(timeslotSource).remove((Integer) examSelected);
-		timeSlots.get(timeslotDestination).add(examSelected);
-
-		return;
-	}
-
-	public void doSwitchTimeslot(int timeslotSource, int timeslotDestination) {
-
-		ArrayList<Integer> temp = timeSlots.get(timeslotSource);
-		ArrayList<Tuple> temp2 = timeSlotsConflict.get(timeslotSource);
-
-		timeSlots.set(timeslotSource, timeSlots.get(timeslotDestination));
-		timeSlotsConflict.set(timeslotSource, timeSlotsConflict.get(timeslotDestination));
-		timeSlots.set(timeslotDestination, temp);
-		timeSlotsConflict.set(timeslotDestination, temp2);
-
-		return;
-	}
-
-    public String toString(String filename) {
-
+    
+    @Override
+    public String toString() {
     	StringBuffer out = new StringBuffer();
     	int s =0;
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
-			for(Iterator<ArrayList<Integer>> its=timeSlots.iterator();its.hasNext();s++) {
-				int slotNumber = s+1;
-				ArrayList<Integer> slot = its.next();
-
-				out.append("Slot "+s+": ");
-
-				for(Iterator<Integer> ite=slot.iterator();ite.hasNext();) {
-					int e = ite.next();
-					out.append( e + ", ");
-					String content = e + " " + slotNumber;
-					bw.write(content);
-				}
-
-				out.append("\n");
-			}
-		} catch (IOException ex) {
-
-			ex.printStackTrace();
-
-		}
+    	for(Iterator<ArrayList<Integer>> its=timeSlots.iterator();its.hasNext();s++) {
+    		ArrayList<Integer> slot = its.next();
+    		out.append("Slot "+s+": ");
+    		
+    		for(Iterator<Integer> ite=slot.iterator();ite.hasNext();)
+    			out.append(ite.next()+", ");
+    		
+    		out.append("\n");
+    		
+    	}
     	
     	out.append("\n");
     	out.append("Conflicts:"+this.conflictNumber);
