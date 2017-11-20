@@ -2,27 +2,29 @@ import java.io.FileNotFoundException;
 
 public class Main {
 
+	public static boolean debug = true;
     public static void main(String[] args) throws Exception {
 
         long startTime = System.currentTimeMillis(), elapsedTime;
         try {
-        	
-        	Data data = new Data();
-        	ReaderWriter rw = new ReaderWriter();
+            ReaderWriter rw = new ReaderWriter();
         	FeasibleCostructor fb = new FeasibleCostructor();
+        	HEA hea = new HEA();
+        	Data data = rw.readInputFiles(args[0]);
+        	int populationSize = 20;
         	
-        	data = rw.readInputFiles(args[0]);
-        	
-            Timetable timetable = fb.makeFeasibleHEA(data);
-            
-            elapsedTime = (System.currentTimeMillis() - startTime);
+            Population population = fb.makeFeasiblePopulation(data, populationSize);
 
             elapsedTime = System.currentTimeMillis() - startTime;
-            System.out.println(timetable.toString());
+            System.out.println("Population created in time: " + elapsedTime);
+            
+            Timetable timetable = hea.heuristic(population, data);
+
+            elapsedTime = System.currentTimeMillis() - startTime;
+            System.out.println(timetable.toString(args[0]));
             System.out.println("Feasable: "+ Util.feasibilityChecker(timetable, data));
             System.out.println("Elapsed time: " + elapsedTime);
-            //rw.writeOutput(elapsedTime, data, args[0]);
-            
+            System.out.println("OF? " + Tools.ofCalculator(timetable, data));
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

@@ -2,143 +2,89 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import java.util.TreeSet;
 
 public class FeasibleCostructor {
+	
+	public Population makeFeasiblePopulation(Data data, int populationSize) throws Exception{
+
+		long startTime = System.currentTimeMillis(), elapsedTime;
+		double bestOF = Integer.MAX_VALUE;
+		Timetable t;
+		ArrayList<Timetable> population = new ArrayList<>();
+		for (int i = 0; i < populationSize; i++) {
+			t = this.makeFeasibleGraphColoringWithTabu(data, null);
+			if (Main.debug) {
+	            elapsedTime = System.currentTimeMillis() - startTime;
+	            System.out.println("Feasable: "+ Util.feasibilityChecker(t, data));
+	            System.out.println("Elapsed time: " + elapsedTime);
+	            System.out.println("OF? " + Tools.ofCalculator(t, data));
+			}
+			t.objFunc = Tools.ofCalculator(t, data);
+			if ( t.objFunc < bestOF)
+				bestOF = t.objFunc;
+			population.add(t);
+		}
+		return new Population(population, bestOF);
+	}
+	
 	/**
 	 * Search and set a feasible timetable solution for current problem 
 	 * described by data object.
 	 * @throws Exception 
 	 * */
-	public Timetable makeFeasibleHEA(Data data) throws Exception {
-		
-		double density = (double)data.totalConflicts / (double)(data.examsNumber*data.examsNumber);
-		int 		numberOfConflict = Integer.MAX_VALUE;
+	public Timetable makeFeasibleGraphColoringWithTabu(Data data, Timetable timetable) throws Exception {
+
+//		double density = (double)data.totalConflicts / (double)(data.examsNumber*data.examsNumber);
 		int[][] 	G = data.conflictExams;
 		int 		k = data.slotsNumber;
 		int			T = 7;
-		int 		pop = 10;
-		int 		rep = 20;
-		int 		i;
-		Timetable timetable, parent1, parent2, newGen = new Timetable(G,k);
-		ArrayList<Timetable> population = new ArrayList<>();
+//		int 		r = (int) (1/density);
+		int rep = 10;
+		//int	rep = (int) ((1/density)*(data.examsNumber)/7);
+//		int	rep = (int) ((1/density)*(Math.sqrt(data.examsNumber)));
+		//int rep = (int) (data.examsNumber/2);
+		//int rep = (int) (k*(2/density));
+		//int rep = data.examsNumber/k;
 		
-		// Random population
-		for (i = 0; i < pop; i++) {
-			timetable = randomSolution(new Timetable(G,k), new ArrayList<>(data.examsMap.keySet()));
-			timetable = LS(timetable, T, rep);
-			if (timetable.conflictNumber < numberOfConflict)
-				numberOfConflict = timetable.conflictNumber;
-			if (numberOfConflict == 0) {
-				newGen = timetable;
-				break;
-			}
-			population.add(timetable);
-		}
+		if (timetable == null) 
+			timetable = new Timetable(G,k);
+		TabuList tabulist = new TabuList(T);
+		
+		// Random coloring.
+		randomSolution(timetable, new ArrayList<Integer>(data.examsMap.keySet()));
 
-		for (i = 0; i < pop; i++) {
-			population.get(i).toString();
-		}
+		while(timetable.conflictNumber>0) {
 
-		while (numberOfConflict > 0) {
-			Random randParent = new Random();
-			int rand1 = 0, rand2 = 0;
-			while (rand1 == rand2) {
-				rand1 = randParent.nextInt(population.size());
-				rand2 = randParent.nextInt(population.size());
-			}
-			parent1 = population.get(rand1);
-			parent2 = population.get(rand2);
-			newGen 	= crossover(parent1, parent2, newGen);
-			newGen 	= LS(newGen, T, rep);
-			if (newGen.conflictNumber > 0)
-				population.set(randParent.nextInt(population.size()), newGen);
-			else
-				break;
-		}
+//			int rep = r * timetable.conflictNumber;
+			TabuMove bestMove = generatesBestNeighbour(timetable,G,tabulist,rep);
 
-		return newGen;
-	}
-
-	/**
-	 * Setting of unfeasible random solution.
-	 * */
-	private Timetable randomSolution(Timetable timetable , List<Integer> exams) {
-
-		Random randTimeslot = new Random();
-
-		for(Iterator<Integer> itExam=exams.iterator();itExam.hasNext();)
-			timetable.addExam(randTimeslot.nextInt(timetable.timeSlots.size()),itExam.next());
-
-		return timetable;
-	}
-
-
-	private Timetable LS(Timetable timetable, int sizeTabu, int rep) {
-
-		int i;
-		for (i = 0; i < rep && timetable.conflictNumber > 0; i++) {
-			TabuList tabulist = new TabuList(sizeTabu);
-			TabuMove bestMove = generatesBestNeighbour(timetable, timetable.G, tabulist, rep);
-			if (bestMove == null) {
+			if(bestMove==null) {
 				/*
 				** Statement unreachable (in theory).
 				*/
 				System.out.println("No better neighbour found !");
 				break;
 			}
+
 			timetable.doSwitch(bestMove.idExam, bestMove.sourceTimeSlot, bestMove.destinationTimeSlot);
+			tabulist.addTabuItem(bestMove);
 		}
+
 		return timetable;
 	}
 
-	private Timetable crossover(Timetable parent1, Timetable parent2, Timetable newGen) {
+	/**
+	 * Setting of unfeasible random solution.
+	 * */
+	private void randomSolution(Timetable timetable , List<Integer> exams) {
 
 		Random randTimeslot = new Random();
-		Timetable A = null, B, C = new Timetable(parent1), D = new Timetable(parent2);
-		int cardinalityMax;
-		int i, j, k, l, m, columnMax = 0;
-		for (i = 0; i < parent1.timeSlots.size(); i++) {
-			cardinalityMax = 0;
 
-			if ( i%2 == 0) {
-				A = C;
-				B = D;
-			} else {
-				A = D;
-				B = C;
-			}
+		for(Iterator<Integer> itExam=exams.iterator();itExam.hasNext();)
+			timetable.addExam(randTimeslot.nextInt(timetable.timeSlots.size()),itExam.next());
 
-			for (j = 0; j < A.timeSlots.size(); j++) {
-				if (A.timeSlots.get(j).size() > cardinalityMax) {
-					cardinalityMax = A.timeSlots.get(j).size();
-					columnMax = j;
-				}
-			}
-
-			for (k = 0; k < A.timeSlots.get(columnMax).size(); k++) {
-				int e = A.timeSlots.get(columnMax).get(k);
-				A.timeSlots.get(columnMax).remove(k);
-				newGen.addExam(i,e);
-				boolean deleted = false;
-				for (l = 0; l < B.timeSlots.size() && !deleted; l++) {
-					for (m = 0; m < B.timeSlots.get(l).size() && !deleted; m++) {
-						if (B.timeSlots.get(l).get(m) == e) {
-							B.timeSlots.get(l).remove(m);
-							deleted = true;
-						}
-					}
-				}
-			}
-		}
-
-		for (i = 0; i < A.timeSlots.size(); i++) {
-			for (m = 0; m < A.timeSlots.get(i).size(); m++)
-				newGen.addExam(randTimeslot.nextInt(newGen.timeSlots.size()), A.timeSlots.get(i).get(m));
-		}
-
-			return newGen;
 	}
+
 	/**
 	 * Method that generates move to best neighbour if exist.
 	 * */
@@ -156,13 +102,24 @@ public class FeasibleCostructor {
 		int bestExamSelected = -1;
 
 		/*
-		 * Generates and searches best neighbour.
+		 * Generates and searches best neighbor.
 		 * */
 		for(int i=0;i<rep;i++) {
 
 			TabuMove move = generatesNeighbour(timetable,tabulist,bestConflictNumber,randConflict,randExam,randTimeslot);
 
-			int conflictNumber =  timetable.evaluatesSwitch(move.idExam,move.sourceTimeSlot,move.destinationTimeSlot);
+			int conflictNumber = timetable.evaluatesSwitch(move.idExam,move.sourceTimeSlot,move.destinationTimeSlot);
+
+			/*
+			 * Check for aspiration level.
+			 * */
+			if(tabulist.getTabuList().contains(move) && conflictNumber < (bestConflictNumber-1)) {
+				bestTimeslotSource = move.sourceTimeSlot;
+				bestExamSelected = move.idExam;
+				bestTimeslotDestination = move.destinationTimeSlot;
+				foundBetterTimetable = true;
+				break;
+			}
 
 			if(conflictNumber < bestConflictNumber) {
 				bestConflictNumber = conflictNumber;
@@ -171,10 +128,12 @@ public class FeasibleCostructor {
 				bestTimeslotDestination = move.destinationTimeSlot;
 				foundBetterTimetable = true;
 			}
+
 		}
 
 		if(foundBetterTimetable) {
 			TabuMove tabuItem = new TabuMove(bestExamSelected, bestTimeslotSource, bestTimeslotDestination);
+			tabulist.addTabuItem(tabuItem);
 			return tabuItem;
 		}
 
@@ -189,7 +148,7 @@ public class FeasibleCostructor {
 	 * */
 	private TabuMove generatesNeighbour(Timetable timetable, TabuList tabulist, int bestConflictsNumber,Random randConflict, Random randExam, Random randTimeslot) {
 
-		TabuMove moving = null;
+		TabuMove moving;
 
 		for(;;) {
 
@@ -212,7 +171,7 @@ public class FeasibleCostructor {
 
 			int conflictSelected = randConflict.nextInt(timetable.timeSlotsConflict.get(timeslotSource).size());
 			//int examToSwitch = randConflict.nextInt(timetable.timeSlots.get(timeslotSource).size());
-			int examSelected = -1;
+			int examSelected;
 
 			if(randExam.nextBoolean()) {
 				examSelected = timetable.timeSlotsConflict.get(timeslotSource).get(conflictSelected).e1;
@@ -227,21 +186,10 @@ public class FeasibleCostructor {
 			/*
 			 * Check if moving is already in the tabulist: if true try with another neighbour.
 			 * */
-			if((
-					tabulist.getTabuList().contains(moving) &&
-							conflictNumber >=(bestConflictsNumber-1)
+			if((tabulist.getTabuList().contains(moving) &&
+					conflictNumber >=(bestConflictsNumber-1)
 			)) {
 				continue;
-			}
-
-			/*
-			 * Check for aspiration level.
-			 * */
-			if(
-					tabulist.getTabuList().contains(moving) &&
-							conflictNumber<(bestConflictsNumber-1)
-			) {
-				tabulist.getTabuList().remove(moving);
 			}
 
 			break;

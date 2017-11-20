@@ -1,6 +1,4 @@
-
-
-public class Tuple {
+public class Tuple implements Cloneable {
 
 	public Integer e1;
 	public Integer e2;
@@ -18,5 +16,9 @@ public class Tuple {
 				return true;
 		}
 		return false;
+	}
+	
+	public Object clone() throws CloneNotSupportedException {
+		return super.clone();
 	}
 }

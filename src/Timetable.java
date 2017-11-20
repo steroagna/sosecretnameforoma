@@ -1,9 +1,11 @@
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.BufferedWriter;
 
-
-public class Timetable {
+public class Timetable implements Cloneable {
 	
 	public int[][] G;
 	
@@ -25,29 +27,38 @@ public class Timetable {
     /**
      * Objective function value ---> penalty to minimize
      */
-    public int objFunc;
+    public double objFunc;
 
 	public Timetable(int[][] G,int k) {
 		super();
 		this.G = G;
-		timeSlots = new ArrayList<ArrayList<Integer>>();
-		for(int i=0;i<k;i++) 
-			timeSlots.add(new ArrayList<Integer>());
-		timeSlotsConflict = new ArrayList<ArrayList<Tuple>>();
-		for(int i=0;i<k;i++) 
-			timeSlotsConflict.add(new ArrayList<Tuple>());
+		this.timeSlots = new ArrayList<ArrayList<Integer>>();
+		for(int i=0;i<k;i++)
+			this.timeSlots.add(new ArrayList<Integer>());
+		this.timeSlotsConflict = new ArrayList<ArrayList<Tuple>>();
+		for(int i=0;i<k;i++)
+			this.timeSlotsConflict.add(new ArrayList<Tuple>());
 		
 		this.conflictNumber = 0;
-		
+		this.objFunc = Integer.MAX_VALUE;
 	}
 
-	public Timetable(Timetable original) {
-		this.G = original.G;
-		timeSlots = original.timeSlots;
-		timeSlotsConflict = original.timeSlotsConflict;
-		this.conflictNumber = original.conflictNumber;
+	public Timetable(Timetable o) {
+		this.G = o.G.clone();
+		this.timeSlots = new ArrayList<>();
+		for(int i=0;i<o.timeSlots.size();i++)
+			this.timeSlots.add(o.timeSlots.get(i));
+		this.timeSlotsConflict = new ArrayList<>();
+		for(int i=0;i<o.timeSlotsConflict.size();i++)
+			this.timeSlotsConflict.add(o.timeSlotsConflict.get(i));
+		this.conflictNumber = o.conflictNumber;
+		this.objFunc = o.objFunc;
 	}
 
+	public Object clone() throws CloneNotSupportedException {
+		return super.clone();
+	}
+	
 	/**
 	 * Add and exam to a specified timeslot updating tied data structures.
 	 * */
@@ -66,7 +77,6 @@ public class Timetable {
 			}
 		}
 	}
-	
 
 	/**
 	 * Evaluates total number of conflicts after applying specified move.
@@ -90,7 +100,28 @@ public class Timetable {
     	
     	return this.conflictNumber-currentLocalConflict+potentialLocalConflict;
     }
-    
+
+	public double evaluatesSwitchWithoutConflicts(Data data, int examSelected, int timeslotSource, int timeslotDestination) {
+
+    	double penalty;
+    	
+    	this.doSwitchExamWithoutConflicts(examSelected,timeslotSource,timeslotDestination);
+    	penalty = Tools.ofCalculator(this, data);
+		this.doSwitchExamWithoutConflicts(examSelected,timeslotDestination,timeslotSource);
+
+		return penalty;
+	}
+
+	public double evaluatesSwitchTimeSlots(Data data, int timeslotSource, int timeslotDestination) {
+
+		double penalty;
+		this.doSwitchTimeslot(timeslotSource,timeslotDestination);
+		penalty = Tools.ofCalculator(this, data);
+		this.doSwitchTimeslot(timeslotDestination,timeslotSource);
+
+		return penalty;
+	}
+
 	/**
 	 * Applies the specified move.
 	 * */
@@ -109,7 +140,7 @@ public class Timetable {
     	}
     	
     	int i;
-    	for(i=0;this.timeSlots.get(timeslotSource).get(i)!=examSelected;i++) ;
+    	for(i=0;this.timeSlots.get(timeslotSource).get(i)!=examSelected;i++);
 
     	this.timeSlots.get(timeslotSource).remove(i);
     	this.timeSlotsConflict.set(timeslotSource,newConflicts);
@@ -119,21 +150,56 @@ public class Timetable {
     	
     }
 
-    @Override
-    public String toString() {
+	/**
+	 * Applies the specified move.
+	 * */
+	public void doSwitchExamWithoutConflicts(int examSelected, int timeslotSource, int timeslotDestination) {
+
+		timeSlots.get(timeslotSource).remove((Integer) examSelected);
+		timeSlots.get(timeslotDestination).add(examSelected);
+
+		return;
+	}
+
+	public void doSwitchTimeslot(int timeslotSource, int timeslotDestination) {
+
+		ArrayList<Integer> temp = timeSlots.get(timeslotSource);
+		ArrayList<Tuple> temp2 = timeSlotsConflict.get(timeslotSource);
+
+		timeSlots.set(timeslotSource, timeSlots.get(timeslotDestination));
+		timeSlotsConflict.set(timeslotSource, timeSlotsConflict.get(timeslotDestination));
+		timeSlots.set(timeslotDestination, temp);
+		timeSlotsConflict.set(timeslotDestination, temp2);
+
+		return;
+	}
+
+    public String toString(String filename) {
+
     	StringBuffer out = new StringBuffer();
     	int s =0;
-    	for(Iterator<ArrayList<Integer>> its=timeSlots.iterator();its.hasNext();s++) {
-    		ArrayList<Integer> slot = its.next();
-    		out.append("Slot "+s+": ");
+    	try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename + "_OMAMZ_group02.sol"))) {
+    		for(Iterator<ArrayList<Integer>> its=timeSlots.iterator();its.hasNext();s++) {
+				int slotNumber = s+1;
+				ArrayList<Integer> slot = its.next();
 
-    		for(Iterator<Integer> ite=slot.iterator();ite.hasNext();)
-    			out.append(ite.next()+", ");
+				out.append("Slot "+s+": ");
 
-    		out.append("\n");
+				for(Iterator<Integer> ite=slot.iterator();ite.hasNext();) {
+					int e = ite.next();
+					out.append( e + ", ");
+					String content = e + " " + slotNumber;
+					bw.write(content);
+				}
 
-    	}
+				out.append("\n");
+			}
+		} catch (IOException ex) {
 
+			ex.printStackTrace();
+
+		}
+    	
     	out.append("\n");
     	out.append("Conflicts:"+this.conflictNumber);
     	return out.toString();
