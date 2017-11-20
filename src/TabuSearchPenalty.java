@@ -9,7 +9,7 @@ public class TabuSearchPenalty {
     public Timetable TabuSearch(Timetable timetable, Data data, int iterations) {
 
         int	T = 7;
-        int i, rep = 50;
+        int i, rep = 100;
         
         bestTimetable = new Timetable(timetable);
         TabuList tabulist = new TabuList(T);
@@ -52,9 +52,11 @@ public class TabuSearchPenalty {
         }
         
         elapsedTime = System.currentTimeMillis() - startTime;
-        System.out.println("*** Second Part *** ");
-        System.out.println("Elapsed time: " + elapsedTime);
-        System.out.println("OF? " + Tools.ofCalculator(bestTimetable, data));
+        if (Main.debug) {
+            System.out.println("*** Second Part *** ");
+            System.out.println("Elapsed time: " + elapsedTime);
+            System.out.println("OF? " + Tools.ofCalculator(bestTimetable, data));
+        }
 
 //        while(elapsedTime < 300000) {
         for (i = 0; i < iterations; i ++) {

@@ -3,13 +3,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-public class FeasibleCostructor {
+public class FeasibleConstructor {
 
 	public Data data;
 	/**
 	 * Private costructor.
 	 * */
-	public FeasibleCostructor(Data data) {
+	public FeasibleConstructor(Data data) {
 		this.data = data;
 	}
 
@@ -18,18 +18,18 @@ public class FeasibleCostructor {
 	 * than one feasible solutions in parallel
 	 * way.
 	 * */
-	static private class FeasibleCostructorThread extends Thread{
+	static private class FeasibleConstructorThread extends Thread{
 
 		public Timetable timetable;
-		private FeasibleCostructor feasibleCostructor;
+		private FeasibleConstructor feasibleConstructor;
 
-		public FeasibleCostructorThread(FeasibleCostructor fc) {
-			this.feasibleCostructor = fc;
+		public FeasibleConstructorThread(FeasibleConstructor fc) {
+			this.feasibleConstructor = fc;
 		}
 
 		public void run() {
 			try {
-				this.timetable = this.feasibleCostructor.makeFeasibleGraphColoringWithTabu(feasibleCostructor.data, timetable);
+				this.timetable = this.feasibleConstructor.makeFeasibleGraphColoringWithTabu(feasibleConstructor.data, timetable);
 			} catch (Exception e) {
 				System.out.println("[FeasibleConstructor::FeasibleConstructorThread::run()] Some problem occurred.");
 			}
@@ -42,10 +42,10 @@ public class FeasibleCostructor {
 		double bestOF = Integer.MAX_VALUE;
 		Timetable t;
 		ArrayList<Timetable> population = new ArrayList<>();
-		List<FeasibleCostructorThread> fcts = new ArrayList<FeasibleCostructorThread>();
+		List<FeasibleConstructorThread> fcts = new ArrayList<>();
 
 		for (int i = 0; i < populationSize; i++)
-			fcts.add(new FeasibleCostructor.FeasibleCostructorThread(new FeasibleCostructor(data)));
+			fcts.add(new FeasibleConstructor.FeasibleConstructorThread(new FeasibleConstructor(data)));
 
 		for (int i = 0; i < populationSize; i++)
 			fcts.get(i).start();

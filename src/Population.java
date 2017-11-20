@@ -27,30 +27,34 @@ public class Population {
 			p1 = r1.nextInt(this.population.size());
 			p2 = r2.nextInt(this.population.size());
 		}
-		try {
-			this.parent1 = (Timetable) this.population.get(p1).clone();
-			this.parent2 = (Timetable) this.population.get(p2).clone();
-		}catch(CloneNotSupportedException c){
-			System.out.println("Clonation failed");
-		}
+
+		this.parent1 = new Timetable(this.population.get(p1));
+		this.parent2 = new Timetable(this.population.get(p2));
 		
 		return;
 	}
-	
+
+	public Timetable generateSon() {
+		this.chooseParents();
+		Timetable newGen = new Timetable(this.parent1);
+		
+		return newGen;
+	}
+
 	public Timetable copulate() {
 		
 		this.chooseParents();
+//		Timetable newGen = new Timetable(this.parent1);
 		Timetable newGen = new Timetable(this.parent1.G, this.parent1.timeSlots.size());
 		Timetable A, B;
-		int examCounterPerColumn, i, j, index = 0, examCounterMax = 0;
+		int examCounterPerColumn, i, j, index = 0, examCounterMax, t1;
 		ArrayList<Integer> slot, selectedColumn = null;
 		Iterator<ArrayList<Integer>> it;
 		Iterator<Integer> itSlot, itSlotSelected;
 		Integer exam;
 		boolean found;
 		Random r1 = new Random();
-		int p1;
-		
+
 		for (i = 0; i < this.parent1.timeSlots.size(); i++) {
 			if (i%2 == 0) {
 				A = this.parent1;
@@ -59,8 +63,9 @@ public class Population {
 				B = this.parent1;
 				A = this.parent2;
 			}
-			
+
 			it = A.timeSlots.iterator();
+			examCounterMax = 0;
 			j = 0;
 			while ( it.hasNext() ) {
 				slot = it.next();
@@ -77,10 +82,10 @@ public class Population {
 				}
 				j++;
 			}
-			
-			found = false;
+
 			itSlotSelected = selectedColumn.iterator();
 			while (itSlotSelected.hasNext()) {
+				found = false;
 				exam = itSlotSelected.next();
 				it = B.timeSlots.iterator();
 				while ( it.hasNext() && !found ) {
@@ -94,21 +99,20 @@ public class Population {
 					}
 				}
 			}
-			
-			A.timeSlots.set(index, new ArrayList<Integer>());
-			newGen.timeSlots.add(selectedColumn);
-			newGen.timeSlotsConflict.add(new ArrayList<Tuple>());
+
+			A.timeSlots.set(index, new ArrayList<>());
+			newGen.timeSlots.set(i, selectedColumn);
 		}
-		
+
 		for (i = 0; i < this.parent1.timeSlots.size(); i++) {
 			slot = this.parent1.timeSlots.get(i);
 			itSlot = slot.iterator();
 			while ( itSlot.hasNext() ) {
-				p1 = r1.nextInt(this.parent1.timeSlots.size());
-				newGen.addExam(p1,itSlot.next());
+				t1 = r1.nextInt(this.parent1.timeSlots.size());
+				newGen.addExam(t1,itSlot.next());
 			}
 		}
-		
+
 		return newGen;
 	}
 
@@ -116,9 +120,9 @@ public class Population {
 		
 		Random r = new Random();
 		int t;
-		
 		t = r.nextInt(this.population.size());
-		this.population.set(t, newGen);
+		if (this.population.get(t).objFunc >= newGen.objFunc)
+			this.population.set(t, newGen);
 	}
 
 }

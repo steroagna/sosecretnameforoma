@@ -47,16 +47,14 @@ public class Timetable implements Cloneable {
 		this.G = o.G.clone();
 		this.timeSlots = new ArrayList<>();
 		for(int i=0;i<o.timeSlots.size();i++)
-			this.timeSlots.add(o.timeSlots.get(i));
+			this.timeSlots.add(new ArrayList<>());
+		for(int i=0;i<o.timeSlots.size();i++)
+			this.timeSlots.set(i, (ArrayList<Integer>)o.timeSlots.get(i).clone());
 		this.timeSlotsConflict = new ArrayList<>();
 		for(int i=0;i<o.timeSlotsConflict.size();i++)
 			this.timeSlotsConflict.add(o.timeSlotsConflict.get(i));
 		this.conflictNumber = o.conflictNumber;
 		this.objFunc = o.objFunc;
-	}
-
-	public Object clone() throws CloneNotSupportedException {
-		return super.clone();
 	}
 	
 	/**
@@ -188,7 +186,7 @@ public class Timetable implements Cloneable {
 				for(Iterator<Integer> ite=slot.iterator();ite.hasNext();) {
 					int e = ite.next();
 					out.append( e + ", ");
-					String content = e + " " + slotNumber;
+					String content = e + " " + slotNumber + "\n";
 					bw.write(content);
 				}
 
