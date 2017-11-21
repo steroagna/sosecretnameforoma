@@ -18,7 +18,7 @@ public class TabuMove {
 		
 		if(o instanceof TabuMove) {
 			TabuMove ti = (TabuMove)o;
-			if(ti.idExam==this.idExam && ti.destinationTimeSlot==this.destinationTimeSlot)
+			if(ti.idExam==this.idExam && this.destinationTimeSlot==ti.sourceTimeSlot)
 				return true;
 		}
 		return false;

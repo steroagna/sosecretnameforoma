@@ -117,12 +117,17 @@ public class Population {
 	}
 
 	public void updatePopulation(Timetable newGen) {
-		
-		Random r = new Random();
-		int t;
-		t = r.nextInt(this.population.size());
-		if (this.population.get(t).objFunc >= newGen.objFunc)
-			this.population.set(t, newGen);
+
+		int i, indexMax = 0;
+		double OJMax = 0;
+		for (i = 0; i < this.population.size(); i++) {
+			if (this.population.get(i).objFunc > OJMax) {
+				OJMax = this.population.get(i).objFunc;
+				indexMax = i;
+			}
+		}
+
+		this.population.set(indexMax, newGen);
 	}
 
 }

@@ -6,13 +6,13 @@ public class HEA {
 		Timetable bestTimetable = null, newGen;
 		TabuSearchPenalty localSearch = new TabuSearchPenalty();
 		long startTime = System.currentTimeMillis(), elapsedTime = 0;
-		int iterations = 10000;
+		long timer = 5000;
 		
 		while (elapsedTime < 300000) {
 			newGen = population.generateSon();
 			fb.makeFeasibleGraphColoringWithTabu(data, newGen);
 			newGen.objFunc = Tools.ofCalculator(newGen, data);
-			newGen = localSearch.TabuSearch(newGen, data, iterations);
+			newGen = localSearch.TabuSearch(newGen, data, timer);
 
 			System.out.println("OF New Generation? " + newGen.objFunc);
 

@@ -6,10 +6,10 @@ public class TabuSearchPenalty {
     double bestMinPenalty;
     Timetable bestTimetable;
 
-    public Timetable TabuSearch(Timetable timetable, Data data, int iterations) {
+    public Timetable TabuSearch(Timetable timetable, Data data, long timer) {
 
         int	T = 7;
-        int i, rep = 100;
+        int rep = 10;
         
         bestTimetable = new Timetable(timetable);
         TabuList tabulist = new TabuList(T);
@@ -17,11 +17,11 @@ public class TabuSearchPenalty {
         bestMinPenalty = timetable.objFunc;
         long startTime = System.currentTimeMillis(), startTimetimer = System.currentTimeMillis(), elapsedTime = 0;
         double lastBestPenalty = bestMinPenalty;
-        double improvementDelta ;
+        double improvementDelta;
         long improvementTimer = 0;
 
-//        while (improvementTimer < 10000) {
-        for (i = 0; i < iterations; i ++) {
+        while (improvementTimer < timer) {
+//        for (i = 0; i < iterations; i ++) {
             TabuMove bestMove = generatesBestNeighbourExam(timetable, tabulist, rep, data);
 
             if (bestMove == null) {
@@ -48,7 +48,6 @@ public class TabuSearchPenalty {
             }
             
             improvementTimer = System.currentTimeMillis() - startTimetimer;
-
         }
         
         elapsedTime = System.currentTimeMillis() - startTime;
@@ -58,8 +57,47 @@ public class TabuSearchPenalty {
             System.out.println("OF? " + Tools.ofCalculator(bestTimetable, data));
         }
 
-//        while(elapsedTime < 300000) {
-        for (i = 0; i < iterations; i ++) {
+        improvementTimer = 0;
+        while (improvementTimer < timer) {
+//        for (i = 0; i < iterations; i ++) {
+            TabuMove bestMove = worstMove(timetable, data);
+
+            if (bestMove == null) {
+                /*
+                ** Statement unreachable (in theory).
+                */
+                System.out.println("No better neighbour found !");
+                break;
+            }
+
+            timetable.doSwitchExamWithoutConflicts(bestMove.idExam, bestMove.sourceTimeSlot, bestMove.destinationTimeSlot);
+
+            timetable.objFunc = Tools.ofCalculator(timetable, data);
+            if (timetable.objFunc < bestTimetable.objFunc) {
+                bestTimetable = new Timetable(timetable);
+                improvementDelta = lastBestPenalty - bestTimetable.objFunc;
+                lastBestPenalty = bestTimetable.objFunc;
+                if ( improvementDelta > 0.001)
+                    startTimetimer = System.currentTimeMillis();
+                if (Main.debug) {
+                    System.out.println("Timer: " + improvementTimer);
+                    System.out.println("OF? " + Tools.ofCalculator(timetable, data));
+                }
+            }
+
+            improvementTimer = System.currentTimeMillis() - startTimetimer;
+        }
+
+        elapsedTime = System.currentTimeMillis() - startTime;
+        if (Main.debug) {
+            System.out.println("*** Second Part *** ");
+            System.out.println("Elapsed time: " + elapsedTime);
+            System.out.println("OF? " + Tools.ofCalculator(bestTimetable, data));
+        }
+
+        improvementTimer = 0;
+        while (improvementTimer < timer) {
+//        for (i = 0; i < iterations; i ++) {
             TabuSlotMove bestSlot = generatesBestNeighbourTimeslot(timetable, data, rep, tabuListSlot);
 
             if (bestSlot == null) {
@@ -77,11 +115,17 @@ public class TabuSearchPenalty {
             timetable.objFunc = Tools.ofCalculator(timetable, data);
             if (timetable.objFunc < bestTimetable.objFunc) {
                 bestTimetable = new Timetable(timetable);
+                improvementDelta = lastBestPenalty - bestTimetable.objFunc;
+                lastBestPenalty = bestTimetable.objFunc;
+                if ( improvementDelta > 0.001)
+                    startTimetimer = System.currentTimeMillis();
                 if (Main.debug) {
 		            System.out.println("Elapsed time: " + elapsedTime);
 		            System.out.println("OF? " + Tools.ofCalculator(timetable, data));
                 }
             }
+
+            improvementTimer = System.currentTimeMillis() - startTimetimer;
         }
 
         return bestTimetable;
@@ -240,34 +284,58 @@ public class TabuSearchPenalty {
         return moving;
     }
 
-    private int selectWorst(ArrayList<ArrayList<Integer>> timeSlots, int timeslotSource, Data data) {
+    private TabuMove worstMove(Timetable timetable, Data data ) {
 
-        int exam = 0, exam1, exam2;
-        double penality, worstPenality = 0;
-        int columnStart = timeslotSource - 5;
-        int columnEnd = timeslotSource + 5;
+        TabuMove moving = null;
 
-        if (columnStart < 0)
-            columnStart = 0;
-        if (columnEnd > timeSlots.size())
-            columnEnd = timeSlots.size();
+        selectWorstTimeslot(timetable.timeSlots, data);
 
-        for (int i = 0; i < timeSlots.get(timeslotSource).size() ; i++) {
-            exam1 = timeSlots.get(timeslotSource).get(i);
-            penality = 0;
-            for (int j = columnStart; j < columnEnd ; j++) {
-                if ( j == timeslotSource) continue;
-                ArrayList<Integer> slot1 = timeSlots.get(j);
-                for (int k = 0; k < slot1.size(); k++) {
-                    exam2 = slot1.get(k);
-                    penality += Math.pow(2, (5 - (k - i))) * data.conflictExams[exam1][exam2];
+        System.out.println("OF: " + Tools.ofCalculator(timetable, data));
+        return moving;
+    }
+
+    private int selectWorstTimeslot(ArrayList<ArrayList<Integer>> timeSlots, Data data) {
+
+        int timeslot = 0, exam1, exam2, distance;
+        double penalty, worstPenality = 0, sum = 0;
+
+        // ciclo su tutti i timeslot
+        for (int timeslotSource = 0; timeslotSource < timeSlots.size() ; timeslotSource++) {
+            penalty = 0;
+            int columnStart = timeslotSource - 6;
+            int columnEnd = timeslotSource + 6;
+            if (columnStart < 0)
+                columnStart = 0;
+            if (columnEnd > timeSlots.size())
+                columnEnd = timeSlots.size();
+            // seleziono gli esami per il timeslot attuale e calcolo per ogni esame le penalità
+            for (int i = 0; i < timeSlots.get(timeslotSource).size(); i++) {
+                exam1 = timeSlots.get(timeslotSource).get(i);
+                // seleziono il range di +/- 5 timeslot
+                for (int j = columnStart; j < columnEnd; j++) {
+                    if (j == timeslotSource) continue;
+                    if (j > timeslotSource)
+                        distance = j - timeslotSource;
+                    else
+                        distance = timeslotSource - j;
+                    ArrayList<Integer> slot1 = timeSlots.get(j);
+                    for (int k = 0; k < slot1.size(); k++) {
+                        exam2 = slot1.get(k);
+                        if (data.conflictExams[exam1][exam2] > 0)
+                            penalty += Math.pow(2, (5 - distance)) * data.conflictExams[exam1][exam2];
+                    }
                 }
-                if (penality > worstPenality)
-                    exam = i;
             }
+            penalty = penalty / data.studentsNumber;
+            if (penalty > worstPenality) {
+                timeslot = timeslotSource;
+                worstPenality = penalty;
+            }
+            sum += penalty;
         }
 
-        return exam;
+        System.out.println("sum: " + sum);
+        return timeslot;
     }
 
 
