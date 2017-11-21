@@ -20,7 +20,7 @@ public class TabuSearchPenalty {
         double improvementDelta ;
         long improvementTimer = 0;
 
-        while (improvementTimer < 20000) {
+        while (improvementTimer < 1000) {
             TabuMove bestMove = generatesBestNeighbourExam(timetable, tabulist, rep, data);
 
             if (bestMove == null) {
@@ -57,7 +57,7 @@ public class TabuSearchPenalty {
             System.out.println("OF? " + Tools.ofCalculator(bestTimetable, data));
         }
 
-        while(elapsedTime < 300000) {
+        while(elapsedTime < 1000) {
             TabuSlotMove bestSlot = generatesBestNeighbourTimeslot(timetable, data, rep, tabuListSlot);
 
             if (bestSlot == null) {
