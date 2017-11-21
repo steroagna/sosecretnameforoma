@@ -9,12 +9,13 @@ public class HEA {
 		long timer = 5000;
 		
 		while (elapsedTime < 300000) {
-			newGen = population.generateSon();
+			newGen = population.copulate();
 			fb.makeFeasibleGraphColoringWithTabu(data, newGen);
 			newGen.objFunc = Tools.ofCalculator(newGen, data);
 			newGen = localSearch.TabuSearch(newGen, data, timer);
 
 			System.out.println("OF New Generation? " + newGen.objFunc);
+			System.out.println("Feasible " + Util.feasibilityChecker(newGen,data));
 
 			if(newGen.objFunc < population.bestOF)
 				bestTimetable = newGen;
