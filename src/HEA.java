@@ -26,6 +26,7 @@ public class HEA {
 	        elapsedTime = System.currentTimeMillis() - startTime;
 		}
 
+		System.out.println("OF Best TT before LS: " + population.bestTimetable.objFunc);
 		Timetable lastbestTimetable = localSearch.TabuSearch(population.bestTimetable, data, 10000);
 		System.out.println("OF Last TT after LS: " + lastbestTimetable.objFunc);
 
