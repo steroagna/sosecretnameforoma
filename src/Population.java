@@ -1,3 +1,4 @@
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
@@ -34,83 +35,36 @@ public class Population {
 		return;
 	}
 
-	public Timetable generateSon() {
-		this.chooseParents();
-		Timetable newGen = new Timetable(this.parent1);
-		
-		return newGen;
+	public Timetable chooseParent() {
+
+		chooseParents();
+		if (this.parent1.objFunc < this.parent2.objFunc)
+			return this.parent1;
+		else
+			return this.parent2;
 	}
 
-	public Timetable copulate() {
-		
-		this.chooseParents();
-//		Timetable newGen = new Timetable(this.parent1);
-		Timetable newGen = new Timetable(this.parent1.G, this.parent1.timeSlots.size());
-		Timetable A, B;
-		int examCounterPerColumn, i, j, index = 0, examCounterMax, t1;
-		ArrayList<Integer> slot, selectedColumn = null;
-		Iterator<ArrayList<Integer>> it;
-		Iterator<Integer> itSlot, itSlotSelected;
-		Integer exam;
-		boolean found;
-		Random r1 = new Random();
+	public Timetable copulate(Data data) {
 
-		for (i = 0; i < this.parent1.timeSlots.size(); i++) {
-			if (i%2 == 0) {
-				A = this.parent1;
-				B = this.parent2;
-			} else {
-				B = this.parent1;
-				A = this.parent2;
-			}
-
-			it = A.timeSlots.iterator();
-			examCounterMax = 0;
-			j = 0;
-			while ( it.hasNext() ) {
-				slot = it.next();
-				itSlot = slot.iterator();
-				examCounterPerColumn = 0;
-				while ( itSlot.hasNext() ) {
-					itSlot.next();
-					examCounterPerColumn++;
-				}
-				if (examCounterPerColumn > examCounterMax) {
-					examCounterMax = examCounterPerColumn;
-					index = j;
-					selectedColumn = A.timeSlots.get(j);
-				}
-				j++;
-			}
-
-			itSlotSelected = selectedColumn.iterator();
-			while (itSlotSelected.hasNext()) {
-				found = false;
-				exam = itSlotSelected.next();
-				it = B.timeSlots.iterator();
-				while ( it.hasNext() && !found ) {
-					slot = it.next();
-					itSlot = slot.iterator();
-					while ( itSlot.hasNext() && !found ) {
-						if (itSlot.next() == exam) {
-							itSlot.remove();
-							found = true;
-						}
-					}
-				}
-			}
-
-			A.timeSlots.set(index, new ArrayList<>());
-			newGen.timeSlots.set(i, selectedColumn);
+		Timetable A,timetable1 = null,timetable2 = null;
+		while (timetable1 == timetable2) {
+			timetable1 = this.chooseParent();
+			timetable2 = this.chooseParent();
 		}
+		Timetable newGen = new Timetable(this.parent1.G, this.parent1.timeSlots.size());
+		ArrayList exams = new ArrayList<Integer>(data.examsMap.keySet());
+		int exam, timeslot, index = 0;
 
-		for (i = 0; i < this.parent1.timeSlots.size(); i++) {
-			slot = this.parent1.timeSlots.get(i);
-			itSlot = slot.iterator();
-			while ( itSlot.hasNext() ) {
-				t1 = r1.nextInt(this.parent1.timeSlots.size());
-				newGen.addExam(t1,itSlot.next());
+		for(Iterator<Integer> itExam=exams.iterator();itExam.hasNext();) {
+			exam = itExam.next();
+			if (index%2 == 0) {
+				A = timetable1;
+			} else {
+				A = timetable2;
 			}
+
+			timeslot = A.positions.get(exam);
+			newGen.addExam(timeslot, exam);
 		}
 
 		return newGen;
@@ -129,5 +83,4 @@ public class Population {
 
 		this.population.set(indexMax, newGen);
 	}
-
 }

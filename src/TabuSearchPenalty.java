@@ -5,23 +5,26 @@ public class TabuSearchPenalty {
 
     double bestMinPenalty;
     Timetable bestTimetable;
+    long startTimetimer;
+    double lastBestPenalty;
+    double improvementDelta;
+    long improvementTimer;
 
     public Timetable TabuSearch(Timetable timetable, Data data, long timer) {
 
         int	T = 7;
-        int rep = 10;
-        
+        int rep = 100;
+
         bestTimetable = new Timetable(timetable);
+        bestMinPenalty = timetable.objFunc;
+        startTimetimer = System.currentTimeMillis();
+        lastBestPenalty = bestMinPenalty;
+        improvementTimer = 0;
         TabuList tabulist = new TabuList(T);
         TabuList tabuListSlot = new TabuList(T);
-        bestMinPenalty = timetable.objFunc;
-        long startTime = System.currentTimeMillis(), startTimetimer = System.currentTimeMillis(), elapsedTime = 0;
-        double lastBestPenalty = bestMinPenalty;
-        double improvementDelta;
-        long improvementTimer = 0;
+        long startTime = System.currentTimeMillis(), elapsedTime = 0;
 
         while (improvementTimer < timer) {
-//        for (i = 0; i < iterations; i ++) {
             TabuMove bestMove = generatesBestNeighbourExam(timetable, tabulist, rep, data);
 
             if (bestMove == null) {
@@ -34,70 +37,30 @@ public class TabuSearchPenalty {
 
             timetable.doSwitchExamWithoutConflicts(bestMove.idExam, bestMove.sourceTimeSlot, bestMove.destinationTimeSlot);
 
-            timetable.objFunc = Tools.ofCalculator(timetable, data);
-            if (timetable.objFunc < bestTimetable.objFunc) {
-                bestTimetable = new Timetable(timetable);
-                improvementDelta = lastBestPenalty - bestTimetable.objFunc;
-                lastBestPenalty = bestTimetable.objFunc;
-                if ( improvementDelta > 0.001)
-                	startTimetimer = System.currentTimeMillis();
-                if (Main.debug) {
-	                System.out.println("Timer: " + improvementTimer);
-	                System.out.println("OF? " + Tools.ofCalculator(timetable, data));
-                }
-            }
-            
+            timetable.objFunc = Util.ofCalculator(timetable, data);
+
+            updateBest(timetable, data);
+
             improvementTimer = System.currentTimeMillis() - startTimetimer;
-        }
-        
-        elapsedTime = System.currentTimeMillis() - startTime;
-        if (Main.debug) {
-            System.out.println("*** Second Part *** ");
-            System.out.println("Elapsed time: " + elapsedTime);
-            System.out.println("OF? " + Tools.ofCalculator(bestTimetable, data));
+
         }
 
-//        improvementTimer = 0;
-//        while (improvementTimer < timer) {
-////        for (i = 0; i < iterations; i ++) {
-//            TabuMove bestMove = worstMove(timetable, data);
-//
-//            if (bestMove == null) {
-//                /*
-//                ** Statement unreachable (in theory).
-//                */
-//                System.out.println("No better neighbour found !");
-//                break;
-//            }
-//
-//            timetable.doSwitchExamWithoutConflicts(bestMove.idExam, bestMove.sourceTimeSlot, bestMove.destinationTimeSlot);
-//
-//            timetable.objFunc = Tools.ofCalculator(timetable, data);
-//            if (timetable.objFunc < bestTimetable.objFunc) {
-//                bestTimetable = new Timetable(timetable);
-//                improvementDelta = lastBestPenalty - bestTimetable.objFunc;
-//                lastBestPenalty = bestTimetable.objFunc;
-//                if ( improvementDelta > 0.001)
-//                    startTimetimer = System.currentTimeMillis();
-//                if (Main.debug) {
-//                    System.out.println("Timer: " + improvementTimer);
-//                    System.out.println("OF? " + Tools.ofCalculator(timetable, data));
-//                }
-//            }
-//
-//            improvementTimer = System.currentTimeMillis() - startTimetimer;
-//        }
+        if (Main.debug) {
+            System.out.println("*** End Tabu Search *** ");
+            System.out.println("Elapsed time: " + elapsedTime);
+            System.out.println("OF? " + Util.ofCalculator(bestTimetable, data));
+        }
 
         elapsedTime = System.currentTimeMillis() - startTime;
         if (Main.debug) {
             System.out.println("*** Second Part *** ");
             System.out.println("Elapsed time: " + elapsedTime);
-            System.out.println("OF? " + Tools.ofCalculator(bestTimetable, data));
+            System.out.println("OF? " + Util.ofCalculator(bestTimetable, data));
         }
-
+        startTimetimer = System.currentTimeMillis();
         improvementTimer = 0;
+
         while (improvementTimer < timer) {
-//        for (i = 0; i < iterations; i ++) {
             TabuSlotMove bestSlot = generatesBestNeighbourTimeslot(timetable, data, rep, tabuListSlot);
 
             if (bestSlot == null) {
@@ -112,23 +75,28 @@ public class TabuSearchPenalty {
 
             elapsedTime = System.currentTimeMillis() - startTime;
 
-            timetable.objFunc = Tools.ofCalculator(timetable, data);
-            if (timetable.objFunc < bestTimetable.objFunc) {
-                bestTimetable = new Timetable(timetable);
-                improvementDelta = lastBestPenalty - bestTimetable.objFunc;
-                lastBestPenalty = bestTimetable.objFunc;
-                if ( improvementDelta > 0.001)
-                    startTimetimer = System.currentTimeMillis();
-                if (Main.debug) {
-		            System.out.println("Elapsed time: " + elapsedTime);
-		            System.out.println("OF? " + Tools.ofCalculator(timetable, data));
-                }
-            }
+            timetable.objFunc = Util.ofCalculator(timetable, data);
+
+            updateBest(timetable, data);
 
             improvementTimer = System.currentTimeMillis() - startTimetimer;
         }
 
         return bestTimetable;
+    }
+
+    private void updateBest(Timetable timetable, Data data) {
+        if (timetable.objFunc < bestTimetable.objFunc) {
+            bestTimetable = new Timetable(timetable);
+            improvementDelta = lastBestPenalty - bestTimetable.objFunc;
+            lastBestPenalty = bestTimetable.objFunc;
+            if ( improvementDelta > 0.001)
+                startTimetimer = System.currentTimeMillis();
+            if (Main.debug) {
+                System.out.println("Timer: " + improvementTimer);
+                System.out.println("OF? " + Util.ofCalculator(timetable, data));
+            }
+        }
     }
 
     private TabuSlotMove generatesBestNeighbourTimeslot(Timetable timetable, Data data, int rep, TabuList tabulist)
@@ -239,9 +207,9 @@ public class TabuSearchPenalty {
 			 * */
             //timetable.timeSlotsConflict.get(timeslotSource).size()==0 ||
             if(
-                timeslotSource==timeslotDestination
-                        || timetable.timeSlots.get(timeslotSource).size()==0
-                )
+                    timeslotSource==timeslotDestination
+                            || timetable.timeSlots.get(timeslotSource).size()==0
+                    )
             {
                 continue;
             }
@@ -290,7 +258,7 @@ public class TabuSearchPenalty {
 
         selectWorstTimeslot(timetable.timeSlots, data);
 
-        System.out.println("OF: " + Tools.ofCalculator(timetable, data));
+        System.out.println("OF: " + Util.ofCalculator(timetable, data));
         return moving;
     }
 

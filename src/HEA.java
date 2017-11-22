@@ -8,10 +8,10 @@ public class HEA {
 		long startTime = System.currentTimeMillis(), elapsedTime = 0;
 		long timer = 5000;
 		
-		while (elapsedTime < 300000) {
-			newGen = population.copulate();
+		while (elapsedTime < 120000) {
+			newGen = population.copulate(data);
 			fb.makeFeasibleGraphColoringWithTabu(data, newGen);
-			newGen.objFunc = Tools.ofCalculator(newGen, data);
+			newGen.objFunc = Util.ofCalculator(newGen, data);
 			newGen = localSearch.TabuSearch(newGen, data, timer);
 
 			System.out.println("OF New Generation? " + newGen.objFunc);
@@ -22,6 +22,8 @@ public class HEA {
 			population.updatePopulation(newGen);
 	        elapsedTime = System.currentTimeMillis() - startTime;
 		}
+
+		bestTimetable = localSearch.TabuSearch(bestTimetable, data, 10000);
 		
 		return bestTimetable;
 	}

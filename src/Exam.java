@@ -1,12 +1,12 @@
 import java.util.ArrayList;
 
 public class Exam {
-    private int id;
-    private int connectedExamsNumber;
-	private int studentsEnrolled;
-    private int slot;
-    private ArrayList<Exam> conflicts = new ArrayList<>();
-    private ArrayList<Integer> possibleSlots = new ArrayList<>();
+    public int id;
+    public int connectedExamsNumber;
+	public int studentsEnrolled;
+    public int slot;
+    public ArrayList<Exam> conflicts = new ArrayList<>();
+    public ArrayList<Integer> possibleSlots = new ArrayList<>();
     
     public Exam(int id, int studentsEnrolled) {
         this.id = id;

@@ -29,7 +29,12 @@ public class FeasibleConstructor {
 
 		public void run() {
 			try {
+				long timer = 5000;
 				this.timetable = this.feasibleConstructor.makeFeasibleGraphColoringWithTabu(feasibleConstructor.data, timetable);
+				TabuSearchPenalty localSearch = new TabuSearchPenalty();
+				this.timetable = localSearch.TabuSearch(this.timetable, feasibleConstructor.data, timer);
+				System.out.println("Feasable: "+ Util.feasibilityChecker(this.timetable, feasibleConstructor.data));
+				System.out.println("OF? " + Util.ofCalculator(this.timetable, feasibleConstructor.data));
 			} catch (Exception e) {
 				System.out.println("[FeasibleConstructor::FeasibleConstructorThread::run()] Some problem occurred.");
 			}
@@ -53,7 +58,7 @@ public class FeasibleConstructor {
 		for (int i = 0; i < populationSize; i++) {
 			fcts.get(i).join();
 			t = fcts.get(i).timetable;
-			t.objFunc = Tools.ofCalculator(t, data);
+			t.objFunc = Util.ofCalculator(t, data);
 			if ( t.objFunc < bestOF)
 				bestOF = t.objFunc;
 			population.add(t);
@@ -61,7 +66,7 @@ public class FeasibleConstructor {
 				elapsedTime = System.currentTimeMillis() - startTime;
 				System.out.println("Feasable: "+ Util.feasibilityChecker(t, data));
 				System.out.println("Elapsed time: " + elapsedTime);
-				System.out.println("OF? " + Tools.ofCalculator(t, data));
+				System.out.println("OF? " + Util.ofCalculator(t, data));
 			}
 		}
 
@@ -90,7 +95,7 @@ public class FeasibleConstructor {
 		if (timetable == null) {
 			timetable = new Timetable(G, k);
 			// Random coloring.
-			randomSolution(timetable, new ArrayList<Integer>(data.examsMap.keySet()));
+			randomSolution(timetable, new ArrayList<Integer>(data.examsMap.keySet()), data);
 		}
 		TabuList tabulist = new TabuList(T);
 
@@ -107,7 +112,7 @@ public class FeasibleConstructor {
 				break;
 			}
 
-			timetable.doSwitch(bestMove.idExam, bestMove.sourceTimeSlot, bestMove.destinationTimeSlot);
+			timetable.doSwitch(bestMove.idExam, bestMove.sourceTimeSlot, bestMove.destinationTimeSlot, data);
 			tabulist.addTabuItem(bestMove);
 		}
 
@@ -117,7 +122,7 @@ public class FeasibleConstructor {
 	/**
 	 * Setting of unfeasible random solution.
 	 * */
-	private void randomSolution(Timetable timetable , List<Integer> exams) {
+	private void randomSolution(Timetable timetable , List<Integer> exams, Data data) {
 
 		Random randTimeslot = new Random();
 

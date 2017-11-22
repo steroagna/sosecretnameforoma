@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.io.FileWriter;
@@ -8,7 +9,11 @@ import java.io.BufferedWriter;
 public class Timetable implements Cloneable {
 	
 	public int[][] G;
-	
+
+	/**
+	 * position of each exam
+	 */
+	public HashMap<Integer, Integer> positions;
 	/**
      * List of exams for each slot.
      */
@@ -38,21 +43,23 @@ public class Timetable implements Cloneable {
 		this.timeSlotsConflict = new ArrayList<ArrayList<Tuple>>();
 		for(int i=0;i<k;i++)
 			this.timeSlotsConflict.add(new ArrayList<Tuple>());
-		
+
+		this.positions = new HashMap<>();
 		this.conflictNumber = 0;
 		this.objFunc = Integer.MAX_VALUE;
 	}
 
 	public Timetable(Timetable o) {
 		this.G = o.G.clone();
-		this.timeSlots = new ArrayList<>();
-		for(int i=0;i<o.timeSlots.size();i++)
-			this.timeSlots.add(new ArrayList<>());
-		for(int i=0;i<o.timeSlots.size();i++)
-			this.timeSlots.set(i, (ArrayList<Integer>)o.timeSlots.get(i).clone());
-		this.timeSlotsConflict = new ArrayList<>();
-		for(int i=0;i<o.timeSlotsConflict.size();i++)
-			this.timeSlotsConflict.add(o.timeSlotsConflict.get(i));
+		this.timeSlots = (ArrayList<ArrayList<Integer>>) o.timeSlots.clone();
+//		for(int i=0;i<o.timeSlots.size();i++)
+//			this.timeSlots.add(new ArrayList<>());
+//		for(int i=0;i<o.timeSlots.size();i++)
+//			this.timeSlots.set(i, (ArrayList<Integer>)o.timeSlots.get(i).clone());
+		this.timeSlotsConflict = (ArrayList<ArrayList<Tuple>>) o.timeSlotsConflict.clone();
+//		this.timeSlotsConflict = new ArrayList<>();
+//			this.timeSlotsConflict.add(o.timeSlotsConflict.get(i));
+		this.positions = (HashMap)o.positions.clone();
 		this.conflictNumber = o.conflictNumber;
 		this.objFunc = o.objFunc;
 	}
@@ -63,6 +70,7 @@ public class Timetable implements Cloneable {
 	public void addExam(int timeslot, int idExam) {
 		timeSlots.get(timeslot).add(idExam);
 		List<Integer> slot = timeSlots.get(timeslot);
+		positions.put(idExam,timeslot);
 		for(int ei=0;ei<slot.size();ei++) {
 			
 			if(slot.get(ei)==idExam) continue;
@@ -104,7 +112,7 @@ public class Timetable implements Cloneable {
     	double penalty;
     	
     	this.doSwitchExamWithoutConflicts(examSelected,timeslotSource,timeslotDestination);
-    	penalty = Tools.ofCalculator(this, data);
+    	penalty = Util.ofCalculator(this, data);
 		this.doSwitchExamWithoutConflicts(examSelected,timeslotDestination,timeslotSource);
 
 		return penalty;
@@ -114,7 +122,7 @@ public class Timetable implements Cloneable {
 
 		double penalty;
 		this.doSwitchTimeslot(timeslotSource,timeslotDestination);
-		penalty = Tools.ofCalculator(this, data);
+		penalty = Util.ofCalculator(this, data);
 		this.doSwitchTimeslot(timeslotDestination,timeslotSource);
 
 		return penalty;
@@ -123,7 +131,7 @@ public class Timetable implements Cloneable {
 	/**
 	 * Applies the specified move.
 	 * */
-    public void doSwitch(int examSelected, int timeslotSource, int timeslotDestination) {
+    public void doSwitch(int examSelected, int timeslotSource, int timeslotDestination, Data data) {
     	
     	int currentLocalConflict=0;
     	
@@ -202,5 +210,10 @@ public class Timetable implements Cloneable {
     	out.append("Conflicts:"+this.conflictNumber);
     	return out.toString();
     }
-    
+
+	public void removeExam(int exam) {
+		int timeslot = this.positions.get(exam);
+		this.timeSlots.get(timeslot).remove((Integer) exam);
+		this.positions.remove(exam);
+	}
 }
