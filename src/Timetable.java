@@ -104,7 +104,7 @@ public class Timetable implements Cloneable {
 		double penalty;
 
 		this.doSwitchExamWithoutConflicts(examSelected,timeslotSource,timeslotDestination);
-		penalty = Tools.ofCalculator(this, data);
+		penalty = Util.ofCalculator(this, data);
 		this.doSwitchExamWithoutConflicts(examSelected,timeslotDestination,timeslotSource);
 
 		return penalty;
@@ -114,7 +114,7 @@ public class Timetable implements Cloneable {
 
 		double penalty;
 		this.doSwitchTimeslot(timeslotSource,timeslotDestination);
-		penalty = Tools.ofCalculator(this, data);
+		penalty = Util.ofCalculator(this, data);
 		this.doSwitchTimeslot(timeslotDestination,timeslotSource);
 
 		return penalty;

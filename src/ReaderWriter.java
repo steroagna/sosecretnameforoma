@@ -83,15 +83,19 @@ public class ReaderWriter {
         
         for(i = 0; i < conflicts.size() ; i++) {
         	for(j = 0; j < conflicts.get(i).size(); j++) {
+        	    int examConflicts = 0;
         		int e1 = conflicts.get(i).get(j);
         		for(k = 0; k < conflicts.get(i).size(); k++) {
         			int e2 = conflicts.get(i).get(k);
         			if (e1 != e2) {
         				data.conflictExams[e1][e2]++;
-        				if (data.conflictExams[e1][e2] == 1)
-        					data.totalConflicts++;
+        				if (data.conflictExams[e1][e2] == 1) {
+                            data.totalConflicts++;
+                            examConflicts++;
+                        }
         			}
         		}
+        		data.getExam(e1).setConflictsNumber(examConflicts);
         	}
         }
 

@@ -1,10 +1,11 @@
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
-import java.util.TreeSet;
+import java.util.*;
 
 public class FeasibleCostructor {
+	/**
+	 * Ordered Exam List based on Vertex number
+	 */
+	static TreeSet<Exam> treeMapExams = new TreeSet<>();
+
 	/**
 	 * Search and set a feasible timetable solution for current problem 
 	 * described by data object.
@@ -28,12 +29,13 @@ public class FeasibleCostructor {
 		TabuList tabulist = new TabuList(T);
 		
 		// Random coloring.
-		randomSolution(timetable, new ArrayList<Integer>(data.examsMap.keySet()));
+//		randomSolution(timetable, new ArrayList<Integer>(data.examsMap.keySet()));
+		notRandomSolution(timetable, data);
 
 		while(timetable.conflictNumber>0) {
 
 //			int rep = r * timetable.conflictNumber;
-			TabuMove bestMove = generatesBestNeighbour(timetable,G,tabulist,rep);
+			TabuMove bestMove = generatesBestNeighbour(timetable,G,tabulist,rep, data);
 
 			if(bestMove==null) {
 				/*
@@ -63,9 +65,52 @@ public class FeasibleCostructor {
 	}
 
 	/**
+	 * Setting of unfeasible random solution based on number of student enrolled.
+	 * */
+	private void notRandomSolution(Timetable timetable, Data data) {
+
+		Random randTimeslot = new Random();
+		int i, j, index = 0;
+		Exam exam;
+		int examId;
+		ArrayList<Integer> slot;
+		boolean conflict, found;
+
+		for (i = 1; i <= data.examsNumber; i++) {
+			exam = data.getExam(i);
+			treeMapExams.add(exam);
+		}
+
+		i = 0;
+		for(Iterator<Exam> itExam=treeMapExams.iterator();itExam.hasNext();) {
+			exam = itExam.next();
+//			if (i / data.examsNumber < 0.02)
+//				exam.mark();
+			i++;
+			examId = exam.getId();
+			found = false;
+			for(i = 0; i < timetable.timeSlots.size() && !found; i++) {
+				index = i;
+				slot = timetable.timeSlots.get(i);
+				conflict = false;
+				for (j = 0; j < slot.size() && !conflict; j++) {
+					if (data.conflictExams[examId][slot.get(j)] > 0)
+						conflict = true;
+				}
+				if (!conflict)
+					found = true;
+			}
+			if (i == timetable.timeSlots.size() && !found)
+				index = randTimeslot.nextInt(timetable.timeSlots.size());
+			timetable.addExam(index, examId);
+		}
+
+	}
+
+	/**
 	 * Method that generates move to best neighbour if exist.
 	 * */
-	private TabuMove generatesBestNeighbour(Timetable timetable, int [][] G, TabuList tabulist,int rep){
+	private TabuMove generatesBestNeighbour(Timetable timetable, int [][] G, TabuList tabulist,int rep, Data data){
 
 		Random randTimeslot = new Random();
 		Random randExam = new Random();
@@ -83,7 +128,7 @@ public class FeasibleCostructor {
 		 * */
 		for(int i=0;i<rep;i++) {
 
-			TabuMove move = generatesNeighbour(timetable,tabulist,bestConflictNumber,randConflict,randExam,randTimeslot);
+			TabuMove move = generatesNeighbour(timetable,tabulist,bestConflictNumber,randConflict,randExam,randTimeslot, data);
 
 			int conflictNumber = timetable.evaluatesSwitch(move.idExam,move.sourceTimeSlot,move.destinationTimeSlot);
 
@@ -123,7 +168,7 @@ public class FeasibleCostructor {
 	/**
 	 * Method that generates a valid neighbour.
 	 * */
-	private TabuMove generatesNeighbour(Timetable timetable, TabuList tabulist, int bestConflictsNumber,Random randConflict, Random randExam, Random randTimeslot) {
+	private TabuMove generatesNeighbour(Timetable timetable, TabuList tabulist, int bestConflictsNumber,Random randConflict, Random randExam, Random randTimeslot, Data data) {
 
 		TabuMove moving;
 
@@ -157,6 +202,9 @@ public class FeasibleCostructor {
 			}
 			//examSelected = timetable.timeSlots.get(timeslotSource).get(examToSwitch);
 			//		.timeSlotsConflict.get(timeslotSource).get(conflictSelected).e1;
+
+			if (data.getExam(examSelected).isMarked())
+				continue;
 
 			moving = new TabuMove(examSelected, timeslotSource, timeslotDestination);
 			int conflictNumber = timetable.evaluatesSwitch(examSelected,timeslotSource,timeslotDestination);
