@@ -13,7 +13,7 @@ public class TabuSearchPenalty {
     public Timetable TabuSearch(Timetable timetable, Data data, long timer) {
 
         int	T = 7;
-        int rep = 100;
+        int rep = 120;
 
         bestTimetable = new Timetable(timetable);
         bestMinPenalty = timetable.objFunc;
@@ -45,12 +45,6 @@ public class TabuSearchPenalty {
 
         }
 
-        if (Main.debug) {
-            System.out.println("*** End Tabu Search *** ");
-            System.out.println("Elapsed time: " + elapsedTime);
-            System.out.println("OF? " + Util.ofCalculator(bestTimetable, data));
-        }
-
         elapsedTime = System.currentTimeMillis() - startTime;
         if (Main.debug) {
             System.out.println("*** Second Part *** ");
@@ -80,6 +74,12 @@ public class TabuSearchPenalty {
             updateBest(timetable, data);
 
             improvementTimer = System.currentTimeMillis() - startTimetimer;
+        }
+
+        if (Main.debug) {
+            System.out.println("*** End Tabu Search *** ");
+            System.out.println("Elapsed time: " + elapsedTime);
+            System.out.println("OF? " + Util.ofCalculator(bestTimetable, data));
         }
 
         return bestTimetable;
@@ -194,9 +194,10 @@ public class TabuSearchPenalty {
      * */
     private TabuMove generatesNeighbourSwappingExam(Data data, Timetable timetable, TabuList tabulist, double bestPenalty,Random randConflict, Random randExam, Random randTimeslot) {
 
-        TabuMove moving;
+        TabuMove moving = null;
+        int i;
 
-        for(;;) {
+        for(i = 0; i < 500; i++) {
 
             int timeslotSource = randTimeslot.nextInt(timetable.timeSlots.size());
             int timeslotDestination = randTimeslot.nextInt(timetable.timeSlots.size());

@@ -1,33 +1,35 @@
+import java.sql.Time;
+
 public class HEA {
 
 	public Timetable heuristic(Population population, Data data) throws Exception {
 		
 		FeasibleConstructor fb = new FeasibleConstructor(data);
-		Timetable bestTimetable = null, newGen;
+		Timetable newGen;
 		TabuSearchPenalty localSearch = new TabuSearchPenalty();
 		long startTime = System.currentTimeMillis(), elapsedTime = 0;
-		long timer = 1000;
+		long timer = 2000;
 		
-		while (elapsedTime < 12000000) {
+		while (elapsedTime < 120000) {
 			newGen = population.copulate(data);
 			fb.makeFeasibleGraphColoringWithTabu(data, newGen);
-			newGen.objFunc = Util.ofCalculator(newGen, data);
 			newGen = localSearch.TabuSearch(newGen, data, timer);
+			newGen.objFunc = Util.ofCalculator(newGen, data);
 
 			System.out.println("OF New Generation: " + newGen.objFunc);
-			System.out.println("Feasible " + Util.feasibilityChecker(newGen,data));
 
 			if(newGen.objFunc < population.bestOF) {
-				bestTimetable = newGen;
+				population.bestTimetable = newGen;
 				population.bestOF = newGen.objFunc;
 			}
 			population.updatePopulation(newGen);
 	        elapsedTime = System.currentTimeMillis() - startTime;
 		}
 
-		bestTimetable = localSearch.TabuSearch(bestTimetable, data, 10000);
-		
-		return bestTimetable;
+		Timetable lastbestTimetable = localSearch.TabuSearch(population.bestTimetable, data, 10000);
+		System.out.println("OF Last TT after LS: " + lastbestTimetable.objFunc);
+
+		return lastbestTimetable;
 	}
 
 }

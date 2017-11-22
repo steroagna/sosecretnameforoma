@@ -11,7 +11,7 @@ public class Main {
             Data data = rw.readInputFiles(args[0]);
             FeasibleConstructor fb = new FeasibleConstructor(data);
             HEA hea = new HEA();
-            int populationSize = 7;
+            int populationSize = 10;
         	
             Population population = fb.makeFeasiblePopulation(data, populationSize);
 

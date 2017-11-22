@@ -8,11 +8,12 @@ public class Population {
 
 	public ArrayList<Timetable> population;
 	public double bestOF;
-	Timetable parent1, parent2;
+	Timetable parent1, parent2, bestTimetable;
 	
-	public Population(ArrayList<Timetable> population, double bestOF) {
+	public Population(ArrayList<Timetable> population, Timetable best, double bestOF) {
 		super();
 		this.population = population;
+		this.bestTimetable = best;
 		this.bestOF = bestOF;
 		this.parent1 = null;
 		this.parent2 = null;

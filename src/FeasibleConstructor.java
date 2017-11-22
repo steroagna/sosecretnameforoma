@@ -29,7 +29,7 @@ public class FeasibleConstructor {
 
 		public void run() {
 			try {
-				long timer = 5000;
+				long timer = 10000;
 				this.timetable = this.feasibleConstructor.makeFeasibleGraphColoringWithTabu(feasibleConstructor.data, timetable);
 				TabuSearchPenalty localSearch = new TabuSearchPenalty();
 				this.timetable = localSearch.TabuSearch(this.timetable, feasibleConstructor.data, timer);
@@ -45,7 +45,7 @@ public class FeasibleConstructor {
 
 		long startTime = System.currentTimeMillis(), elapsedTime;
 		double bestOF = Integer.MAX_VALUE;
-		Timetable t;
+		Timetable t, best = null;
 		ArrayList<Timetable> population = new ArrayList<>();
 		List<FeasibleConstructorThread> fcts = new ArrayList<>();
 
@@ -59,8 +59,10 @@ public class FeasibleConstructor {
 			fcts.get(i).join();
 			t = fcts.get(i).timetable;
 			t.objFunc = Util.ofCalculator(t, data);
-			if ( t.objFunc < bestOF)
+			if ( t.objFunc < bestOF) {
 				bestOF = t.objFunc;
+				best = new Timetable(t);
+			}
 			population.add(t);
 			if (Main.debug) {
 				elapsedTime = System.currentTimeMillis() - startTime;
@@ -70,7 +72,7 @@ public class FeasibleConstructor {
 			}
 		}
 
-		return new Population(population, bestOF);
+		return new Population(population, best, bestOF);
 	}
 	
 	/**
