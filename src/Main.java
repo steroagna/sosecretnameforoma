@@ -19,8 +19,13 @@ public class Main {
             System.out.println("Feasable: "+ Util.feasibilityChecker(timetable, data));
             System.out.println("Elapsed time: " + elapsedTime);
             System.out.println("OF? " + Util.ofCalculator(timetable, data));
+            startTime = System.currentTimeMillis();
+            elapsedTime = System.currentTimeMillis() - startTime;
 
-            timetable = ts.TabuSearch(timetable, data);
+            while (elapsedTime < 120000) {
+                timetable = ts.TabuSearch(timetable, data);
+                elapsedTime = System.currentTimeMillis() - startTime;
+            }
 
             elapsedTime = System.currentTimeMillis() - startTime;
             System.out.println(timetable.toString(args[0]));

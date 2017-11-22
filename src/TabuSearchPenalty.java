@@ -13,7 +13,7 @@ public class TabuSearchPenalty {
     public Timetable TabuSearch(Timetable timetable, Data data) {
 
         int	T = 7;
-        int rep = 100;
+        int rep = 120;
 
         bestTimetable = new Timetable(timetable);
         bestMinPenalty = timetable.objFunc;
@@ -24,8 +24,37 @@ public class TabuSearchPenalty {
         TabuList tabuListSlot = new TabuList(T);
         long startTime = System.currentTimeMillis(), elapsedTime = 0;
 
+        while (improvementTimer < 10000) {
+            TabuMove bestMove = generatesBestNeighbourExam(timetable, tabulist, rep, data);
 
-        while (improvementTimer < 25000) {
+            if (bestMove == null) {
+                /*
+                ** Statement unreachable (in theory).
+                */
+                System.out.println("No better neighbour found !");
+                break;
+            }
+
+            timetable.doSwitchExamWithoutConflicts(bestMove.idExam, bestMove.sourceTimeSlot, bestMove.destinationTimeSlot);
+
+            timetable.objFunc = Util.ofCalculator(timetable, data);
+
+            updateBest(timetable, data);
+
+            improvementTimer = System.currentTimeMillis() - startTimetimer;
+
+        }
+
+        elapsedTime = System.currentTimeMillis() - startTime;
+        if (Main.debug) {
+            System.out.println("*** Second Part *** ");
+            System.out.println("Elapsed time: " + elapsedTime);
+            System.out.println("OF? " + Util.ofCalculator(bestTimetable, data));
+        }
+        startTimetimer = System.currentTimeMillis();
+        improvementTimer = 0;
+
+        while (improvementTimer < 10000) {
             TabuSlotMove bestSlot = generatesBestNeighbourTimeslot(timetable, data, rep, tabuListSlot);
 
             if (bestSlot == null) {
@@ -45,36 +74,6 @@ public class TabuSearchPenalty {
             updateBest(timetable, data);
 
             improvementTimer = System.currentTimeMillis() - startTimetimer;
-        }
-
-        elapsedTime = System.currentTimeMillis() - startTime;
-        if (Main.debug) {
-            System.out.println("*** Second Part *** ");
-            System.out.println("Elapsed time: " + elapsedTime);
-            System.out.println("OF? " + Util.ofCalculator(bestTimetable, data));
-        }
-        startTimetimer = System.currentTimeMillis();
-        improvementTimer = 0;
-
-        while (improvementTimer < 25000) {
-            TabuMove bestMove = generatesBestNeighbourExam(timetable, tabulist, rep, data);
-
-            if (bestMove == null) {
-                /*
-                ** Statement unreachable (in theory).
-                */
-                System.out.println("No better neighbour found !");
-                break;
-            }
-
-            timetable.doSwitchExamWithoutConflicts(bestMove.idExam, bestMove.sourceTimeSlot, bestMove.destinationTimeSlot);
-
-            timetable.objFunc = Util.ofCalculator(timetable, data);
-
-            updateBest(timetable, data);
-
-            improvementTimer = System.currentTimeMillis() - startTimetimer;
-
         }
 
             if (Main.debug) {
@@ -221,8 +220,8 @@ public class TabuSearchPenalty {
 
             int examSelected = timetable.timeSlots.get(timeslotSource).get(conflictSelected);
 
-            if (data.getExam(examSelected).isMarked())
-                continue;
+//            if (data.getExam(examSelected).isMarked())
+//                continue;
 
             moving = new TabuMove(examSelected, timeslotSource, timeslotDestination);
             int conflictNumber = timetable.evaluatesSwitch(examSelected,timeslotSource,timeslotDestination);

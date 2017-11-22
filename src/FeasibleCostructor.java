@@ -29,8 +29,8 @@ public class FeasibleCostructor {
 		TabuList tabulist = new TabuList(T);
 		
 		// Random coloring.
-//		randomSolution(timetable, new ArrayList<Integer>(data.examsMap.keySet()));
-		notRandomSolution(timetable, data);
+		randomSolution(timetable, new ArrayList<>(data.examsMap.keySet()));
+//		notRandomSolution(timetable, data);
 
 		while(timetable.conflictNumber>0) {
 
