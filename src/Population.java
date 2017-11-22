@@ -81,6 +81,7 @@ public class Population {
 			}
 		}
 
-		this.population.set(indexMax, newGen);
+		if (newGen.objFunc < this.population.get(indexMax).objFunc)
+			this.population.set(indexMax, newGen);
 	}
 }
