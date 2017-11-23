@@ -12,13 +12,14 @@ public class Main {
             FeasibleConstructor fb = new FeasibleConstructor(data);
             HEA hea = new HEA();
             int populationSize = 10;
-        	
+            int threadNumber = 10;
+
             Population population = fb.makeFeasiblePopulation(data, populationSize);
 
             elapsedTime = System.currentTimeMillis() - startTime;
             System.out.println("Population created in time: " + elapsedTime);
-            
-            Timetable timetable = hea.heuristic(population, data);
+
+            Timetable timetable = hea.parallelHeuristic(population, data, threadNumber);
 
             elapsedTime = System.currentTimeMillis() - startTime;
             System.out.println(timetable.toString(args[0]));
