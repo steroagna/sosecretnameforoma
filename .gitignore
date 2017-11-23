@@ -6,3 +6,4 @@
 *.class
 *.sol
 /.settings
+/bin/

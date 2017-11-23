@@ -10,10 +10,9 @@ public class TabuSearchPenalty {
     double improvementDelta;
     long improvementTimer;
 
-    public Timetable TabuSearch(Timetable timetable, Data data, long timer) {
+    public Timetable TabuSearch(Timetable timetable, Data data, int rep, long timer) {
 
         int	T = 7;
-        int rep = 120;
 
         bestTimetable = new Timetable(timetable);
         bestMinPenalty = timetable.objFunc;

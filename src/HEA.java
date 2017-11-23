@@ -7,47 +7,53 @@ public class HEA {
 		public Population population;
 		public Data data;
 		public Timetable newGen;
+		public long timerNewGenLS;
+		public int neighborNumberFeasibleConstructor;
+		public int neighborLS;
 
-		public HEAThread(Population population, Data data) {
+		public HEAThread(Population population, Data data, int neighborNumberFeasibleConstructor, 
+				int neighborLS, long timerNewGenLS) {
+			super();
 			this.population = population;
 			this.data = data;
+			this.timerNewGenLS = timerNewGenLS;
+			this.neighborNumberFeasibleConstructor = neighborNumberFeasibleConstructor;
+			this.neighborLS = neighborLS;
 		}
 
 		public void run() {
 			try {
-				newGen = this.heuristic(this.population, this.data);
+				newGen = this.heuristic(this.population, this.data, this.neighborNumberFeasibleConstructor, this.neighborLS, this.timerNewGenLS);
 			} catch (Exception e) {
 				System.out.println("[FeasibleConstructor::FeasibleConstructorThread::run()] Some problem occurred.");
 			}
 		}
 
-		public Timetable heuristic(Population population, Data data) throws Exception {
+		public Timetable heuristic(Population population, Data data, int neighborNumberFeasibleConstructor, int neighborLS, long timerNewGenLS) throws Exception {
 
-			FeasibleConstructor fb = new FeasibleConstructor(data);
+			FeasibleConstructor.FeasibleConstructorThread fb = new FeasibleConstructor.FeasibleConstructorThread(data, 0, neighborNumberFeasibleConstructor, neighborLS);
 			Timetable newGen;
 			TabuSearchPenalty localSearch = new TabuSearchPenalty();
-			long timer = 1000;
 
 			newGen = population.copulate(data);
-			fb.makeFeasibleGraphColoringWithTabu(data, newGen);
-			newGen = localSearch.TabuSearch(newGen, data, timer);
+			fb.makeFeasibleGraphColoringWithTabu(data, newGen, neighborNumberFeasibleConstructor);
+			newGen = localSearch.TabuSearch(newGen, data, neighborLS, timerNewGenLS);
 			newGen.objFunc = Util.ofCalculator(newGen, data);
 
 			return newGen;
 		}
 	}
 
-	public Timetable parallelHeuristic(Population population, Data data, int threadsNumber) throws Exception {
+	public Timetable parallelHeuristic(Population population, Data data, long timerHEADuration, long timerNewGenLS,int neighborNumberFeasibleConstructor, int neighborLS, int threadsNumber) throws Exception {
 
 		List<HEAThread> heatr = new ArrayList<>();
 		long startTime = System.currentTimeMillis(), elapsedTime = 0;
-		TabuSearchPenalty localSearch = new TabuSearchPenalty();
 		Timetable newGen;
 
 		while (elapsedTime < 120000) {
 
 			for (int i = 0; i < threadsNumber; i++)
-				heatr.add(new HEA.HEAThread(population, data));
+				heatr.add(new HEA.HEAThread(population, data, neighborNumberFeasibleConstructor, neighborLS, timerNewGenLS));
 
 			for (int i = 0; i < threadsNumber; i++)
 				heatr.get(i).start();
@@ -74,10 +80,8 @@ public class HEA {
 		}
 
 		System.out.println("OF Best TT before LS: " + population.bestTimetable.objFunc);
-		Timetable lastbestTimetable = localSearch.TabuSearch(population.bestTimetable, data, 10000);
-		System.out.println("OF Last TT after LS: " + lastbestTimetable.objFunc);
 
-		return lastbestTimetable;
+		return population.bestTimetable;
 	}
 
 }
