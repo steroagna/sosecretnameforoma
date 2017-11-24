@@ -22,6 +22,8 @@ public class FeasibleConstructor {
         public void run() {
         	try {
 				this.timetable = this.feasibleCostructor.makeFeasibleGraphColoringWithTabu(null);
+		        TabuSearchPenalty tsp = new TabuSearchPenalty();
+		        this.timetable = tsp.TabuSearch(this.timetable, this.timetable.data, 150, 5000);
 			} catch (Exception e) {
 				System.out.println("[FeasibleConstructor::FeasibleConstructorThread::run()] Some problem occurred.");
 			}

@@ -83,7 +83,7 @@ public class Timetable implements Comparable<Timetable> {
      * List of tuple conflicting exams.
      */    
     public ArrayList<ArrayList<Tuple>> timeSlotsConflict;
- 
+    
 	/**
      * List of timeslot (id) which contain at least a conflict.
      */  
@@ -102,7 +102,7 @@ public class Timetable implements Comparable<Timetable> {
      * Total penalty calculated according to definition
      * already given.
      */
-    public int penalty;
+    public double penalty;
     
     /**
      * Penalty associated to exams.
@@ -113,6 +113,27 @@ public class Timetable implements Comparable<Timetable> {
     public PriorityQueue<SlotInfo> orderedSlotInfos;
     // End data structures need optimality initialized
 
+    /**
+     * Timetable constructor.
+     * */
+	public Timetable(Timetable o) {
+		this(o.data);
+		
+		this.data = o.data;
+		this.timeSlots = (ArrayList<ArrayList<Integer>>) o.timeSlots.clone();
+//		for(int i=0;i<o.timeSlots.size();i++)
+//			this.timeSlots.add(new ArrayList<>());
+//		for(int i=0;i<o.timeSlots.size();i++)
+//			this.timeSlots.set(i, (ArrayList<Integer>)o.timeSlots.get(i).clone());
+		this.timeSlotsConflict = (ArrayList<ArrayList<Tuple>>) o.timeSlotsConflict.clone();
+//		this.timeSlotsConflict = new ArrayList<>();
+//			this.timeSlotsConflict.add(o.timeSlotsConflict.get(i));
+		
+		this.conflictNumber = o.conflictNumber;
+		this.penalty = o.penalty;
+}
+    
+    
     /**
      * Timetable constructor.
      * */
@@ -299,6 +320,62 @@ public class Timetable implements Comparable<Timetable> {
 
 		//return objectiveFunction / data.studentsNumber;
 	}
+	
+	/*
+	 * ###########################
+	 * 
+	 * */
+	
+	
+	public double evaluatesSwitchWithoutConflicts(Data data, int examSelected, int timeslotSource, int timeslotDestination) {
+
+    	double penalty;
+    	
+    	this.doSwitchExamWithoutConflicts(examSelected,timeslotSource,timeslotDestination);
+    	penalty = Util.ofCalculator(this, data);
+		this.doSwitchExamWithoutConflicts(examSelected,timeslotDestination,timeslotSource);
+
+		return penalty;
+	}
+
+	public double evaluatesSwitchTimeSlots(Data data, int timeslotSource, int timeslotDestination) {
+
+		double penalty;
+		this.doSwitchTimeslot(timeslotSource,timeslotDestination);
+		penalty = Util.ofCalculator(this, data);
+		this.doSwitchTimeslot(timeslotDestination,timeslotSource);
+
+		return penalty;
+	}
+
+	/**
+	 * Applies the specified move.
+	 * */
+	public void doSwitchExamWithoutConflicts(int examSelected, int timeslotSource, int timeslotDestination) {
+
+		timeSlots.get(timeslotSource).remove((Integer) examSelected);
+		timeSlots.get(timeslotDestination).add(examSelected);
+
+		return;
+	}
+
+	public void doSwitchTimeslot(int timeslotSource, int timeslotDestination) {
+
+		ArrayList<Integer> temp = timeSlots.get(timeslotSource);
+		ArrayList<Tuple> temp2 = timeSlotsConflict.get(timeslotSource);
+
+		timeSlots.set(timeslotSource, timeSlots.get(timeslotDestination));
+		timeSlotsConflict.set(timeslotSource, timeSlotsConflict.get(timeslotDestination));
+		timeSlots.set(timeslotDestination, temp);
+		timeSlotsConflict.set(timeslotDestination, temp2);
+
+		return;
+	}
+	
+	/*
+	 * ############################################################### 
+	 * */
+	
 	
     @Override
     public String toString() {

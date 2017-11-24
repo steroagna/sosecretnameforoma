@@ -13,7 +13,7 @@ public class Main {
         data = rw.readInputFiles(args[0]);
             
         List<Timetable> timetables = FeasibleConstructor.generatesFeasibleTimetables(data,50);
-            
+        
         elapsedTime = (System.currentTimeMillis() - startTime);
         System.out.println("Elapsed: "+elapsedTime+" ms");
         
@@ -26,6 +26,14 @@ public class Main {
         GeneticOptimizer optimizer  = new GeneticOptimizer(timetables);
         Timetable best = optimizer.startOptimizer(1000);
         
+        System.out.println("Starting local search....");
         System.out.println("Best: "+ (double)best.penalty/best.data.studentsNumber);
+        System.out.println("Feasible best: " + Util.feasibilityChecker(best, best.data));
+        
+        TabuSearchPenalty tsp = new TabuSearchPenalty();
+        best = tsp.TabuSearch(best, best.data, 150, 20000);
+        
+        System.out.println("Best: "+ (double)best.penalty);
+        System.out.println("Feasible best: " + Util.feasibilityChecker(best, best.data));
     }
 }

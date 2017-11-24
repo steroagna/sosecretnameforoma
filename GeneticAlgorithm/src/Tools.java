@@ -5,7 +5,7 @@ public class Tools {
 	/**
 	 * Objective Function Calculator
 	 */
-	public int ofCalculator(Data data) {
+	static public int ofCalculator(Data data) {
 		
 		int objectiveFunction = 0;
 		int e1 = 0, e2 = 0;
