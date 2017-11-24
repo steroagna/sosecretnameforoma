@@ -7,13 +7,14 @@ import java.util.TreeMap;
 
 public class Timetable {
 	
-	public int[][] G;
+	public Data data;
 	
 	/**
      * List of exams for each slot.
      */
     public ArrayList<ArrayList<Integer>> timeSlots;
     
+    // Data structures need to find feasible solution(s)
 	/**
      * List of tuple conflicting exams.
      */    
@@ -28,23 +29,26 @@ public class Timetable {
      * Total number of conflicts.
      */ 
     public int conflictNumber;
-
+    // End data structures need to find feasible solution(s)
+    
+	
     /**
      * Objective function value ---> penalty to minimize
      */
     public int objFunc;
 
-	public Timetable(int[][] G,int k) {
+	public Timetable(Data data) {
 		super();
-		this.G = G;
+		
+		this.data = data;
 		timeSlots = new ArrayList<ArrayList<Integer>>();
 		
-		for(int i=0;i<k;i++) 
+		for(int i=0;i<data.slotsNumber;i++) 
 			timeSlots.add(new ArrayList<Integer>());
 		
 		timeSlotsConflict = new ArrayList<ArrayList<Tuple>>();
 		
-		for(int i=0;i<k;i++) 
+		for(int i=0;i<data.slotsNumber;i++) 
 			timeSlotsConflict.add(new ArrayList<Tuple>());
 		
 		timeSlotWithConflicts = new TreeMap<Integer,Integer>();
@@ -63,7 +67,7 @@ public class Timetable {
 			
 			if(slot.get(ei)==idExam) continue;
 			
-			if(G[idExam][slot.get(ei)]!=0) {
+			if(this.data.conflictExams[idExam][slot.get(ei)]!=0) {
 				this.conflictNumber++;
 				
 				Tuple conflict = new Tuple(slot.get(ei),idExam);
@@ -91,7 +95,7 @@ public class Timetable {
     	
     	for(Iterator<Integer> it=this.timeSlots.get(timeslotDestination).iterator();it.hasNext();) {
     		Integer idExam = it.next();
-    		if(G[idExam][examSelected]!=0)
+    		if(this.data.conflictExams[idExam][examSelected]!=0)
     			potentialLocalConflict++;
     	}
     	
@@ -130,6 +134,7 @@ public class Timetable {
     	this.addExam(timeslotDestination, examSelected);
     	
     }
+
     
     @Override
     public String toString() {

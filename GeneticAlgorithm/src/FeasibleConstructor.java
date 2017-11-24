@@ -3,25 +3,25 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-public class FeasibleCostructor {
+public class FeasibleConstructor {
 
 	/**
 	 * Internal class useful to generate more
 	 * than one feasible solutions in parallel
 	 * way.
 	 * */
-	static private class FeasibleCostructorThread extends Thread{
+	static private class FeasibleConstructorThread extends Thread{
 		
 		public Timetable timetable;
-        private FeasibleCostructor feasibleCostructor;
+        private FeasibleConstructor feasibleCostructor;
         
-        public FeasibleCostructorThread(FeasibleCostructor fc) {
+        public FeasibleConstructorThread(FeasibleConstructor fc) {
             this.feasibleCostructor = fc; 
         }
 
         public void run() {
         	try {
-				this.timetable = this.feasibleCostructor.makeFeasibleGraphColoringWithTabu();
+				this.timetable = this.feasibleCostructor.makeFeasibleGraphColoringWithTabu(null);
 			} catch (Exception e) {
 				System.out.println("[FeasibleConstructor::FeasibleConstructorThread::run()] Some problem occurred.");
 			}
@@ -35,10 +35,10 @@ public class FeasibleCostructor {
 	public static List<Timetable> generatesFeasibleTimetables(Data data,int n) throws InterruptedException{
 		
 		List<Timetable> timetables = new ArrayList<Timetable>();
-		List<FeasibleCostructorThread> fcts = new ArrayList<FeasibleCostructorThread>();
+		List<FeasibleConstructorThread> fcts = new ArrayList<FeasibleConstructorThread>();
 		
 		for(int i=0;i<n;i++)
-			fcts.add(new FeasibleCostructor.FeasibleCostructorThread(new FeasibleCostructor(data)));
+			fcts.add(new FeasibleConstructor.FeasibleConstructorThread(new FeasibleConstructor(data)));
 		
 		for(int i=0;i<n;i++)
 			fcts.get(i).start();
@@ -50,6 +50,14 @@ public class FeasibleCostructor {
 		return timetables;
 	}
 	
+	/**
+	 * Temporany static method. 
+	 * @throws Exception 
+	 * */
+	public static Timetable generatesFeasibleTimetable(Timetable timetable) throws Exception{
+		FeasibleConstructor feasibleConstructor = new FeasibleConstructor(timetable.data);
+		return feasibleConstructor.makeFeasibleGraphColoringWithTabu(timetable);
+	}
 	
 	/**
 	 * Data input object.
@@ -62,18 +70,19 @@ public class FeasibleCostructor {
 	private Integer bestConflictsNumberFromStarting = Integer.MAX_VALUE;
 	
 	/**
-	 * Private costructor.
+	 * Private constructor.
 	 * */
-	private FeasibleCostructor(Data data) {
+	private FeasibleConstructor(Data data) {
 		this.data = data;
 	}
+	
 	
 	/**
 	 * Search and set a feasible timetable solution for current problem 
 	 * described by data object.
 	 * @throws Exception 
 	 * */
-	public Timetable makeFeasibleGraphColoringWithTabu() throws Exception {
+	public Timetable makeFeasibleGraphColoringWithTabu(Timetable timetableStart) throws Exception {
 		
 		int[][] 	G = data.conflictExams;
 		int			T = 7;
@@ -81,11 +90,17 @@ public class FeasibleCostructor {
 		int rep = -1;
 		int minRep = 10;
 		
-		Timetable timetable = new Timetable(data);
+		Timetable timetable = null;
+		if(timetableStart==null)
+			timetable = new Timetable(data);
+		else
+			timetable = timetableStart;
+		
 		TabuList tabulist = new TabuList(T);
 		
-		// Random coloring.
-		randomSolution(timetable, new ArrayList<Integer>(data.examsMap.keySet()));
+		if(timetableStart==null)
+			// Random coloring.
+			randomSolution(timetable, new ArrayList<Integer>(data.examsMap.keySet()));
 		
 		while(timetable.conflictNumber>0) {
 		
