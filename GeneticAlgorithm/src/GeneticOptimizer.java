@@ -111,7 +111,7 @@ public class GeneticOptimizer {
 	
 	
 	// Costant parameter fields.
-	private double generation_replace_percentage = 0.5;
+	private double generation_replace_percentage = 0.7;
 	private double simple_crossover_threshold_pergentage = 0.7;
 	// ... others?
 	

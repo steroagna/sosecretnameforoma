@@ -19,7 +19,9 @@ public class Main {
         
         //System.out.println(timetable.toString());
         for(Iterator<Timetable> it= timetables.iterator();it.hasNext();) {
+        	
         	Timetable t = it.next();
+        	System.out.println(t.toString());
         	System.out.println("Feasable: "+ Util.feasibilityChecker(t, data));
          }
          
