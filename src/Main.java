@@ -24,18 +24,18 @@ public class Main {
             int neighborLS = 120;
             int threadNumber = 30; // Generano ognuno una nuova generazione
 
-//            FeasibleConstructor.FeasibleConstructorThread fb = new FeasibleConstructor.FeasibleConstructorThread(data, 0, neighborNumberFeasibleConstructor, neighborLS);
-//            Timetable timetable = fb.makeFeasibleGraphColoringWithTabu(data, null, neighborNumberFeasibleConstructor) ;
+            FeasibleConstructor.FeasibleConstructorThread fb = new FeasibleConstructor.FeasibleConstructorThread(data, 0, neighborNumberFeasibleConstructor, neighborLS);
+            Timetable timetable = fb.makeFeasibleGraphColoringWithTabu(data, null, neighborNumberFeasibleConstructor) ;
 
-            FeasibleConstructor fb = new FeasibleConstructor();
-            Population population = fb.makeFeasiblePopulation(data, populationSize, timerFeasibleConstructorLS, neighborNumberFeasibleConstructor, neighborLS);
-
+//            FeasibleConstructor fb = new FeasibleConstructor();
+//            Population population = fb.makeFeasiblePopulation(data, populationSize, timerFeasibleConstructorLS, neighborNumberFeasibleConstructor, neighborLS);
 
             elapsedTime = System.currentTimeMillis() - startTime;
             System.out.println("Population created in time: " + elapsedTime);
 
-            Timetable timetable = hea.parallelHeuristic(population, data, timerHEADuration, timerNewGenLS, neighborNumberFeasibleConstructor, neighborLS, threadNumber);
+//            Timetable timetable = hea.parallelHeuristic(population, data, timerHEADuration, timerNewGenLS, neighborNumberFeasibleConstructor, neighborLS, threadNumber);
 
+            timetable.objFunc = Util.ofCalculator(timetable, data);
             Timetable bestTimetable = sa.simulatedAnnealing(timetable, data, 30, 60000);
 
             elapsedTime = System.currentTimeMillis() - startTime;

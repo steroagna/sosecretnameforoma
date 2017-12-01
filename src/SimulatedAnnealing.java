@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class SimulatedAnnealing {
 
@@ -14,7 +15,7 @@ public class SimulatedAnnealing {
 
         double alfa = 0.99;
         bestTimetable = new Timetable(timetable);
-        bestMinPenalty = timetable.objFunc;
+        bestMinPenalty = new Double(timetable.objFunc);
         startTimetimer = System.currentTimeMillis();
         lastBestPenalty = bestMinPenalty;
         improvementTimer = 0;
@@ -29,36 +30,117 @@ public class SimulatedAnnealing {
             temperature = temperature*alfa;
             for (int i = 0; i < plateau; i++) {
 
-                Move move = generatesNeighbourSwappingExam(data, timetable);
+//                Move move = generatesNeighbourSwappingExam(data, timetable);
+//
+//                if (move.penalty > timetable.objFunc) {
+//                    double p = Math.exp((timetable.objFunc - move.penalty) / temperature);
+//                    Random r1 = new Random();
+//                    double p1 = r1.nextDouble();
+//
+//                    if ( p1 < p) {
+//                        timetable.doSwitchExamWithoutConflicts(move.idExam, move.sourceTimeSlot, move.destinationTimeSlot);
+//                    }
+//                } else {
+//                    timetable.doSwitchExamWithoutConflicts(move.idExam, move.sourceTimeSlot, move.destinationTimeSlot);
+//                }
+//
+//                timetable.objFunc = Util.ofCalculator(timetable, data);
+//
+//                updateBest(timetable, data);
 
-                if (move.penalty > timetable.objFunc) {
-                    double p = Math.exp((timetable.objFunc - move.penalty) / temperature);
-                    Random r1 = new Random();
-                    double p1 = r1.nextDouble();
-
-                    if ( p1 < p) {
-                        timetable.doSwitchExamWithoutConflicts(move.idExam, move.sourceTimeSlot, move.destinationTimeSlot);
-                    }
-                } else {
-                    timetable.doSwitchExamWithoutConflicts(move.idExam, move.sourceTimeSlot, move.destinationTimeSlot);
-                }
-
-                timetable.objFunc = Util.ofCalculator(timetable, data);
+                timetable = kempeChain(timetable, data);
 
                 updateBest(timetable, data);
 
-                improvementTimer = System.currentTimeMillis() - startTime;
+                improvementTimer = 0;
             }
         }
 
         elapsedTime = System.currentTimeMillis() - startTime;
-        if (Main.debug) {
-            System.out.println("*** END SIMULATED ANNEALING *** ");
-            System.out.println("Elapsed time: " + elapsedTime);
-            System.out.println("OF? " + Util.ofCalculator(bestTimetable, data));
-        }
+
+        System.out.println("*** END SIMULATED ANNEALING *** ");
+        System.out.println("Elapsed time: " + elapsedTime);
+        System.out.println("OF? " + Util.ofCalculator(bestTimetable, data));
 
         return bestTimetable;
+    }
+
+    private Timetable kempeChain(Timetable timetable, Data data) {
+
+        int randomSlot1, randomSlot2;
+        int iter = 10;
+        int k = 5;
+        boolean[] visited;
+        Timetable temp;
+        Timetable bestTimetable = new Timetable(timetable);
+
+//        for (int i = 0; i < iter; i++) {
+            temp = new Timetable(timetable);
+//            System.out.println(temp.toString("ciao"));
+
+            visited = new boolean[timetable.timeSlots.size()]; // todo creare lista invece di array in cui inserire solo i non visited
+            randomSlot1 = 0;
+            randomSlot2 = 0;
+//            for (int j = 0; j < k; j++) {
+                while (randomSlot1 == randomSlot2 || visited[randomSlot1] || visited[randomSlot2]) { //todo ottimizzare se ho già visitato solo uno dei due riscelgo solo l'altro
+                    randomSlot1 = ThreadLocalRandom.current().nextInt(timetable.timeSlots.size());
+                    randomSlot2 = ThreadLocalRandom.current().nextInt(timetable.timeSlots.size());
+                }
+                visited[randomSlot1] = true;
+                visited[randomSlot2] = true;
+                int randomExam = ThreadLocalRandom.current().nextInt(timetable.timeSlots.get(randomSlot1).size());
+                int exam = timetable.timeSlots.get(randomSlot1).get(randomExam);
+                temp = kempeMove(randomSlot1, randomSlot2, exam, temp);
+//            }
+
+            temp.objFunc = Util.ofCalculator(temp, data);
+            if (temp.objFunc < timetable.objFunc) {
+                bestTimetable = new Timetable(temp);
+//                break;
+            } else {
+                temp = kempeMove(randomSlot2, randomSlot1, exam, temp);
+            }
+//        }
+        return bestTimetable;
+    }
+
+    private Timetable kempeMove(int slot1, int slot2, int exam, Timetable temp) {
+
+        int departureSlot, arrivalSlot, i = 0, exam2;
+        ArrayList<Integer> examsMoved = new ArrayList<>();
+
+        temp.removeExam(exam);
+        temp.addExam(slot2,exam);
+        examsMoved.add(exam);
+//        System.out.println("Exam " + exam + " da " + slot1 + " a " + slot2);
+
+        while (temp.conflictNumber > 0) {
+            if ( i%2 == 0 ) {
+                departureSlot = slot2;
+                arrivalSlot = slot1;
+            }
+            else {
+                departureSlot = slot1;
+                arrivalSlot = slot2;
+            }
+
+            while (temp.timeSlotsConflict.get(departureSlot).size() != 0) {
+                Tuple tupla = temp.timeSlotsConflict.get(departureSlot).get(0);
+                if (examsMoved.contains(tupla.e1)) {
+                    exam2 = tupla.e2;
+                }
+                else
+                    exam2 = tupla.e1;
+
+                examsMoved.add(exam2);
+                temp.removeExam(exam2);
+                temp.addExam(arrivalSlot,exam2);
+//                System.out.println("Exam " + exam2 + " da " + departureSlot + " a " + arrivalSlot);
+            }
+            i++;
+        }
+
+        return temp;
     }
 
     private double setTemperature(Timetable timetable, int rep, Data data) {
@@ -138,16 +220,17 @@ public class SimulatedAnnealing {
         if (timetable.objFunc < bestTimetable.objFunc) {
             bestTimetable = new Timetable(timetable);
             improvementDelta = lastBestPenalty - bestTimetable.objFunc;
-            lastBestPenalty = bestTimetable.objFunc;
+            lastBestPenalty = new Double(bestTimetable.objFunc);
             if ( improvementDelta > 0.001)
                 startTimetimer = System.currentTimeMillis();
             if (Main.debug) {
                 System.out.println("Timer: " + improvementTimer);
                 System.out.println("OF? " + Util.ofCalculator(timetable, data));
+                System.out.println(bestTimetable.toString("MastrototaroChain"));
+                System.out.println(Util.feasibilityChecker( bestTimetable, data));
             }
         }
     }
-
 
     /**
      * Method that generates a move

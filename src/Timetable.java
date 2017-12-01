@@ -69,17 +69,17 @@ public class Timetable implements Cloneable {
 	 * */
 	public void addExam(int timeslot, int idExam) {
 		timeSlots.get(timeslot).add(idExam);
+		positions.put(idExam, timeslot);
+
 		List<Integer> slot = timeSlots.get(timeslot);
-		positions.put(idExam,timeslot);
-		for(int ei=0;ei<slot.size();ei++) {
-			
-			if(slot.get(ei)==idExam) continue;
-			
-			if(G[idExam][slot.get(ei)]!=0) {
-				this.conflictNumber++;
-				
-				Tuple conflict = new Tuple(slot.get(ei),idExam);
+		for (int ei = 0; ei < slot.size(); ei++) {
+
+			if (slot.get(ei) == idExam) continue;
+
+			if (G[idExam][slot.get(ei)] != 0) {
+				Tuple conflict = new Tuple(slot.get(ei), idExam);
 				this.timeSlotsConflict.get(timeslot).add(conflict);
+				this.conflictNumber++;
 			}
 		}
 	}
@@ -213,7 +213,22 @@ public class Timetable implements Cloneable {
 
 	public void removeExam(int exam) {
 		int timeslot = this.positions.get(exam);
-		this.timeSlots.get(timeslot).remove((Integer) exam);
-		this.positions.remove(exam);
+		if (this.timeSlots.get(timeslot).contains(exam)) {
+			this.timeSlots.get(timeslot).remove((Integer) exam);
+			this.positions.remove(exam);
+		} else {
+			System.out.println("ciao");
+		}
+
+		int i = 0;
+		while (i < this.timeSlotsConflict.get(timeslot).size()) {
+			Tuple tupla = this.timeSlotsConflict.get(timeslot).get(i);
+			if (tupla.e1 == exam || tupla.e2 == exam) {
+				this.timeSlotsConflict.get(timeslot).remove(tupla);
+				this.conflictNumber--;
+			}
+			else
+				i++;
+		}
 	}
 }
