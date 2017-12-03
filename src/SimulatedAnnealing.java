@@ -4,7 +4,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class SimulatedAnnealing {
 
-    double bestMinPenalty;
     Timetable bestTimetable;
     long startTimetimer;
     double lastBestPenalty;
@@ -16,15 +15,15 @@ public class SimulatedAnnealing {
         double alfa = 0.99;
         Timetable tempTimetable;
         bestTimetable = new Timetable(timetable);
-        bestMinPenalty = new Double(timetable.objFunc);
         startTimetimer = System.currentTimeMillis();
-        lastBestPenalty = bestMinPenalty;
+        lastBestPenalty = bestTimetable.objFunc;
         improvementTimer = 0;
-        int plateau = timetable.timeSlots.size()*data.examsNumber*20/8;
+        int plateau = timetable.timeSlots.size()*data.examsNumber/8;
 
         long startTime = System.currentTimeMillis(), elapsedTime;
 
-        double temperature = setTemperature(timetable, rep, data);
+        tempTimetable = kempeChain(timetable, data, (int) Math.floor(data.slotsNumber/2));
+        double temperature = setTemperature(timetable, tempTimetable, rep, data);
         temperature *= alfa;
         while (improvementTimer < timer) {
 
@@ -32,7 +31,7 @@ public class SimulatedAnnealing {
             System.out.println("temp: " + temperature);
             for (int i = 0; i < plateau; i++) {
 
-                tempTimetable = kempeChain(timetable, data);
+                tempTimetable = kempeChain(timetable, data, (int) Math.floor(data.slotsNumber/2));
 
                 if (tempTimetable.objFunc > timetable.objFunc) {
                     double p = Math.exp((timetable.objFunc - tempTimetable.objFunc) / temperature);
@@ -44,15 +43,10 @@ public class SimulatedAnnealing {
                 } else {
                     timetable = tempTimetable;
                 }
-
                 updateBest(timetable, data);
 
                 improvementTimer = 0;
             }
-
-            timetable = kempeChain(timetable, data);
-            updateBest(timetable, data);
-
         }
 
         elapsedTime = System.currentTimeMillis() - startTime;
@@ -64,14 +58,14 @@ public class SimulatedAnnealing {
         return bestTimetable;
     }
 
-    private Timetable kempeChain(Timetable timetable, Data data) {
+    private Timetable kempeChain(Timetable timetable, Data data, int k) {
 
         int randomSlot1, randomSlot2;
         int iter = 10;
-        int k = 5;
         boolean[] visited;
         Timetable tempTimetable;
         Timetable bestTimetable = new Timetable(timetable);
+        bestTimetable.objFunc = Double.MAX_VALUE;
 
         for (int i = 0; i < iter; i++) {
             tempTimetable = new Timetable(timetable);
@@ -134,7 +128,7 @@ public class SimulatedAnnealing {
         return tempTimetable;
     }
 
-    private double setTemperature(Timetable timetable, int rep, Data data) {
+    private double setTemperature(Timetable timetable, Timetable startingTimetable, int rep, Data data) {
 
         Timetable tempTimetable;
         double temperature;
@@ -142,8 +136,8 @@ public class SimulatedAnnealing {
         int numberWorstSol = 0;
 
         for (int i = 0; i<rep ; i++) {
-            tempTimetable = kempeChain(timetable, data);
-            if (tempTimetable.objFunc > timetable.objFunc) {
+            tempTimetable = kempeChain(timetable, data, (int) Math.floor(data.slotsNumber/2));
+            if (tempTimetable.objFunc > startingTimetable.objFunc) {
                 totPenalty += tempTimetable.objFunc;
                 numberWorstSol++;
             }
@@ -151,7 +145,7 @@ public class SimulatedAnnealing {
 
         totPenalty /= numberWorstSol;
 
-        temperature = -((totPenalty - timetable.objFunc))/Math.log(0.5);
+        temperature = -((totPenalty - startingTimetable.objFunc))/Math.log(0.2);
 
         return temperature;
     }
@@ -164,9 +158,9 @@ public class SimulatedAnnealing {
             if ( improvementDelta > 0.001)
                 startTimetimer = System.currentTimeMillis();
             if (Main.debug) {
-                System.out.println("Timer: " + improvementTimer);
+//                System.out.println("Timer: " + improvementTimer);
                 System.out.println("OF? " + Util.ofCalculator(timetable, data));
-                System.out.println(Util.feasibilityChecker( bestTimetable, data));
+//                System.out.println(Util.feasibilityChecker( bestTimetable, data));
             }
         }
     }
