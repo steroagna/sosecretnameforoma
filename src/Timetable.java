@@ -37,12 +37,12 @@ public class Timetable implements Cloneable {
 	public Timetable(int[][] G,int k) {
 		super();
 		this.G = G;
-		this.timeSlots = new ArrayList<ArrayList<Integer>>();
+		this.timeSlots = new ArrayList<>();
 		for(int i=0;i<k;i++)
-			this.timeSlots.add(new ArrayList<Integer>());
-		this.timeSlotsConflict = new ArrayList<ArrayList<Tuple>>();
+			this.timeSlots.add(new ArrayList<>());
+		this.timeSlotsConflict = new ArrayList<>();
 		for(int i=0;i<k;i++)
-			this.timeSlotsConflict.add(new ArrayList<Tuple>());
+			this.timeSlotsConflict.add(new ArrayList<>());
 
 		this.positions = new HashMap<>();
 		this.conflictNumber = 0;
@@ -50,16 +50,22 @@ public class Timetable implements Cloneable {
 	}
 
 	public Timetable(Timetable o) {
-		this.G = o.G.clone();
-		this.timeSlots = (ArrayList<ArrayList<Integer>>) o.timeSlots.clone();
-//		for(int i=0;i<o.timeSlots.size();i++)
-//			this.timeSlots.add(new ArrayList<>());
-//		for(int i=0;i<o.timeSlots.size();i++)
-//			this.timeSlots.set(i, (ArrayList<Integer>)o.timeSlots.get(i).clone());
-		this.timeSlotsConflict = (ArrayList<ArrayList<Tuple>>) o.timeSlotsConflict.clone();
-//		this.timeSlotsConflict = new ArrayList<>();
-//			this.timeSlotsConflict.add(o.timeSlotsConflict.get(i));
-		this.positions = (HashMap)o.positions.clone();
+		this.G = o.G;
+		this.timeSlots = new ArrayList<>();
+		this.timeSlotsConflict = new ArrayList<>();
+		for(int i=0;i<o.timeSlots.size();i++) {
+			this.timeSlots.add(new ArrayList<>());
+			for(int j= 0; j < o.timeSlots.get(i).size(); j++)
+				this.timeSlots.get(i).add(o.timeSlots.get(i).get(j));
+		}
+		this.timeSlotsConflict = new ArrayList<>();
+		for(int i=0;i<o.timeSlotsConflict.size();i++) {
+			this.timeSlotsConflict.add(new ArrayList<>());
+			for(int j= 0; j < o.timeSlotsConflict.get(i).size(); j++)
+				this.timeSlotsConflict.get(i).add(o.timeSlotsConflict.get(i).get(j));
+		}
+		this.positions = new HashMap<>();
+		this.positions.putAll(o.positions);
 		this.conflictNumber = o.conflictNumber;
 		this.objFunc = o.objFunc;
 	}
@@ -216,8 +222,6 @@ public class Timetable implements Cloneable {
 		if (this.timeSlots.get(timeslot).contains(exam)) {
 			this.timeSlots.get(timeslot).remove((Integer) exam);
 			this.positions.remove(exam);
-		} else {
-			System.out.println("ciao");
 		}
 
 		int i = 0;
