@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public class FeasibleConstructor {
@@ -231,6 +232,9 @@ public class FeasibleConstructor {
 				examSelected = timetable.timeSlotsConflict.get(timeslotSource).get(conflictSelected).e2;
 			}
 			
+			//###########
+			//if(fixed.containsKey(examSelected)==true) continue;
+			//###########
 			moving = new TabuMove(examSelected, timeslotSource, timeslotDestination);
 			
 			/*

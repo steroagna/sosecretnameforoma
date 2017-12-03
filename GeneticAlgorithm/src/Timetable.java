@@ -111,6 +111,8 @@ public class Timetable implements Comparable<Timetable> {
     public Map<Integer,SlotInfo> slotInfos;
     public PriorityQueue<ExamInfo> orderedExamInfos;
     public PriorityQueue<SlotInfo> orderedSlotInfos;
+    
+    //public Map<Integer,Integer> fixedExams;
     // End data structures need optimality initialized
 
     /**
@@ -118,6 +120,7 @@ public class Timetable implements Comparable<Timetable> {
      * */
 	public Timetable(Timetable o) {
 		this(o.data);
+		//this.fixedExams = new HashMap<Integer,Integer>();
 		
 		this.data = o.data;
 		this.timeSlots = (ArrayList<ArrayList<Integer>>) o.timeSlots.clone();
@@ -139,6 +142,8 @@ public class Timetable implements Comparable<Timetable> {
      * */
 	public Timetable(Data data) {
 		super();
+		//this.fixedExams = new HashMap<Integer,Integer>(); 
+		
 		
 		this.data = data;
 		timeSlots = new ArrayList<ArrayList<Integer>>();
@@ -285,48 +290,61 @@ public class Timetable implements Comparable<Timetable> {
 								if((ei1=this.examInfos.get(e1))==null) {
 									ei1 = new ExamInfo(e1,0,i);
 									this.examInfos.put(e1, ei1);
-									this.orderedExamInfos.add(ei1);
+//									this.orderedExamInfos.add(ei1);
 								}
 								if((ei2=this.examInfos.get(e2))==null) {
 									ei2 = new ExamInfo(e2,0,k);
 									this.examInfos.put(e2, ei2);
-									this.orderedExamInfos.add(ei2);
+//									this.orderedExamInfos.add(ei2);
 								}
 								
 								ei1.penalty += partialPenalty;
 								ei2.penalty += partialPenalty;								
-							
+								
+//								this.orderedExamInfos.remove(ei1);
+//								this.orderedExamInfos.remove(ei2);
+//								this.orderedExamInfos.add(ei1);
+//								this.orderedExamInfos.add(ei2);
+								
+								
 								if((si1=this.slotInfos.get(i))==null) {
 									si1 = new SlotInfo(i);
 									this.slotInfos.put(i, si1);
-									this.orderedSlotInfos.add(si1);
+//									this.orderedSlotInfos.add(si1);
 								}
 								if((si2=this.slotInfos.get(k))==null) {
 									si2 = new SlotInfo(k);
 									this.slotInfos.put(k, si2);
-									this.orderedSlotInfos.add(si2);
+//									this.orderedSlotInfos.add(si2);
 								}
 								
-								if(!si1.orderedExamInfo.contains(ei1))
-									si1.addExamInfo(ei1);
-								if(!si2.orderedExamInfo.contains(ei2))
-									si2.addExamInfo(ei2);
+//								if(!si1.orderedExamInfo.contains(ei1))
+//									si1.addExamInfo(ei1);
+//								if(!si2.orderedExamInfo.contains(ei2))
+//									si2.addExamInfo(ei2);
+//								
+//								this.orderedSlotInfos.remove(si1);
+//								this.orderedSlotInfos.remove(si2);
+//								this.orderedSlotInfos.add(si1);
+//								this.orderedSlotInfos.add(si2);
 							}
 						}
 					}
 				}
 			}
 		}
-
+		
+		for (int i = 0 ; i < timeSlots.size()-1; i++) {
+			this.orderedSlotInfos.add(this.slotInfos.get(i));
+		}
+		for (Iterator<ExamInfo> it = this.examInfos.values().iterator();it.hasNext();) {
+			ExamInfo ei = it.next();
+			this.slotInfos.get(ei.timeslot).orderedExamInfo.add(ei);
+		}
 		//return objectiveFunction / data.studentsNumber;
 	}
 	
-	/*
-	 * ###########################
-	 * 
-	 * */
-	
-	
+
 	public double evaluatesSwitchWithoutConflicts(Data data, int examSelected, int timeslotSource, int timeslotDestination) {
 
     	double penalty;
@@ -372,11 +390,7 @@ public class Timetable implements Comparable<Timetable> {
 		return;
 	}
 	
-	/*
-	 * ############################################################### 
-	 * */
-	
-	
+
     @Override
     public String toString() {
     	StringBuffer out = new StringBuffer();
@@ -406,5 +420,5 @@ public class Timetable implements Comparable<Timetable> {
 			return -1;
 		return 0;
 	}
-    
+	
 }

@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -22,13 +23,22 @@ public class GeneticOptimizer {
 			
 			List<Timetable> list = new ArrayList<Timetable>(this.orderedChromosomes);
 			List<Timetable> out = new ArrayList<Timetable>();
-			//Random rand = new Random();
-			
+			Random rand = new Random();
+			ArrayList<Integer> selected = new ArrayList<Integer>();
 			int i=0;
-			for(Iterator<Timetable> it =list.iterator();it.hasNext()&&i<this.orderedChromosomes.size()*percentage;i+=2,it.next()) {
-				out.add(list.get(i));
+			for(Iterator<Timetable> it =list.iterator();it.hasNext()&&i<this.orderedChromosomes.size()*percentage;i+=1,it.next()) {
+				//out.add(list.get(i));
+				//selected.add(i);
 				//out.add(list.get(list.size()/2+i));
-				out.add(list.get(list.size()-i-1));
+				//out.add(list.get(list.size()-i-1));
+				//for(;;) {
+					Integer s = rand.nextInt(list.size());
+					if(selected.contains(s)) continue;
+					out.add(list.get((int)s));
+					selected.add(s);
+					i--;
+				//	break;
+				//}
 			}
 			
 			return out;
@@ -39,12 +49,21 @@ public class GeneticOptimizer {
 			return this.orderedChromosomes.peek();
 		}
 		
+		/* Get worst chromosome */
+		Timetable getWorstChromosome() {
+			return new ArrayList<Timetable>(this.orderedChromosomes).get(this.orderedChromosomes.size()-1);
+		}
+		
 		/* Now take first best chromosomes of queue (always). */
 		void replace(List<Timetable> newIndividuals){
 			List<Timetable> list = new ArrayList<Timetable>(this.orderedChromosomes);
-			
-			for(int i=list.size()-1,j=0;i>=0&&j<newIndividuals.size();i--,j++) {
-				list.set(i, newIndividuals.get(j));
+			for(int j=0;j<newIndividuals.size();j++) {
+				for(int i=list.size()-1;i>=0;i--) { // &&j<newIndividuals.size()
+					if(list.get(i).penalty>newIndividuals.get(j).penalty) {
+						list.set(i, newIndividuals.get(j));
+						break;
+					}
+				}
 			}
 			this.orderedChromosomes.clear();
 			this.orderedChromosomes.addAll(list);
@@ -53,15 +72,38 @@ public class GeneticOptimizer {
 		
 		
 		/* Mutates a given chromosome */
-		static void mutates(Timetable chromosome) {
-			Random slotRand = new Random();
-			for(;;) {
-				int t1 = slotRand.nextInt(chromosome.timeSlots.size());
-				int t2 = slotRand.nextInt(chromosome.timeSlots.size());
-				if(t1 == t2) continue;
-				chromosome.switchSlots(t1,t2);
-				break;
+		void mutates(Timetable chromosome) {
+			Random rand = new Random();
+			
+			chromosome.data.timeSlots.size();
+			for(int i=0;i<chromosome.data.slotsNumber*0.30;i=i+2) {
+				int src = rand.nextInt(chromosome.data.slotsNumber);
+				int dst = rand.nextInt(chromosome.data.slotsNumber);
+				
+				ArrayList<Integer> srcDs= chromosome.timeSlots.get(src);
+				ArrayList<Integer> dstDs= chromosome.timeSlots.get(dst);
+				chromosome.timeSlots.set(dst, srcDs);
+				chromosome.timeSlots.set(src, dstDs);
+				
+				ArrayList<Tuple> srcConfDs= chromosome.timeSlotsConflict.get(src);
+				ArrayList<Tuple> dstConfDs= chromosome.timeSlotsConflict.get(dst);
+				chromosome.timeSlotsConflict.set(dst, srcConfDs);
+				chromosome.timeSlotsConflict.set(src, dstConfDs);
+						
+				// timeSlotWithConflicts.. is empty...
+				
+				
+				for(Iterator<Timetable.ExamInfo> ite = chromosome.slotInfos.get(src).orderedExamInfo.iterator();ite.hasNext(); ) {
+					Timetable.ExamInfo e = ite.next();
+					e.timeslot=dst;
+				}
+				for(Iterator<Timetable.ExamInfo> ite = chromosome.slotInfos.get(dst).orderedExamInfo.iterator();ite.hasNext(); ) {
+					Timetable.ExamInfo e = ite.next();
+					e.timeslot=src;
+				}
 			}
+			
+			
 		}
 		
 		/* Reproducts two parent to get a child ...
@@ -70,8 +112,8 @@ public class GeneticOptimizer {
 			
 			//int numberExamToChange = (int) (p1.data.examsNumber*crossOverThreesholdPercentage);
 			
-			Timetable best = (p1.penalty>p2.penalty)?p2:p1;
-			Timetable worst = (best==p1)? p2:p1;
+			Timetable best = (p1.penalty>p2.penalty)?p2:p1; // best
+			Timetable worst = (best==p1)? p2:p1;			// worst			
 			Timetable c = new Timetable(p1.data);
 
 			Timetable.ExamInfo bestExamInfoOfBestOfBestTimeslot = best.orderedSlotInfos.peek().orderedExamInfo.peek();
@@ -87,22 +129,32 @@ public class GeneticOptimizer {
 				
 				for(int j=0;j<exams.size()*crossOverThreesholdPercentage;j++) {
 					c.addExam(i,exams.get(j).id);
+					//c.fixedExams.put(exams.get(j).id, exams.get(j).id);
 					addedExams.add(exams.get(j).id);
 				}
 			}
 			
+			Random rand = new Random();
+			
 			// Copio restante parte dal worst
 			for(int i=0;i<worst.timeSlots.size();i++) {
 				for(int j=0;j<worst.timeSlots.get(i).size();j++) {
+					
+//					ArrayList<ArrayList<Integer>> src = (rand.nextBoolean())?worst.timeSlots:best.timeSlots;
+					
 					if(addedExams.contains((Integer)worst.timeSlots.get(i).get(j)))
+					//if(addedExams.contains((Integer)src.get(i).get(j)))
 							continue;
 					c.addExam(i,worst.timeSlots.get(i).get(j));
 					addedExams.add(worst.timeSlots.get(i).get(j));
+//					c.addExam(i,src.get(i).get(j));
+//					addedExams.add(src.get(i).get(j));
 				}
 					
 			}
 			
 			Timetable prova = FeasibleConstructor.generatesFeasibleTimetable(c);
+			//prova.fixedExams = new HashMap<Integer,Integer>();
 			return prova;
 		}
 		
@@ -111,7 +163,7 @@ public class GeneticOptimizer {
 	
 	
 	// Costant parameter fields.
-	private double generation_replace_percentage = 0.7;
+	private double generation_replace_percentage = 0.5;
 	private double simple_crossover_threshold_pergentage = 0.7;
 	// ... others?
 	
@@ -146,6 +198,9 @@ public class GeneticOptimizer {
 		int pi=1;
 		Random mutationRand = new Random();
 		
+		
+		double penaltyFirst = this.population.getBestChromosome().penalty/this.population.getBestChromosome().data.studentsNumber;
+		
 		while(pi<timeout||timeout==-1) {
 			
 			List<Timetable> parents = this.population.selects(this.generation_replace_percentage);
@@ -154,26 +209,69 @@ public class GeneticOptimizer {
 			System.out.println("[GeneticOptimizer] Population number "+ pi);
 			
 			// Reproduction phase
-			for(int i=0;i<parents.size();i++) {
-				for(int j=0;children.size()<childrenCount&&j<parents.size();j++) {
-					if(i==j) continue;
+			for(int i=0,j=parents.size()-1;i<j;i++,j--) {
+				
+				if(i==j) continue;
 					
-					Timetable p1 = parents.get(i);
-					Timetable p2 = parents.get(j);
+				Timetable p1 = parents.get(i);
+				Timetable p2 = parents.get(j);
 					
-					Timetable c = Population.reproducts(p1,p2,simple_crossover_threshold_pergentage);
+				Timetable c = Population.reproducts(p1,p2,simple_crossover_threshold_pergentage);
 					
-					c.evaluatesPenalty();
-					System.out.println("[GeneticOptimizer] (pop="+pi+")Individual penalty :"+ (double)c.penalty/c.data.studentsNumber);
-					children.add(c);
-				}
+				c.evaluatesPenalty();
+				//System.out.println("[GeneticOptimizer] (pop="+pi+")Individual penalty :"+ (double)c.penalty/c.data.studentsNumber);
+				children.add(c);
 			}
 			
 			this.population.replace(children);
-
+			
+			double avg = 0;
+			for(Iterator<Timetable> it = this.population.orderedChromosomes.iterator();it.hasNext();) {
+				Timetable t = it.next();
+				System.out.println("[GeneticOptimizer] (pop="+pi+")Individual penalty :"+ (double)t.penalty/t.data.studentsNumber);		
+				avg+=t.penalty;
+			}
+			
+			avg/=this.population.size;
+			
+			int shold=0;
+			for(Iterator<Timetable> it = this.population.orderedChromosomes.iterator();it.hasNext();) {	
+				Timetable t = it.next();
+				if(Math.abs(avg-t.penalty)<0.1 && shold>this.population.size*this.generation_replace_percentage) {
+					shold--;
+					List<Timetable> chromosomes = new ArrayList<Timetable>(this.population.orderedChromosomes);
+					Random rand = new Random();
+					for(int i=0;i<this.population.size*this.generation_replace_percentage;i++) {
+						Timetable selected = chromosomes.get(rand.nextInt(chromosomes.size()));
+						this.population.mutates(selected);
+						int ciao;
+						ciao = 1;
+					}
+					break;
+				}
+				shold++;
+			}			
+			
+			
+//			Timetable best = this.population.getBestChromosome();
+//			Timetable worst= this.population.getWorstChromosome();
+//			
+//			if(best.penalty/worst.penalty>0.999) {
+//				List<Timetable> chromosomes = new ArrayList<Timetable>(this.population.orderedChromosomes);
+//				Random rand = new Random();
+//				for(int i=0;i<this.population.size*this.generation_replace_percentage;i++) {
+//					Timetable selected = chromosomes.get(rand.nextInt(chromosomes.size()));
+//					this.population.mutates(selected);
+//					
+//				}
+//			}
+			
 			pi++;
 		}
 		
+        System.out.println("Best of first population : "+ (double)penaltyFirst);
+        
+        
 		return this.population.getBestChromosome();
 	}
 	
