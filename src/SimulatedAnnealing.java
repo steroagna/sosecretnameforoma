@@ -8,11 +8,11 @@ public class SimulatedAnnealing {
     long startTimetimer;
     double lastBestPenalty;
     double improvementDelta;
-    int i = 0;
+    int i = 0, count = 0, countw = 0, countb = 0;
 
     public Timetable simulatedAnnealing(Timetable timetable, Data data, int rep, long timer) {
 
-        double alfa = 0.001;
+        double alfa = 0.0001;
         double a = 10;
         Timetable tempTimetable;
         bestTimetable = new Timetable(timetable);
@@ -21,59 +21,63 @@ public class SimulatedAnnealing {
         int plateau;
         long startTime = System.currentTimeMillis(), elapsedTime = 0;
 
-        tempTimetable = kempeChain(timetable, data, (int) Math.floor(data.slotsNumber/3));
         while (elapsedTime < timer) {
+            tempTimetable = kempeChain(timetable, data, (int) Math.floor(data.slotsNumber/3));
             double temperature = setTemperature(timetable, tempTimetable, rep, data);
             plateau = (int) (data.examsNumber*a);
             while (true) {
                 a = a*1.1;
                 i++;
-                if (i == 10)
+                if (i == 3)
                     break;
                 temperature = 1/(1/temperature + alfa);
-//                System.out.println("temp: " + temperature);
+                System.out.println("temp: " + temperature);
                 for (int j = 0; j < plateau; j++) {
-
-                    Move move = generatesNeighbourSwappingExam(data, timetable);
-
-                    if (move.penalty > timetable.objFunc) {
-                        double penalty = timetable.objFunc - move.penalty;
+                    tempTimetable = kempeChain(timetable, data, (int) Math.floor(data.slotsNumber / 3));
+                    if (tempTimetable.objFunc > timetable.objFunc) {
+                        double penalty = timetable.objFunc - tempTimetable.objFunc;
                         double p = Math.exp((penalty) / temperature);
                         double p1 = ThreadLocalRandom.current().nextDouble();
 
-                        System.out.println("p: " + p + " p1: " + p1 );
                         if (p1 < p) {
-                            timetable.doSwitchExamWithoutConflicts(move.idExam, move.destinationTimeSlot);
+                            countw++;
+                            timetable = tempTimetable;
                         }
                     } else {
-                        timetable.doSwitchExamWithoutConflicts(move.idExam, move.destinationTimeSlot);
+                        countb++;
+                        timetable = tempTimetable;
                     }
-
-                    timetable.objFunc = Util.ofCalculator(timetable, data);
-
                     updateBest(timetable, data);
                 }
             }
 
             i=0;
-            tempTimetable = kempeChain(timetable, data, (int) Math.floor(data.slotsNumber / 3));
-            if (tempTimetable.objFunc > timetable.objFunc) {
-                double penalty = timetable.objFunc - tempTimetable.objFunc;
+            Move move = generatesNeighbourSwappingExam(data, timetable);
+            if (move.penalty > timetable.objFunc) {
+                double penalty = timetable.objFunc - move.penalty;
                 double p = Math.exp((penalty) / temperature);
                 double p1 = ThreadLocalRandom.current().nextDouble();
 
                 if (p1 < p) {
-                    timetable = tempTimetable;
+//                    System.out.println("worst");
+                    timetable.doSwitchExamWithoutConflicts(move.idExam, move.destinationTimeSlot);
                 }
             } else {
-                timetable = tempTimetable;
+//                System.out.println("best");
+                timetable.doSwitchExamWithoutConflicts(move.idExam, move.destinationTimeSlot);
             }
+            timetable.objFunc = Util.ofCalculator(timetable, data);
             updateBest(timetable, data);
+
+            elapsedTime = System.currentTimeMillis() - startTime;
         }
 
         System.out.println("*** END SIMULATED ANNEALING *** ");
         System.out.println("Elapsed time: " + elapsedTime);
         System.out.println("OF? " + Util.ofCalculator(bestTimetable, data));
+        System.out.println("Count W? " + countw);
+        System.out.println("Count B? " + countb);
+        System.out.println("Count equal min? " + count);
 
         return bestTimetable;
     }
@@ -151,15 +155,15 @@ public class SimulatedAnnealing {
     private double setTemperature(Timetable timetable, Timetable startingTimetable, int rep, Data data) {
 
         Timetable tempTimetable;
-        Move move;
+//        Move move;
         double temperature;
         double totPenalty = 0;
         int numberWorstSol = 0;
 
         for (int i = 0; i<rep ; i++) {
-            move = generatesNeighbourSwappingExam(data, timetable);
-            if (move.penalty > timetable.objFunc) {
-                totPenalty += move.penalty;
+            tempTimetable = kempeChain(timetable, data, (int) Math.floor(data.slotsNumber/3));
+            if (tempTimetable.objFunc > startingTimetable.objFunc) {
+                totPenalty += tempTimetable.objFunc;
                 numberWorstSol++;
             }
         }
@@ -185,7 +189,8 @@ public class SimulatedAnnealing {
                 System.out.println("OF? " + Util.ofCalculator(timetable, data));
 //                System.out.println(Util.feasibilityChecker( bestTimetable, data));
             }
-        }
+        } else if (timetable.objFunc == bestTimetable.objFunc)
+            count++;
     }
 
     /**
