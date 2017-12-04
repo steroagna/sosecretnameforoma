@@ -8,7 +8,7 @@ public class SimulatedAnnealing {
     long startTimetimer;
     double lastBestPenalty;
     double improvementDelta;
-    int i = 0;
+    int i = 0, count = 0, countw = 0, countb = 0;
 
     public Timetable simulatedAnnealing(Timetable timetable, Data data, int rep, long timer) {
 
@@ -58,9 +58,11 @@ public class SimulatedAnnealing {
                     double p1 = ThreadLocalRandom.current().nextDouble();
 
                     if ( p1 < p) {
+                        countw++;
                         timetable = tempTimetable;
                     }
                 } else {
+                    countb++;
                     timetable = tempTimetable;
                 }
                 updateBest(timetable, data);
@@ -72,6 +74,9 @@ public class SimulatedAnnealing {
         System.out.println("*** END SIMULATED ANNEALING *** ");
         System.out.println("Elapsed time: " + elapsedTime);
         System.out.println("OF? " + Util.ofCalculator(bestTimetable, data));
+        System.out.println("Conto scambi con sol peggiori: " + countw);
+        System.out.println("Conto scambi con sol migliori: " + countb);
+        System.out.println("Numero di volte che trovo lo stesso minimo: " + count);
 
         return bestTimetable;
     }
@@ -91,9 +96,15 @@ public class SimulatedAnnealing {
             randomSlot1 = 0;
             randomSlot2 = 0;
             for (int j = 0; j < k; j++) {
-                while (randomSlot1 == randomSlot2 || visited[randomSlot1] || visited[randomSlot2]) { //todo ottimizzare se ho già visitato solo uno dei due riscelgo solo l'altro
-                    randomSlot1 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
-                    randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+                while (randomSlot1 == randomSlot2 ) {
+                    if (visited[randomSlot1] && !visited[randomSlot2]) {
+                        randomSlot1 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+                    } else if (visited[randomSlot2] && !visited[randomSlot1]) {
+                        randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+                    } else {
+                        randomSlot1 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+                        randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+                    }
                 }
                 visited[randomSlot1] = true;
                 visited[randomSlot2] = true;
@@ -182,7 +193,8 @@ public class SimulatedAnnealing {
                 System.out.println("OF? " + Util.ofCalculator(timetable, data));
 //                System.out.println(Util.feasibilityChecker( bestTimetable, data));
             }
-        }
+        } else if (timetable.objFunc == bestTimetable.objFunc)
+            count++;
     }
 
     /**
