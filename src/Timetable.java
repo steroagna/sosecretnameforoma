@@ -117,9 +117,9 @@ public class Timetable implements Cloneable {
 
     	double penalty;
     	
-    	this.doSwitchExamWithoutConflicts(examSelected,timeslotSource,timeslotDestination);
+    	this.doSwitchExamWithoutConflicts(examSelected,timeslotDestination);
     	penalty = Util.ofCalculator(this, data);
-		this.doSwitchExamWithoutConflicts(examSelected,timeslotDestination,timeslotSource);
+		this.doSwitchExamWithoutConflicts(examSelected,timeslotSource);
 
 		return penalty;
 	}
@@ -165,10 +165,10 @@ public class Timetable implements Cloneable {
 	/**
 	 * Applies the specified move.
 	 * */
-	public void doSwitchExamWithoutConflicts(int examSelected, int timeslotSource, int timeslotDestination) {
+	public void doSwitchExamWithoutConflicts(int examSelected, int timeslotDestination) {
 
-		timeSlots.get(timeslotSource).remove((Integer) examSelected);
-		timeSlots.get(timeslotDestination).add(examSelected);
+		this.removeExam(examSelected);
+		this.addExam(timeslotDestination,examSelected);
 
 		return;
 	}

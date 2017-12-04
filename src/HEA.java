@@ -34,10 +34,11 @@ public class HEA {
 			FeasibleConstructor.FeasibleConstructorThread fb = new FeasibleConstructor.FeasibleConstructorThread(data, 0, neighborNumberFeasibleConstructor, neighborLS);
 			Timetable newGen;
 			TabuSearchPenalty localSearch = new TabuSearchPenalty();
+			SimulatedAnnealing sa = new SimulatedAnnealing();
 
 			newGen = population.copulate(data);
 			fb.makeFeasibleGraphColoringWithTabu(data, newGen, neighborNumberFeasibleConstructor);
-			newGen = localSearch.TabuSearch(newGen, data, neighborLS, timerNewGenLS);
+			newGen = sa.simulatedAnnealing(newGen, data, 10, 1000);
 			newGen.objFunc = Util.ofCalculator(newGen, data);
 
 			return newGen;

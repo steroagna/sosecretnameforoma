@@ -20,7 +20,7 @@ public class Main {
 
             //Parametri seconda parte
             long timerHEADuration = 30000;
-            long timerNewGenLS = 200;
+            long timerNewGenLS = 5000;
             int neighborLS = 120;
             int threadNumber = 30; // Generano ognuno una nuova generazione
 
@@ -36,14 +36,15 @@ public class Main {
 //            Timetable timetable = hea.parallelHeuristic(population, data, timerHEADuration, timerNewGenLS, neighborNumberFeasibleConstructor, neighborLS, threadNumber);
 
             timetable.objFunc = Util.ofCalculator(timetable, data);
-            Timetable bestTimetable = sa.simulatedAnnealing(timetable, data, 30, 60000);
+            Timetable bestTimetable = sa.simulatedAnnealing(timetable, data, 30, 120000);
 
             elapsedTime = System.currentTimeMillis() - startTime;
             System.out.println(timetable.toString(args[0]));
             System.out.println("Feasable: "+ Util.feasibilityChecker(timetable, data));
             System.out.println("Elapsed time: " + elapsedTime);
             System.out.println("OF Last TT after SA: " + bestTimetable.objFunc);
-       
+//            System.out.println("OF Last TT after SA: " + timetable.objFunc);
+
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

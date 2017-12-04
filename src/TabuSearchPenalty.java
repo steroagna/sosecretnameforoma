@@ -34,7 +34,7 @@ public class TabuSearchPenalty {
                 break;
             }
 
-            timetable.doSwitchExamWithoutConflicts(bestMove.idExam, bestMove.sourceTimeSlot, bestMove.destinationTimeSlot);
+            timetable.doSwitchExamWithoutConflicts(bestMove.idExam, bestMove.destinationTimeSlot);
 
             timetable.objFunc = Util.ofCalculator(timetable, data);
 

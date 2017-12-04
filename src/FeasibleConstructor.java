@@ -62,8 +62,8 @@ public class FeasibleConstructor {
 		public void run() {
 			try {
 				this.timetable = this.makeFeasibleGraphColoringWithTabu(this.data, this.timetable, this.neighborNumber);
-				TabuSearchPenalty localSearch = new TabuSearchPenalty();
-				this.timetable = localSearch.TabuSearch(this.timetable, this.data, this.neighborLS, this.timer);
+//				TabuSearchPenalty localSearch = new TabuSearchPenalty();
+//				this.timetable = localSearch.TabuSearch(this.timetable, this.data, this.neighborLS, this.timer);
 				System.out.println("Feasable: "+ Util.feasibilityChecker(this.timetable, this.data));
 				System.out.println("OF? " + Util.ofCalculator(this.timetable, this.data));
 			} catch (Exception e) {
