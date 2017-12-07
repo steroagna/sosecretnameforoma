@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class SimulatedAnnealing {
+public class ILS {
 
     Timetable bestTimetable;
     long startTimetimer;
@@ -10,7 +10,7 @@ public class SimulatedAnnealing {
     double improvementDelta;
     int countbk = 0, countbs = 0;
 
-    public Timetable simulatedAnnealing(Timetable timetable, Data data, int rep, long timer) {
+    public Timetable iteratedLocalSearch(Timetable timetable, Data data, int rep, long timer) {
 
         Move move;
         Timetable tempTimetable;

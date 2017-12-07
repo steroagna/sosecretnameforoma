@@ -4,40 +4,6 @@ import java.util.List;
 import java.util.Random;
 
 public class FeasibleConstructor {
-	
-	public Population makeFeasiblePopulation(Data data, int populationSize, long timer, int neighborNumber, int neighborLS) throws Exception{
-
-		long startTime = System.currentTimeMillis(), elapsedTime;
-		double bestOF = Integer.MAX_VALUE;
-		Timetable t, best = null;
-		ArrayList<Timetable> population = new ArrayList<>();
-		List<FeasibleConstructorThread> fcts = new ArrayList<>();
-
-		for (int i = 0; i < populationSize; i++)
-			fcts.add(new FeasibleConstructor.FeasibleConstructorThread(data, timer, neighborNumber, neighborLS));
-
-		for (int i = 0; i < populationSize; i++)
-			fcts.get(i).start();
-
-		for (int i = 0; i < populationSize; i++) {
-			fcts.get(i).join();
-			t = fcts.get(i).timetable;
-			t.objFunc = Util.ofCalculator(t, data);
-			if ( t.objFunc < bestOF) {
-				bestOF = t.objFunc;
-				best = new Timetable(t);
-			}
-			population.add(t);
-			if (Main.debug) {
-				elapsedTime = System.currentTimeMillis() - startTime;
-				System.out.println("Feasable: "+ Util.feasibilityChecker(t, data));
-				System.out.println("Elapsed time: " + elapsedTime);
-				System.out.println("OF? " + Util.ofCalculator(t, data));
-			}
-		}
-
-		return new Population(population, best, bestOF);
-	}
 
 	/**
 	 * Internal class useful to generate more
@@ -62,8 +28,6 @@ public class FeasibleConstructor {
 		public void run() {
 			try {
 				this.timetable = this.makeFeasibleGraphColoringWithTabu(this.data, this.timetable, this.neighborNumber);
-//				TabuSearchPenalty localSearch = new TabuSearchPenalty();
-//				this.timetable = localSearch.TabuSearch(this.timetable, this.data, this.neighborLS, this.timer);
 				System.out.println("Feasable: "+ Util.feasibilityChecker(this.timetable, this.data));
 				System.out.println("OF? " + Util.ofCalculator(this.timetable, this.data));
 			} catch (Exception e) {
@@ -85,7 +49,7 @@ public class FeasibleConstructor {
 			if (timetable == null) {
 				timetable = new Timetable(G, k);
 				// Random coloring.
-				randomSolution(timetable, new ArrayList<Integer>(data.examsMap.keySet()), data);
+				randomSolution(timetable, new ArrayList<>(data.examsMap.keySet()), data);
 			}
 			TabuList tabulist = new TabuList(T);
 

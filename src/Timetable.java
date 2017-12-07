@@ -29,7 +29,11 @@ public class Timetable implements Cloneable {
      */ 
     public int conflictNumber;
 
-    /**
+	/**
+	 *
+	 */
+	public HashMap<Integer, Double> examsPenality;
+	/**
      * Objective function value ---> penalty to minimize
      */
     public double objFunc;
@@ -45,6 +49,7 @@ public class Timetable implements Cloneable {
 			this.timeSlotsConflict.add(new ArrayList<>());
 
 		this.positions = new HashMap<>();
+		this.examsPenality = new HashMap<>();
 		this.conflictNumber = 0;
 		this.objFunc = Integer.MAX_VALUE;
 	}
@@ -66,6 +71,8 @@ public class Timetable implements Cloneable {
 		}
 		this.positions = new HashMap<>();
 		this.positions.putAll(o.positions);
+		this.examsPenality = new HashMap<>();
+		this.examsPenality.putAll(o.examsPenality);
 		this.conflictNumber = o.conflictNumber;
 		this.objFunc = o.objFunc;
 	}
@@ -124,16 +131,6 @@ public class Timetable implements Cloneable {
 		return penalty;
 	}
 
-	public double evaluatesSwitchTimeSlots(Data data, int timeslotSource, int timeslotDestination) {
-
-		double penalty;
-		this.doSwitchTimeslot(timeslotSource,timeslotDestination);
-		penalty = Util.ofCalculator(this, data);
-		this.doSwitchTimeslot(timeslotDestination,timeslotSource);
-
-		return penalty;
-	}
-
 	/**
 	 * Applies the specified move.
 	 * */
@@ -169,19 +166,6 @@ public class Timetable implements Cloneable {
 
 		this.removeExam(examSelected);
 		this.addExam(timeslotDestination,examSelected);
-
-		return;
-	}
-
-	public void doSwitchTimeslot(int timeslotSource, int timeslotDestination) {
-
-		ArrayList<Integer> temp = timeSlots.get(timeslotSource);
-		ArrayList<Tuple> temp2 = timeSlotsConflict.get(timeslotSource);
-
-		timeSlots.set(timeslotSource, timeSlots.get(timeslotDestination));
-		timeSlotsConflict.set(timeslotSource, timeSlotsConflict.get(timeslotDestination));
-		timeSlots.set(timeslotDestination, temp);
-		timeSlotsConflict.set(timeslotDestination, temp2);
 
 		return;
 	}
