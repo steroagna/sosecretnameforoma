@@ -36,7 +36,7 @@ public class Main {
 //            Timetable timetable = hea.parallelHeuristic(population, data, timerHEADuration, timerNewGenLS, neighborNumberFeasibleConstructor, neighborLS, threadNumber);
 
             timetable.objFunc = Util.ofCalculator(timetable, data);
-            Timetable bestTimetable = sa.simulatedAnnealing(timetable, data, 30, 240000);
+            Timetable bestTimetable = sa.simulatedAnnealing(timetable, data, 30, 60000);
 
             elapsedTime = System.currentTimeMillis() - startTime;
             System.out.println(bestTimetable.toString(args[0]));
