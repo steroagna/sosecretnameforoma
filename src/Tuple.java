@@ -1,9 +1,7 @@
+public class Tuple implements Cloneable {
 
-
-public class Tuple {
-
-	public Integer e1;
-	public Integer e2;
+	public int e1;
+	public int e2;
 	
 	public Tuple(Integer e1, Integer e2) {
 		this.e1 = e1;
@@ -18,5 +16,9 @@ public class Tuple {
 				return true;
 		}
 		return false;
+	}
+	
+	public Object clone() throws CloneNotSupportedException {
+		return super.clone();
 	}
 }
