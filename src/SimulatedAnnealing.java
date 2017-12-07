@@ -140,30 +140,6 @@ public class SimulatedAnnealing {
         return tempTimetable;
     }
 
-    private double setTemperature(Timetable timetable, Timetable startingTimetable, int rep, Data data) {
-
-        Move move;
-        double temperature;
-        double totPenalty = 0;
-        int numberWorstSol = 0;
-
-        for (int i = 0; i<rep ; i++) {
-            move = generatesNeighbourSwappingExam(data, timetable);
-            if (move.penalty > timetable.objFunc) {
-                totPenalty += move.penalty;
-                numberWorstSol++;
-            }
-        }
-
-        if (numberWorstSol > 0) {
-            totPenalty /= numberWorstSol;
-            temperature = -((totPenalty - startingTimetable.objFunc)) / Math.log(0.5);
-        } else
-            temperature = 10;
-
-        return temperature;
-    }
-
     private boolean updateBest(Timetable timetable, Data data, boolean flag) {
         if (timetable.objFunc < bestTimetable.objFunc) {
             bestTimetable = new Timetable(timetable);

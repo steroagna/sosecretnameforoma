@@ -2,7 +2,7 @@ import java.io.FileNotFoundException;
 
 public class Main {
 
-	public static boolean debug = false;
+	public static boolean debug = true;
     public static void main(String[] args) throws Exception {
 
         long startTime = System.currentTimeMillis(), elapsedTime;
@@ -36,7 +36,7 @@ public class Main {
 //            Timetable timetable = hea.parallelHeuristic(population, data, timerHEADuration, timerNewGenLS, neighborNumberFeasibleConstructor, neighborLS, threadNumber);
 
             timetable.objFunc = Util.ofCalculator(timetable, data);
-            Timetable bestTimetable = sa.simulatedAnnealing(timetable, data, 30, 30000);
+            Timetable bestTimetable = sa.simulatedAnnealing(timetable, data, 30, 15000);
 
             elapsedTime = System.currentTimeMillis() - startTime;
 //            System.out.println(timetable.toString(args[0]));
