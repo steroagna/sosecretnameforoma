@@ -81,34 +81,43 @@ public class Util {
 	public static void setPenality(Timetable timetable, Data data) {
 
 		double objectiveFunctionExam;
-		int e1, e2;
+		int e1, e2, pow;
 		ArrayList<Integer> slot1, slot2;
 		int timeslotStart, timeslotEnd, size = timetable.timeSlots.size();
 		timetable.objFunc = 0;
 
 		for (int i = 0 ; i < size; i++) {
-			if (i < 5)
+			if (i < 5) {
 				timeslotStart = 0;
-			else
+			}
+			else {
 				timeslotStart = i - 5;
-			if (i + 5 > size - 1)
+			}
+			if (i + 5 > size - 1) {
 				timeslotEnd = size - 1;
-			else
+			}
+			else {
 				timeslotEnd = i + 5;
+			}
 
 			slot1 = timetable.timeSlots.get(i);
 			for (int j = 0 ; j < slot1.size(); j++) {
 				objectiveFunctionExam = 0;
 				e1 = slot1.get(j);
 				for (int k = timeslotStart; k <= timeslotEnd; k++) {
-					if (k == i)
+					if (k == i) {
 						continue;
+					}
 					slot2 = timetable.timeSlots.get(k);
 					for (int l = 0; l < slot2.size(); l++) {
 						e2 = slot2.get(l);
 						if (e1 != e2) {
 							if (timetable.G[e1][e2] > 0) {
-								objectiveFunctionExam += Math.pow(2, (5 - (k - i))) * timetable.G[e1][e2];
+								if (k < i)
+									pow = i - k;
+								else
+									pow = k - i ;
+								objectiveFunctionExam += Math.pow(2, (5 - (pow))) * timetable.G[e1][e2];
 							}
 						}
 					}

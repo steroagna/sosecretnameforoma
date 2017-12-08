@@ -19,6 +19,7 @@ public class Main {
             System.out.println("Feasible created in time: " + elapsedTime);
             Util.setPenality(timetable, data);
             System.out.println("OF with set: " + timetable.objFunc);
+            timetable.G = data.conflictExams;
             timetable.objFunc = Util.ofCalculator(timetable, data);
             System.out.println("OF with ofCalc: " + timetable.objFunc);
             Timetable bestTimetable = ils.iteratedLocalSearch(timetable, data, 30, 30000);
