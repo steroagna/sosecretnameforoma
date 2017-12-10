@@ -8,7 +8,7 @@ import java.io.BufferedWriter;
 
 public class Timetable implements Cloneable {
 	
-	public int[][] G;
+	public Data data;
 
 	/**
 	 * position of each exam
@@ -36,36 +36,37 @@ public class Timetable implements Cloneable {
 	/**
      * Objective function value ---> penalty to minimize
      */
-    public double objFunc;
+    public Double objFunc;
 
-	public Timetable(int[][] G,int k) {
+	public Timetable(Data data) {
 		super();
-		this.G = G;
+		int k = data.slotsNumber;
+		this.data = data;
 		this.timeSlots = new ArrayList<>();
 		for(int i=0;i<k;i++)
-			this.timeSlots.add(new ArrayList<>());
+			this.timeSlots.add(new ArrayList<Integer>());
 		this.timeSlotsConflict = new ArrayList<>();
 		for(int i=0;i<k;i++)
-			this.timeSlotsConflict.add(new ArrayList<>());
+			this.timeSlotsConflict.add(new ArrayList<Tuple>());
 
 		this.positions = new HashMap<>();
 		this.examsPenality = new HashMap<>();
 		this.conflictNumber = 0;
-		this.objFunc = Integer.MAX_VALUE;
+		this.objFunc = Double.MAX_VALUE;
 	}
 
 	public Timetable(Timetable o) {
-		this.G = o.G;
+		this.data = o.data;
 		this.timeSlots = new ArrayList<>();
 		this.timeSlotsConflict = new ArrayList<>();
 		for(int i=0;i<o.timeSlots.size();i++) {
-			this.timeSlots.add(new ArrayList<>());
+			this.timeSlots.add(new ArrayList<Integer>());
 			for(int j= 0; j < o.timeSlots.get(i).size(); j++)
 				this.timeSlots.get(i).add(o.timeSlots.get(i).get(j));
 		}
 		this.timeSlotsConflict = new ArrayList<>();
 		for(int i=0;i<o.timeSlotsConflict.size();i++) {
-			this.timeSlotsConflict.add(new ArrayList<>());
+			this.timeSlotsConflict.add(new ArrayList<Tuple>());
 			for(int j= 0; j < o.timeSlotsConflict.get(i).size(); j++)
 				this.timeSlotsConflict.get(i).add(o.timeSlotsConflict.get(i).get(j));
 		}
@@ -74,26 +75,54 @@ public class Timetable implements Cloneable {
 		this.examsPenality = new HashMap<>();
 		this.examsPenality.putAll(o.examsPenality);
 		this.conflictNumber = o.conflictNumber;
-		this.objFunc = o.objFunc;
+		this.objFunc = new Double(o.objFunc);
 	}
 	
 	/**
-	 * Add and exam to a specified timeslot updating tied data structures.
+	 * Add an exam to a specified timeslot updating tied data structures.
 	 * */
 	public void addExam(int timeslot, int idExam) {
+		
 		timeSlots.get(timeslot).add(idExam);
 		positions.put(idExam, timeslot);
-
+		updateOF(idExam, timeslot, true);
+		
 		List<Integer> slot = timeSlots.get(timeslot);
 		for (int ei = 0; ei < slot.size(); ei++) {
 
 			if (slot.get(ei) == idExam) continue;
 
-			if (G[idExam][slot.get(ei)] != 0) {
+			if (data.conflictExams[idExam][slot.get(ei)] != 0) {
 				Tuple conflict = new Tuple(slot.get(ei), idExam);
 				this.timeSlotsConflict.get(timeslot).add(conflict);
 				this.conflictNumber++;
 			}
+		}
+	}
+	
+	/**
+	 * Remove an exam from its timeslot updating tied data structures.
+	 * */
+	public void removeExam(int exam) {
+		
+		int timeslot = this.positions.get(exam);
+		
+		updateOF(exam, 0, false);
+		
+		if (this.timeSlots.get(timeslot).contains(exam)) {
+			this.timeSlots.get(timeslot).remove((Integer) exam);
+			this.positions.remove(exam);
+		}
+
+		int i = 0;
+		while (i < this.timeSlotsConflict.get(timeslot).size()) {
+			Tuple tupla = this.timeSlotsConflict.get(timeslot).get(i);
+			if (tupla.e1 == exam || tupla.e2 == exam) {
+				this.timeSlotsConflict.get(timeslot).remove(tupla);
+				this.conflictNumber--;
+			}
+			else
+				i++;
 		}
 	}
 
@@ -113,23 +142,12 @@ public class Timetable implements Cloneable {
     	
     	for(Iterator<Integer> it=this.timeSlots.get(timeslotDestination).iterator();it.hasNext();) {
     		Integer idExam = it.next();
-    		if(G[idExam][examSelected]!=0)
+    		if(data.conflictExams[idExam][examSelected]!=0)
     			potentialLocalConflict++;
     	}
     	
     	return this.conflictNumber-currentLocalConflict+potentialLocalConflict;
     }
-
-	public double evaluatesSwitchWithoutConflicts(Data data, int examSelected, int timeslotSource, int timeslotDestination) {
-
-    	double penalty;
-    	
-    	this.doSwitchExamWithoutConflicts(examSelected,timeslotDestination);
-    	penalty = Util.ofCalculator(this, data);
-		this.doSwitchExamWithoutConflicts(examSelected,timeslotSource);
-
-		return penalty;
-	}
 
 	/**
 	 * Applies the specified move.
@@ -163,11 +181,8 @@ public class Timetable implements Cloneable {
 	 * Applies the specified move.
 	 * */
 	public void doSwitchExamWithoutConflicts(int examSelected, int timeslotDestination) {
-
 		this.removeExam(examSelected);
 		this.addExam(timeslotDestination,examSelected);
-
-		return;
 	}
 
     public String toString(String filename) {
@@ -200,23 +215,142 @@ public class Timetable implements Cloneable {
     	out.append("Conflicts:"+this.conflictNumber);
     	return out.toString();
     }
+    
+    public void setPenality() {
 
-	public void removeExam(int exam) {
-		int timeslot = this.positions.get(exam);
-		if (this.timeSlots.get(timeslot).contains(exam)) {
-			this.timeSlots.get(timeslot).remove((Integer) exam);
-			this.positions.remove(exam);
-		}
+		double objectiveFunctionExam;
+		int e1, e2, pow;
+		ArrayList<Integer> slot1, slot2;
+		int timeslotStart, timeslotEnd, size = this.timeSlots.size();
+		this.objFunc = 0.0;
 
-		int i = 0;
-		while (i < this.timeSlotsConflict.get(timeslot).size()) {
-			Tuple tupla = this.timeSlotsConflict.get(timeslot).get(i);
-			if (tupla.e1 == exam || tupla.e2 == exam) {
-				this.timeSlotsConflict.get(timeslot).remove(tupla);
-				this.conflictNumber--;
+		for (int i = 0 ; i < size; i++) {
+			if (i < 5) {
+				timeslotStart = 0;
 			}
-			else
-				i++;
+			else {
+				timeslotStart = i - 5;
+			}
+			if (i + 5 > size - 1) {
+				timeslotEnd = size - 1;
+			}
+			else {
+				timeslotEnd = i + 5;
+			}
+
+			slot1 = this.timeSlots.get(i);
+			for (int j = 0 ; j < slot1.size(); j++) {
+				objectiveFunctionExam = 0;
+				e1 = slot1.get(j);
+				for (int k = timeslotStart; k <= timeslotEnd; k++) {
+					if (k == i) {
+						continue;
+					}
+					slot2 = this.timeSlots.get(k);
+					for (int l = 0; l < slot2.size(); l++) {
+						e2 = slot2.get(l);
+						if (e1 != e2) {
+							if (this.data.conflictExams[e1][e2] > 0) {
+								if (k < i)
+									pow = i - k;
+								else
+									pow = k - i ;
+								objectiveFunctionExam += Math.pow(2, (5 - (pow))) * this.data.conflictExams[e1][e2];
+							}
+						}
+					}
+				}
+				this.objFunc += objectiveFunctionExam;
+				this.examsPenality.put(e1, objectiveFunctionExam / this.data.studentsNumber);
+			}
+		}
+		this.objFunc = this.objFunc / (2 * this.data.studentsNumber);
+	}
+	
+    public double evaluateOF(int e1, int timeslotDest) {
+    	int timeslotStart, timeslotEnd, size = timeSlots.size();
+		int e2, pow;
+		ArrayList<Integer> slot;
+		
+		double objectiveFunctionExam = 0;
+		
+		if (timeslotDest < 5) {
+			timeslotStart = 0;
+		} else {
+			timeslotStart = timeslotDest - 5;
+		}
+		
+		if (timeslotDest + 5 > size - 1) {
+			timeslotEnd = size - 1;
+		} else {
+			timeslotEnd = timeslotDest + 5;
+		}
+		
+		for (int k = timeslotStart; k <= timeslotEnd; k++) {
+			if (k == timeslotDest) {
+				continue;
+			}
+			slot = timeSlots.get(k);
+			for (int l = 0; l < slot.size(); l++) {
+				e2 = slot.get(l);
+				if (e1 != e2) {
+					if (data.conflictExams[e1][e2] > 0) {
+						if (k < timeslotDest)
+							pow = timeslotDest - k;
+						else
+							pow = k - timeslotDest;
+						objectiveFunctionExam += Math.pow(2, (5 - pow)) * data.conflictExams[e1][e2];
+					}
+				}
+			}
+		}
+		
+		return objFunc - examsPenality.get(e1) + (objectiveFunctionExam / data.studentsNumber);
+    }
+    
+	public void updateOF(int e1, int timeslotDest, boolean insert) {
+		
+		int timeslotStart, timeslotEnd, size = timeSlots.size();
+		double objectiveFunctionExam = 0;
+		int e2, pow;
+		ArrayList<Integer> slot;
+		
+		if (insert) {
+			if (timeslotDest < 5) {
+				timeslotStart = 0;
+			} else {
+				timeslotStart = timeslotDest - 5;
+			}
+			if (timeslotDest + 5 > size - 1) {
+				timeslotEnd = size - 1;
+			} else {
+				timeslotEnd = timeslotDest + 5;
+			}
+			
+			for (int k = timeslotStart; k <= timeslotEnd; k++) {
+				if (k == timeslotDest) {
+					continue;
+				}
+				slot = timeSlots.get(k);
+				for (int l = 0; l < slot.size(); l++) {
+					e2 = slot.get(l);
+					if (e1 != e2) {
+						if (data.conflictExams[e1][e2] > 0) {
+							if (k < timeslotDest)
+								pow = timeslotDest - k;
+							else
+								pow = k - timeslotDest;
+							objectiveFunctionExam += Math.pow(2, (5 - pow)) * data.conflictExams[e1][e2];
+						}
+					}
+				}
+			}
+			objectiveFunctionExam = objectiveFunctionExam / data.studentsNumber;
+			objFunc += objectiveFunctionExam;
+			examsPenality.put(e1, objectiveFunctionExam);
+		} else {
+			objFunc -= examsPenality.get(e1);
+			examsPenality.remove(e1);
 		}
 	}
 }

@@ -52,7 +52,7 @@ public class Util {
 				return true;
 	}
 
-	public static double ofCalculator(Timetable timetable, Data data) {
+	public static double ofCalculator(Timetable timetable) {
 
 		double objectiveFunction = 0;
 		int e1, e2;
@@ -67,65 +67,14 @@ public class Util {
 					for (int l = 0 ; l < slot2.size(); l++) {
 						e2 = slot2.get(l);
 						if (e1 != e2) {
-							if (timetable.G[e1][e2] > 0)
-								objectiveFunction += Math.pow(2, (5 - (k-i))) * timetable.G[e1][e2];
+							if (timetable.data.conflictExams[e1][e2] > 0)
+								objectiveFunction += Math.pow(2, (5 - (k-i))) * timetable.data.conflictExams[e1][e2];
 						}
 					}
 				}
 			}
 		}
 
-		return objectiveFunction / data.studentsNumber;
-	}
-
-	public static void setPenality(Timetable timetable, Data data) {
-
-		double objectiveFunctionExam;
-		int e1, e2, pow;
-		ArrayList<Integer> slot1, slot2;
-		int timeslotStart, timeslotEnd, size = timetable.timeSlots.size();
-		timetable.objFunc = 0;
-
-		for (int i = 0 ; i < size; i++) {
-			if (i < 5) {
-				timeslotStart = 0;
-			}
-			else {
-				timeslotStart = i - 5;
-			}
-			if (i + 5 > size - 1) {
-				timeslotEnd = size - 1;
-			}
-			else {
-				timeslotEnd = i + 5;
-			}
-
-			slot1 = timetable.timeSlots.get(i);
-			for (int j = 0 ; j < slot1.size(); j++) {
-				objectiveFunctionExam = 0;
-				e1 = slot1.get(j);
-				for (int k = timeslotStart; k <= timeslotEnd; k++) {
-					if (k == i) {
-						continue;
-					}
-					slot2 = timetable.timeSlots.get(k);
-					for (int l = 0; l < slot2.size(); l++) {
-						e2 = slot2.get(l);
-						if (e1 != e2) {
-							if (timetable.G[e1][e2] > 0) {
-								if (k < i)
-									pow = i - k;
-								else
-									pow = k - i ;
-								objectiveFunctionExam += Math.pow(2, (5 - (pow))) * timetable.G[e1][e2];
-							}
-						}
-					}
-				}
-				timetable.objFunc += objectiveFunctionExam;
-				timetable.examsPenality.put(e1, objectiveFunctionExam / data.studentsNumber);
-			}
-		}
-		timetable.objFunc = timetable.objFunc / (2 * data.studentsNumber);
+		return objectiveFunction / timetable.data.studentsNumber;
 	}
 }

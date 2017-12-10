@@ -17,18 +17,15 @@ public class Main {
             Timetable timetable = fb.makeFeasibleGraphColoringWithTabu(data, null, neighborNumberFeasibleConstructor);
             elapsedTime = System.currentTimeMillis() - startTime;
             System.out.println("Feasible created in time: " + elapsedTime);
-            Util.setPenality(timetable, data);
+            timetable.setPenality();
             System.out.println("OF with set: " + timetable.objFunc);
-            timetable.G = data.conflictExams;
-            timetable.objFunc = Util.ofCalculator(timetable, data);
-            System.out.println("OF with ofCalc: " + timetable.objFunc);
-            Timetable bestTimetable = ils.iteratedLocalSearch(timetable, data, 30, 30000);
+            Timetable bestTimetable = ils.iteratedLocalSearch(timetable, data, 30, 5000);
             elapsedTime = System.currentTimeMillis() - startTime;
 //            System.out.println(timetable.toString(args[0]));
             System.out.println("Feasable: "+ Util.feasibilityChecker(timetable, data));
             System.out.println("Elapsed time: " + elapsedTime);
             System.out.println("OF Last TT after SA: " + bestTimetable.objFunc);
-//            System.out.println("OF Last TT after SA: " + timetable.objFunc);
+            System.out.println(Util.ofCalculator(bestTimetable));
 
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block

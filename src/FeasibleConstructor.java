@@ -28,9 +28,7 @@ public class FeasibleConstructor {
 		public void run() {
 			try {
 				this.timetable = this.makeFeasibleGraphColoringWithTabu(this.data, this.timetable, this.neighborNumber);
-				System.out.println("Feasable: "+ Util.feasibilityChecker(this.timetable, this.data));
-				System.out.println("OF? " + Util.ofCalculator(this.timetable, this.data));
-			} catch (Exception e) {
+				} catch (Exception e) {
 				System.out.println("[FeasibleConstructor::FeasibleConstructorThread::run()] Some problem occurred.");
 			}
 		}
@@ -43,11 +41,10 @@ public class FeasibleConstructor {
 		public Timetable makeFeasibleGraphColoringWithTabu(Data data, Timetable timetable, int rep) throws Exception {
 
 			int[][] 	G = data.conflictExams;
-			int 		k = data.slotsNumber;
 			int			T = 7;
 			
 			if (timetable == null) {
-				timetable = new Timetable(G, k);
+				timetable = new Timetable(data);
 				// Random coloring.
 				randomSolution(timetable, new ArrayList<>(data.examsMap.keySet()), data);
 			}
