@@ -11,7 +11,7 @@ public class ILS {
 
     public Timetable iteratedLocalSearch(Timetable timetable, Data data, int rep, long timer) {
 
-        Move move = null;
+        Move move;
         Timetable tempTimetable;
         bestTimetableG = new Timetable(timetable);
         startTimetimer = System.currentTimeMillis();
@@ -23,41 +23,41 @@ public class ILS {
         while (elapsedTime < timer) {
             counterStop = 0;
             for (int j = 0; j < plateau && elapsedTime < timer && counterStop < 20; j++) {
-                move = generatesNeighbourSwappingExam(data, timetable);
-                System.out.println("COMPARISON 0");
-                System.out.println(move.penalty);            
-                System.out.println(move.destinationTimeSlot);            
-                System.out.println(timetable.objFunc);
-                System.out.println(Util.ofCalculator(timetable));
-                if ( timetable.objFunc != Util.ofCalculator(timetable))
-                	 System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAH");
+                move = generatesNeighbourSwappingExam(timetable);
                 if (move.penalty < timetable.objFunc) {
                     counterStop = 0;
-                    timetable.doSwitchExamWithoutConflicts(move.idExam, move.destinationTimeSlot);
-                    updateBest(timetable, data, true);
+                    timetable.doSwitchExamWithoutConflicts(move);
+                    if ( timetable.objFunc != Util.ofCalculator(timetable) && false) {
+                        System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAH");
+                        System.out.println("evaluated: " + move.penalty);
+                        System.out.println("dest timeslot: " + move.destinationTimeSlot);
+                        System.out.println("wrong: " + timetable.objFunc);
+                        System.out.println("right (with util): " + Util.ofCalculator(timetable));
+                    }
+                    updateBest(timetable, true);
                 } else
                     counterStop++;
                 elapsedTime = System.currentTimeMillis() - startTime;
             }
             
-//            counterStop = 0;
-//            for (int j = 0; j < plateau/5 - 1 && elapsedTime < timer && counterStop < 10; j++) {
-//                tempTimetable = kempeChain(timetable, data, (int) Math.floor(data.slotsNumber / 3));
-//                if (tempTimetable.objFunc < timetable.objFunc) {
-//                    counterStop = 0;
-//                    timetable = tempTimetable;
-//                    updateBest(timetable, data, false);
-//                } else
-//                    counterStop++;
-//                elapsedTime = System.currentTimeMillis() - startTime;
-//            }
-//            timetable = kempeChain(timetable, data, (int) Math.floor(data.slotsNumber / 3));
-//            updateBest(timetable, data, false);
-////            while (!updateBest(timetable, data, false))
-////                timetable = kempeChain(timetable, data, (int) Math.floor(data.slotsNumber / 3));
-//            move = generatesNeighbourSwappingExam(data, timetable);
-//            timetable.doSwitchExamWithoutConflicts(move.idExam, move.destinationTimeSlot);
-//            elapsedTime = System.currentTimeMillis() - startTime;
+            counterStop = 0;
+            for (int j = 0; j < plateau/5 - 1 && elapsedTime < timer /*&& counterStop < 5*/; j++) {
+                tempTimetable = kempeChain(timetable, (int) Math.floor(data.slotsNumber / 2));
+                if (tempTimetable.objFunc < timetable.objFunc) {
+                    counterStop = 0;
+                    timetable = tempTimetable;
+                    updateBest(timetable, false);
+                } else
+                    counterStop++;
+                elapsedTime = System.currentTimeMillis() - startTime;
+            }
+            timetable = kempeChain(timetable, (int) Math.floor(data.slotsNumber / 4));
+            updateBest(timetable, false);
+//            while (!updateBest(timetable, data, false))
+//                timetable = kempeChain(timetable, data, (int) Math.floor(data.slotsNumber / 3));
+            move = generatesNeighbourSwappingExam(timetable);
+            timetable.doSwitchExamWithoutConflicts(move);
+            elapsedTime = System.currentTimeMillis() - startTime;
         }
 
         System.out.println("*** END SIMULATED ANNEALING *** ");
@@ -69,7 +69,7 @@ public class ILS {
         return bestTimetableG;
     }
 
-    private Timetable kempeChain(Timetable timetable, Data data, int k) {
+    private Timetable kempeChain(Timetable timetable, int k) {
 
         int randomSlot1, randomSlot2;
         int iter = 10;
@@ -99,8 +99,10 @@ public class ILS {
                 int randomExam = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.get(randomSlot1).size());
                 int exam = tempTimetable.timeSlots.get(randomSlot1).get(randomExam);
                 tempTimetable = kempeMove(randomSlot1, randomSlot2, exam, tempTimetable);
-                if (tempTimetable.objFunc < bestTimetable.objFunc)
+                if (tempTimetable.objFunc < bestTimetable.objFunc) {
                     bestTimetable = new Timetable(tempTimetable);
+                    break;
+                }
             }
         }
 
@@ -112,8 +114,10 @@ public class ILS {
         int departureSlot, arrivalSlot, i = 0, exam2;
         ArrayList<Integer> examsMoved = new ArrayList<>();
 
+        tempTimetable.updateOF(exam, tempTimetable.positions.get(exam), false);
         tempTimetable.removeExam(exam);
         tempTimetable.addExam(slot2,exam);
+        tempTimetable.updateOF(exam, tempTimetable.positions.get(exam), true);
         examsMoved.add(exam);
 
         while (tempTimetable.conflictNumber > 0) {
@@ -135,8 +139,10 @@ public class ILS {
                     exam2 = tupla.e1;
 
                 examsMoved.add(exam2);
+                tempTimetable.updateOF(exam2, tempTimetable.positions.get(exam2), false);
                 tempTimetable.removeExam(exam2);
                 tempTimetable.addExam(arrivalSlot,exam2);
+                tempTimetable.updateOF(exam2, arrivalSlot, true);
             }
             i++;
         }
@@ -144,19 +150,17 @@ public class ILS {
         return tempTimetable;
     }
 
-    private boolean updateBest(Timetable timetable, Data data, boolean flag) {
+    private boolean updateBest(Timetable timetable, boolean flag) {
         if (timetable.objFunc < bestTimetableG.objFunc) {
             bestTimetableG = new Timetable(timetable);
             improvementDelta = lastBestPenalty - bestTimetableG.objFunc;
-            lastBestPenalty = new Double(bestTimetableG.objFunc);
+            lastBestPenalty = bestTimetableG.objFunc;
             if ( improvementDelta > 0.001)
                 startTimetimer = System.currentTimeMillis();
             if (Main.debug) {
 //                System.out.println("Timer: " + improvementTimer);
                 System.out.println("OF? " + timetable.objFunc + " " + flag);
 //                System.out.println(Util.feasibilityChecker( bestTimetable, data));
-                timetable.toString("instance02");
-                
             }
             if (flag)
                 countbs++;
@@ -170,11 +174,11 @@ public class ILS {
     /**
      * Method that generates a move
      * */
-    private Move generatesNeighbourSwappingExam(Data data, Timetable timetable) {
+    private Move generatesNeighbourSwappingExam(Timetable timetable) {
 
         Move moving;
 
-        for(; ; ) {
+        for(;;) {
 
             int timeslotSource = ThreadLocalRandom.current().nextInt(timetable.timeSlots.size());
             int timeslotDestination = ThreadLocalRandom.current().nextInt(timetable.timeSlots.size());
