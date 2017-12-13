@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.BufferedWriter;
@@ -23,7 +20,11 @@ public class Timetable implements Cloneable {
      * List of tuple conflicting exams.
      */    
     public ArrayList<ArrayList<Tuple>> timeSlotsConflict;
- 
+
+	/**
+	 * HashSet of exams not already moved by swap or kempe
+	 */
+	public HashSet<Integer> examMoved;
 	/**
      * Total number of conflicts.
      */ 
@@ -45,6 +46,8 @@ public class Timetable implements Cloneable {
 		for(int i=0;i<k;i++)
 			this.timeSlotsConflict.add(new ArrayList<Tuple>());
 
+		this.examMoved = new HashSet<>();
+		this.repopulateMovedExam();
 		this.positions = new HashMap<>();
 		this.conflictNumber = 0;
 		this.objFunc = Double.MAX_VALUE;
@@ -67,10 +70,16 @@ public class Timetable implements Cloneable {
 		}
 		this.positions = new HashMap<>();
 		this.positions.putAll(o.positions);
+		this.examMoved = new HashSet<>();
+		this.examMoved.addAll(o.examMoved);
 		this.conflictNumber = o.conflictNumber;
 		this.objFunc = new Double(o.objFunc);
 	}
-	
+
+	public void repopulateMovedExam() {
+		for(int i = 1; i <= data.examsNumber; i++)
+			examMoved.add(i);
+	}
 	/**
 	 * Add an exam to a specified timeslot updating tied data structures.
 	 * */
@@ -175,6 +184,29 @@ public class Timetable implements Cloneable {
 		this.removeExam(examSelected);
 		this.addExam(timeslotDestination,examSelected);
 		this.objFunc = move.penalty;
+		this.examMoved.remove(examSelected);
+	}
+
+	public void perturbation() {
+		Move move;
+		int examSelected, timeslotSource, timeslotDestination;
+		boolean moved = false;
+
+		for (Iterator<Integer> it = this.examMoved.iterator(); it.hasNext() && !moved; ) {
+			examSelected = it.next();
+			timeslotSource = positions.get(examSelected);
+			for(timeslotDestination = 0; timeslotDestination < timeSlots.size() && !moved; timeslotDestination++) {
+				move = new Move(examSelected, timeslotSource, timeslotDestination);
+				int conflictNumber = evaluatesSwitch(examSelected, timeslotSource, timeslotDestination);
+				if (conflictNumber > 0) {
+					continue;
+				} else {
+					move.penalty = evaluateOF(examSelected, timeslotDestination);
+					doSwitchExamWithoutConflicts(move);
+					moved = true;
+				}
+			}
+		}
 	}
 
     public String toString(String filename) {
