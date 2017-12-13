@@ -24,7 +24,21 @@ public class Timetable implements Cloneable {
 	/**
 	 * HashSet of exams not already moved by swap or kempe
 	 */
-	public HashSet<Integer> examMoved;
+	public TreeMap<Integer, Double> examMoved;
+
+	public static <K, V extends Comparable<V>> Map<K, V> sortByValues(final Map<K, V> map) {
+		Comparator<K> valueComparator = new Comparator<K>() {
+			public int compare(K k1, K k2) {
+				return map.get(k2).compareTo(map.get(k1));
+			}
+		};
+
+		Map<K, V> sortedByValues =
+				new TreeMap<K, V>(valueComparator);
+		sortedByValues.putAll(map);
+		return sortedByValues;
+	}
+
 	/**
      * Total number of conflicts.
      */ 
@@ -46,8 +60,7 @@ public class Timetable implements Cloneable {
 		for(int i=0;i<k;i++)
 			this.timeSlotsConflict.add(new ArrayList<Tuple>());
 
-		this.examMoved = new HashSet<>();
-		this.repopulateMovedExam();
+		this.examMoved = new TreeMap<>();
 		this.positions = new HashMap<>();
 		this.conflictNumber = 0;
 		this.objFunc = Double.MAX_VALUE;
@@ -70,16 +83,12 @@ public class Timetable implements Cloneable {
 		}
 		this.positions = new HashMap<>();
 		this.positions.putAll(o.positions);
-		this.examMoved = new HashSet<>();
-		this.examMoved.addAll(o.examMoved);
+		this.examMoved = new TreeMap<>();
+		this.examMoved.putAll(o.examMoved);
 		this.conflictNumber = o.conflictNumber;
 		this.objFunc = new Double(o.objFunc);
 	}
 
-	public void repopulateMovedExam() {
-		for(int i = 1; i <= data.examsNumber; i++)
-			examMoved.add(i);
-	}
 	/**
 	 * Add an exam to a specified timeslot updating tied data structures.
 	 * */
@@ -123,6 +132,11 @@ public class Timetable implements Cloneable {
 			else
 				i++;
 		}
+	}
+
+	public void repopulateMovedExam() {
+		for(int i = 1; i <= data.examsNumber; i++)
+			examMoved.put(i, 0.0);
 	}
 
 	/**
@@ -188,24 +202,38 @@ public class Timetable implements Cloneable {
 	}
 
 	public void perturbation() {
-		Move move;
+		Move move = null, bestMove = new Move(0,0,0);
 		int examSelected, timeslotSource, timeslotDestination;
 		boolean moved = false;
+		bestMove.penalty = Double.MAX_VALUE;
 
-		for (Iterator<Integer> it = this.examMoved.iterator(); it.hasNext() && !moved; ) {
-			examSelected = it.next();
+		Map sortedMap = sortByValues(examMoved);
+		Set set = sortedMap.entrySet();
+		Iterator it = set.iterator();
+
+		while (it.hasNext() && !moved) {
+			Map.Entry me = (Map.Entry) it.next();
+			examSelected = (int) me.getKey();
 			timeslotSource = positions.get(examSelected);
-			for(timeslotDestination = 0; timeslotDestination < timeSlots.size() && !moved; timeslotDestination++) {
+			for (timeslotDestination = 0; timeslotDestination < timeSlots.size(); timeslotDestination++) {
 				move = new Move(examSelected, timeslotSource, timeslotDestination);
 				int conflictNumber = evaluatesSwitch(examSelected, timeslotSource, timeslotDestination);
 				if (conflictNumber > 0) {
 					continue;
 				} else {
 					move.penalty = evaluateOF(examSelected, timeslotDestination);
-					doSwitchExamWithoutConflicts(move);
+					if (move.penalty < bestMove.penalty){
+						bestMove.idExam = move.idExam;
+						bestMove.destinationTimeSlot = move.destinationTimeSlot;
+						bestMove.sourceTimeSlot = move.sourceTimeSlot;
+						bestMove.penalty = move.penalty;
+					}
 					moved = true;
 				}
 			}
+		}
+		if (move != null) {
+			doSwitchExamWithoutConflicts(bestMove);
 		}
 	}
 
@@ -265,7 +293,7 @@ public class Timetable implements Cloneable {
 			slot = this.timeSlots.get(i);
 			for (int j = 0 ; j < slot.size(); j++) {
 				e1 = slot.get(j);
-				objectiveFunctionExam = calculatePenalty(e1, i, timeslotStart, timeslotEnd);
+				objectiveFunctionExam = calculatePenalty(e1, i, timeslotStart, timeslotEnd, true);
 				this.objFunc += objectiveFunctionExam;
 			}
 		}
@@ -300,13 +328,13 @@ public class Timetable implements Cloneable {
 			timeslotEndSource = timeslotSource + 5;
 		}
 
-		double objectiveFunctionExamAdd = calculatePenalty(e1, timeslotDest, timeslotStart, timeslotEnd);
-		double objectiveFunctionExamRemove = calculatePenalty(e1, timeslotSource, timeslotStartSource, timeslotEndSource);
+		double objectiveFunctionExamAdd = calculatePenalty(e1, timeslotDest, timeslotStart, timeslotEnd, false);
+		double objectiveFunctionExamRemove = calculatePenalty(e1, timeslotSource, timeslotStartSource, timeslotEndSource, false);
 
 		return objFunc - objectiveFunctionExamRemove + objectiveFunctionExamAdd;
     }
 
-	private double calculatePenalty(int e1, int timeslotDest, int timeslotStart, int timeslotEnd) {
+	private double calculatePenalty(int e1, int timeslotDest, int timeslotStart, int timeslotEnd, boolean updateMoves) {
 
 		ArrayList<Integer> slot;
 		double objectiveFunctionExam = 0;
@@ -330,6 +358,9 @@ public class Timetable implements Cloneable {
 				}
 			}
 		}
+		if (updateMoves)
+			examMoved.put(e1, objectiveFunctionExam);
+
 		return objectiveFunctionExam;
 	}
 
@@ -349,7 +380,7 @@ public class Timetable implements Cloneable {
 			timeslotEnd = timeslotDest + 5;
 		}
 
-		objectiveFunctionExam = calculatePenalty(e1, timeslotDest, timeslotStart, timeslotEnd);
+		objectiveFunctionExam = calculatePenalty(e1, timeslotDest, timeslotStart, timeslotEnd, true);
 
 		if (insert)
 			objFunc += objectiveFunctionExam;
