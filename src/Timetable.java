@@ -237,7 +237,7 @@ public class Timetable implements Cloneable {
 				this.objFunc += objectiveFunctionExam;
 			}
 		}
-		this.objFunc = this.objFunc / (2 * this.data.studentsNumber);
+		this.objFunc = this.objFunc / 2;
 	}
 	
     public double evaluateOF(int e1, int timeslotDest) {
@@ -268,8 +268,8 @@ public class Timetable implements Cloneable {
 			timeslotEndSource = timeslotSource + 5;
 		}
 
-		double objectiveFunctionExamAdd = calculatePenalty(e1, timeslotDest, timeslotStart, timeslotEnd) / data.studentsNumber;
-		double objectiveFunctionExamRemove = calculatePenalty(e1, timeslotSource, timeslotStartSource, timeslotEndSource) / data.studentsNumber;
+		double objectiveFunctionExamAdd = calculatePenalty(e1, timeslotDest, timeslotStart, timeslotEnd);
+		double objectiveFunctionExamRemove = calculatePenalty(e1, timeslotSource, timeslotStartSource, timeslotEndSource);
 
 		return objFunc - objectiveFunctionExamRemove + objectiveFunctionExamAdd;
     }
@@ -317,7 +317,7 @@ public class Timetable implements Cloneable {
 			timeslotEnd = timeslotDest + 5;
 		}
 
-		objectiveFunctionExam = calculatePenalty(e1, timeslotDest, timeslotStart, timeslotEnd) / data.studentsNumber;
+		objectiveFunctionExam = calculatePenalty(e1, timeslotDest, timeslotStart, timeslotEnd);
 
 		if (insert)
 			objFunc += objectiveFunctionExam;

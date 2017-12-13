@@ -7,10 +7,10 @@ public class ILS {
     long startTimetimer;
     double lastBestPenalty;
     double improvementDelta;
-    int countbk = 0, countbs = 0;
+    int countbk = 0, countbs = 0, count2 = 0;
 
     public Timetable ILST(Timetable timetable, Data data, long timer, long startTime) throws Exception {
-
+        
         Move move, bestMove = new Move(0,0,0);
         Timetable tempTimetable;
         bestTimetableG = new Timetable(timetable);
@@ -45,13 +45,6 @@ public class ILS {
 
             if (bestMove.penalty < timetable.objFunc) {
                 timetable.doSwitchExamWithoutConflicts(bestMove);
-//                    if ( timetable.objFunc != Util.ofCalculator(timetable) && false) {
-//                        System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAH");
-//                        System.out.println("evaluated: " + move.penalty);
-//                        System.out.println("dest timeslot: " + move.destinationTimeSlot);
-//                        System.out.println("wrong: " + timetable.objFunc);
-//                        System.out.println("right (with util): " + Util.ofCalculator(timetable));
-//                    }
                 updateBest(timetable, true);
             }
             ilsmt.clear();
@@ -74,6 +67,20 @@ public class ILS {
             ILS.ILSMoveThread ilsm = new ILS.ILSMoveThread(timetable,0,0,0);
             ILS.ILSKempeThread ilsk = new ILS.ILSKempeThread(timetable,0,0);
 
+//            if (countbs > 20 && countbk > 20) {
+//                timetable = ilsk.kempeChain3(timetable, timetable.data.slotsNumber/3, 5);
+//                updateBest(timetable, false);
+//                countbs = 0;
+//                countbk = 0;
+//                System.out.println("YAY!!");
+//                count2++;
+//            }
+//            if (count2 > 15) {
+//                timetable = ilsk.kempeChain(timetable, timetable.data.slotsNumber, 10);
+//                updateBest(timetable, false);
+//                count2 = 0;
+//                System.out.println("WUMPA!!");
+//            }
             timetable = ilsk.kempeChain(timetable, 2, 5);
             updateBest(timetable, false);
             move = ilsm.generatesNeighbourSwappingExam(timetable);
@@ -83,7 +90,7 @@ public class ILS {
 
         System.out.println("*** END SIMULATED ANNEALING *** ");
         System.out.println("Elapsed time: " + elapsedTime);
-        System.out.println("OF? " + bestTimetableG.objFunc);
+        System.out.println("OF: " + bestTimetableG.objFunc / data.studentsNumber);
         System.out.println("move improvement: " + countbs);
         System.out.println("kempe improvement: " + countbk);
 
@@ -178,7 +185,7 @@ public class ILS {
 
         public void run() {
             try {
-                timetable = kempeChain(timetable, (int) Math.floor(timetable.data.slotsNumber / 3), 7);
+                timetable = kempeChain(timetable, (int) Math.floor(timetable.data.slotsNumber / 4), 7);
             } catch (Exception e) {
                 System.out.println("[FeasibleConstructor::FeasibleConstructorThread::run()] Some problem occurred.");
             }
@@ -203,10 +210,12 @@ public class ILS {
                             randomSlot1 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
                         } else if (visited[randomSlot2] && !visited[randomSlot1]) {
                             randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
-                        } else {
+                        } else if (visited[randomSlot2] && !visited[randomSlot1]) {
+                            randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+                        }else {
                             randomSlot1 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
                             randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
-                        }
+                            }
                     }
                     visited[randomSlot1] = true;
                     visited[randomSlot2] = true;
@@ -263,6 +272,98 @@ public class ILS {
 
             return tempTimetable;
         }
+
+        private Timetable kempeChain3(Timetable timetable, int k, int iter) {
+
+            int randomSlot1, randomSlot2, randomSlot3;
+            boolean[] visited;
+            Timetable tempTimetable;
+            Timetable bestTimetable = new Timetable(timetable);
+            bestTimetable.objFunc = Double.MAX_VALUE;
+
+            for (int i = 0; i < iter; i++) {
+                tempTimetable = new Timetable(timetable);
+                visited = new boolean[timetable.timeSlots.size()]; // todo creare lista invece di array in cui inserire solo i non visited
+                randomSlot1 = 0;
+                randomSlot2 = 0;
+                randomSlot3 = 0;
+                for (int j = 0; j < k; j++) {
+                    while (randomSlot1 == randomSlot2 || randomSlot1 == randomSlot3 || randomSlot2 == randomSlot3
+                            || visited[randomSlot1]
+                            || visited[randomSlot2]
+                            || visited[randomSlot3]) {
+//                    if (visited[randomSlot1] && !visited[randomSlot2]) {
+//                        randomSlot1 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+//                    } else if (visited[randomSlot2] && !visited[randomSlot1]) {
+//                        randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+//                    } else if (visited[randomSlot2] && !visited[randomSlot1]) {
+//                        randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+//                    }else {
+                        randomSlot1 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+                        randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+                        randomSlot3 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+                    }
+//                }
+                    visited[randomSlot1] = true;
+                    visited[randomSlot2] = true;
+                    visited[randomSlot3] = true;
+                    int randomExam = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.get(randomSlot1).size());
+                    int exam = tempTimetable.timeSlots.get(randomSlot1).get(randomExam);
+                    tempTimetable = kempeMove3(randomSlot1, randomSlot2, randomSlot3, exam, tempTimetable);
+                    if (tempTimetable.objFunc < bestTimetable.objFunc) {
+                        bestTimetable = new Timetable(tempTimetable);
+//                        break;
+                    }
+                }
+            }
+
+            return bestTimetable;
+        }
+
+        private Timetable kempeMove3(int slot1, int slot2, int slot3, int exam, Timetable tempTimetable) {
+
+            int departureSlot, arrivalSlot, i = 0, exam2;
+            ArrayList<Integer> examsMoved = new ArrayList<>();
+
+            tempTimetable.updateOF(exam, tempTimetable.positions.get(exam), false);
+            tempTimetable.removeExam(exam);
+            tempTimetable.addExam(slot2,exam);
+            tempTimetable.updateOF(exam, tempTimetable.positions.get(exam), true);
+            examsMoved.add(exam);
+
+            while (tempTimetable.conflictNumber > 0) {
+                if ( i%3 == 1 ) {
+                    departureSlot = slot2;
+                    arrivalSlot = slot3;
+                }
+                else if ( i%3 == 2 ) {
+                    departureSlot = slot3;
+                    arrivalSlot = slot1;
+                }
+                else {
+                    departureSlot = slot1;
+                    arrivalSlot = slot2;
+                }
+
+                while (tempTimetable.timeSlotsConflict.get(departureSlot).size() != 0) {
+                    Tuple tupla = tempTimetable.timeSlotsConflict.get(departureSlot).get(0);
+                    if (examsMoved.contains(tupla.e1)) {
+                        exam2 = tupla.e2;
+                    }
+                    else
+                        exam2 = tupla.e1;
+
+                    examsMoved.add(exam2);
+                    tempTimetable.updateOF(exam2, tempTimetable.positions.get(exam2), false);
+                    tempTimetable.removeExam(exam2);
+                    tempTimetable.addExam(arrivalSlot,exam2);
+                    tempTimetable.updateOF(exam2, arrivalSlot, true);
+                }
+                i++;
+            }
+
+            return tempTimetable;
+        }
     }
 
     private boolean updateBest(Timetable timetable, boolean flag) {
@@ -270,14 +371,22 @@ public class ILS {
             bestTimetableG = new Timetable(timetable);
             improvementDelta = lastBestPenalty - bestTimetableG.objFunc;
             lastBestPenalty = bestTimetableG.objFunc;
+            bestTimetableG.toString(Main.filename);
             if ( improvementDelta > 0.001)
                 startTimetimer = System.currentTimeMillis();
             if (Main.debug) {
 //                System.out.println("Timer: " + improvementTimer);
-                System.out.println("OF? " + timetable.objFunc + " " + flag);
+                System.out.println("OF --> " + timetable.objFunc / timetable.data.studentsNumber + " " + flag);
 //                System.out.println(Util.feasibilityChecker( bestTimetable, data));
             }
+            countbs = 0;
+            countbk = 0;
+            count2 = 0;
             return true;
+        } else if (timetable.objFunc > bestTimetableG.objFunc && flag == true) {
+            countbs++;
+        } else if (timetable.objFunc > bestTimetableG.objFunc && flag == false) {
+            countbk++;
         }
         return false;
     }
