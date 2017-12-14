@@ -2,6 +2,7 @@ import java.util.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.BufferedWriter;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Timetable implements Cloneable {
 	
@@ -204,7 +205,7 @@ public class Timetable implements Cloneable {
 	public int perturbation() {
 		int numberOfMove = 30, count = 0;
 		Move move[] = new Move[numberOfMove], bestMove[] = new Move[numberOfMove];
-		int examSelected, timeslotSource, timeslotDestination, i = 0;
+		int examSelected, timeslotSource, timeslotDestination, i;
 		boolean moved = false;
 
 		for (i = 0; i < numberOfMove; i++) {
@@ -233,13 +234,13 @@ public class Timetable implements Cloneable {
 					continue;
 				} else {
 					move[i].penalty = evaluateOF(examSelected, timeslotDestination);
-					if (move[i].penalty < bestMove[i].penalty){
+					if (move[i].penalty < bestMove[i].penalty && ThreadLocalRandom.current().nextDouble() > 0.25){
 						bestMove[i].idExam = move[i].idExam;
 						bestMove[i].destinationTimeSlot = move[i].destinationTimeSlot;
 						bestMove[i].sourceTimeSlot = move[i].sourceTimeSlot;
 						bestMove[i].penalty = move[i].penalty;
+						moved = true;
 					}
-					moved = true;
 				}
 				if (!moved)
 					move[i] = null;
