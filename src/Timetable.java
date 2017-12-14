@@ -201,40 +201,63 @@ public class Timetable implements Cloneable {
 		this.examMoved.remove(examSelected);
 	}
 
-	public void perturbation() {
-		Move move = null, bestMove = new Move(0,0,0);
-		int examSelected, timeslotSource, timeslotDestination;
+	public int perturbation() {
+		int numberOfMove = 30, count = 0;
+		Move move[] = new Move[numberOfMove], bestMove[] = new Move[numberOfMove];
+		int examSelected, timeslotSource, timeslotDestination, i = 0;
 		boolean moved = false;
-		bestMove.penalty = Double.MAX_VALUE;
+
+		for (i = 0; i < numberOfMove; i++) {
+			bestMove[i] = new Move(0,0,0);
+			bestMove[i].penalty = Double.MAX_VALUE;
+		}
 
 		Map sortedMap = sortByValues(examMoved);
 		Set set = sortedMap.entrySet();
 		Iterator it = set.iterator();
 
-		while (it.hasNext() && !moved) {
+		i = 0;
+		while (it.hasNext() && i < numberOfMove) {
+			if (moved)
+				i++;
 			Map.Entry me = (Map.Entry) it.next();
 			examSelected = (int) me.getKey();
 			timeslotSource = positions.get(examSelected);
-			for (timeslotDestination = 0; timeslotDestination < timeSlots.size(); timeslotDestination++) {
-				move = new Move(examSelected, timeslotSource, timeslotDestination);
+			moved = false;
+			for (timeslotDestination = 0; timeslotDestination < timeSlots.size() && i < numberOfMove; timeslotDestination++) {
+				if (timeslotDestination == timeslotSource)
+					continue;
+				move[i] = new Move(examSelected, timeslotSource, timeslotDestination);
 				int conflictNumber = evaluatesSwitch(examSelected, timeslotSource, timeslotDestination);
 				if (conflictNumber > 0) {
 					continue;
 				} else {
-					move.penalty = evaluateOF(examSelected, timeslotDestination);
-					if (move.penalty < bestMove.penalty){
-						bestMove.idExam = move.idExam;
-						bestMove.destinationTimeSlot = move.destinationTimeSlot;
-						bestMove.sourceTimeSlot = move.sourceTimeSlot;
-						bestMove.penalty = move.penalty;
+					move[i].penalty = evaluateOF(examSelected, timeslotDestination);
+					if (move[i].penalty < bestMove[i].penalty){
+						bestMove[i].idExam = move[i].idExam;
+						bestMove[i].destinationTimeSlot = move[i].destinationTimeSlot;
+						bestMove[i].sourceTimeSlot = move[i].sourceTimeSlot;
+						bestMove[i].penalty = move[i].penalty;
 					}
 					moved = true;
 				}
+				if (!moved)
+					move[i] = null;
 			}
 		}
-		if (move != null) {
-			doSwitchExamWithoutConflicts(bestMove);
+		for (i = 0; i < numberOfMove; i++) {
+			if (move[i] != null) {
+				int conflictNumber = evaluatesSwitch(bestMove[i].idExam, bestMove[i].sourceTimeSlot, bestMove[i].destinationTimeSlot);
+				if (conflictNumber > 0) {
+					continue;
+				}
+				bestMove[i].penalty = evaluateOF(bestMove[i].idExam, bestMove[i].destinationTimeSlot);
+				doSwitchExamWithoutConflicts(bestMove[i]);
+				count++;
+			} else
+				break;
 		}
+		return count;
 	}
 
     public String toString(String filename) {
@@ -386,5 +409,55 @@ public class Timetable implements Cloneable {
 			objFunc += objectiveFunctionExam;
 		else
 			objFunc -= objectiveFunctionExam;
+	}
+
+	public boolean feasibilityChecker() {
+
+		int examCounter = 0, e1 = 0, e2 = 0;
+		boolean feasible = true;
+		ArrayList<Integer> slot = new ArrayList<Integer>();
+
+		if (this.timeSlots.size() > data.slotsNumber) {
+			feasible = false;
+			System.out.println("Too many timeslots used");
+		}
+
+		int[] coveredExams = new int[data.examsNumber+1];
+
+		for (int i = 0 ; i < this.timeSlots.size() && feasible ; i++) {
+			slot = this.timeSlots.get(i);
+			for (int j = 0 ; j < slot.size() && feasible; j++) {
+				e1 = slot.get(j);
+				coveredExams[e1]=+1;
+				examCounter++;
+				for (int k = j+1 ; k < slot.size() && feasible; k++) {
+					e2 = slot.get(k);
+					if (e1 != e2) {
+						if (data.conflictExams[e1][e2] > 0) {
+							feasible = false;
+							System.out.println("Conflict: " + e1 + " - " + e2);
+						}
+					}
+				}
+			}
+		}
+
+		if ( feasible == true && examCounter < data.examsNumber) {
+			feasible = false;
+			System.out.println("Exam Inserted: " + examCounter + " Exam Number form Data: " + data.examsNumber);
+		}
+
+		for(int i =1; i<=data.examsNumber;i++)
+			if(coveredExams[i]==0||coveredExams[i]>1) {
+				if(feasible==true)
+					System.out.println("Uncovered/Duplicated exams: ");
+				feasible= false;
+				System.out.println(""+i+", ");
+			}
+
+		if (feasible == false)
+			return false;
+		else
+			return true;
 	}
 }

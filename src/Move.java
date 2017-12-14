@@ -12,6 +12,7 @@ public class Move {
 		this.destinationTimeSlot = destinationTimeSlot;
 		this.sourceTimeSlot = sourceTimeSlot;
 		this.idExam = idExam;
+		this.penalty = 0;
 	}
 	
 	@Override

@@ -24,10 +24,11 @@ public class Main {
             Timetable bestTimetable = ils.ILST(timetable, data, 120000, startTime);
             elapsedTime = System.currentTimeMillis() - startTime;
 //            System.out.println(timetable.toString(args[0]));
-            System.out.println("Feasable: "+ Util.feasibilityChecker(timetable, data));
+            System.out.println("Feasable: "+ timetable.feasibilityChecker());
             System.out.println("Elapsed time: " + elapsedTime);
             System.out.println("OF Last TT after SA: " + bestTimetable.objFunc / data.studentsNumber);
-            System.out.println(Util.ofCalculator(bestTimetable));
+            bestTimetable.setPenality();
+            System.out.println("OF with set: " + bestTimetable.objFunc / data.studentsNumber);
 
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block

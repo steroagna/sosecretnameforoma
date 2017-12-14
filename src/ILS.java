@@ -5,19 +5,19 @@ import java.util.concurrent.ThreadLocalRandom;
 public class ILS {
 
     Timetable bestTimetableG;
-    int countbk = 0, countbs = 0;
+    int countbk = 0, countbs = 0, countReset = 0;
 
     public Timetable ILST(Timetable timetable, Data data, long timer, long startTime) throws Exception {
 
-        bestTimetableG = new Timetable(timetable);
-        Move move, bestMove = new Move(0,0,0);
-        Timetable tempTimetable;
-        int plateau = data.examsNumber/20;
-        int threadsMove = 20;
-        int threadsKempe = 40;
-        long elapsedTime = 0;
         ArrayList<ILSMoveThread> ilsmt = new ArrayList<>();
         ArrayList<ILSKempeThread> ilskt = new ArrayList<>();
+        Timetable tempTimetable;
+        bestTimetableG      = new Timetable(timetable);
+        Move move, bestMove = new Move(0,0,0);
+        int plateau         = data.examsNumber/20;
+        int threadsMove     = 30;
+        int threadsKempe    = 30;
+        long elapsedTime    = 0;
 
         while (elapsedTime < timer) {
 
@@ -67,18 +67,24 @@ public class ILS {
             ILS.ILSMoveThread ilsm = new ILS.ILSMoveThread(timetable,0,0,0);
             ILS.ILSKempeThread ilsk = new ILS.ILSKempeThread(timetable,0,0);
 
-            if (countbs > 20 && countbk > 20) {
+            if (countbs > 10 && countbk > 10) {
                 if (!timetable.examMoved.isEmpty()) {
-                    timetable.perturbation();
+                    int moved = timetable.perturbation();
+                    System.out.println("Perturbation moved " + moved + " exams");
                     updateBest(timetable, "perturbation");
-//                    System.out.println("Perturbation!");
                     countbs = 0;
                     countbk = 0;
+                    countReset++;
                 } else {
                     timetable.repopulateMovedExam();
                     timetable.setPenality();
                     System.out.println("All exams moved!");
                 }
+            }
+            if (countReset == 5) {
+                timetable = new Timetable(bestTimetableG);
+                countReset = 0;
+                System.out.println("Timetable Reset!");
             }
             timetable = ilsk.kempeChain(timetable, 2, 5);
             updateBest(timetable, "kempe");
