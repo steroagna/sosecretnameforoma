@@ -11,6 +11,7 @@ public class ILS {
     public Timetable ILST(Timetable timetable, Data data, long timer, long startTime) throws Exception {
 
         ArrayList<ILSMoveThread> ilsmt = new ArrayList<>();
+        ArrayList<ILSManyMoveThread> ilsmmt = new ArrayList<>();
         ArrayList<ILSSwapThread> ilsst = new ArrayList<>();
         ArrayList<ILSKempeThread> ilskt = new ArrayList<>();
         ILS.ILSMoveThread ilsm = new ILS.ILSMoveThread(timetable,0,0,0);
@@ -22,6 +23,7 @@ public class ILS {
         Swap swap, bestSwap = new Swap();
         int plateau         = data.examsNumber/20;
         int threadsMove     = 50;
+        int threadsManyMove = 50;
         int threadsSwap     = 50;
         int threadsKempe    = 15;
         long elapsedTime    = 0;
@@ -47,14 +49,30 @@ public class ILS {
             }
 
             if (bestMove.penalty < timetable.objFunc) {
-                timetable.doSwitchExamWithoutConflicts(bestMove);
+                timetable.moveExamWithoutConflicts(bestMove);
                 updateBest(timetable, "exam move");
             } else {
                 countbm++;
                 threadsMove--;
             }
-
             ilsmt.clear();
+
+            for (int l = 2; l <= 5; l++) {
+                for (int i = 0; i < threadsManyMove; i++)
+                    ilsmmt.add(new ILS.ILSManyMoveThread(timetable, plateau, timer, startTime, l));
+
+                for (int i = 0; i < threadsManyMove; i++)
+                    ilsmmt.get(i).start();
+
+                for (int i = 0; i < threadsManyMove; i++) {
+                    ilsmmt.get(i).join();
+                    tempTimetable = ilsmmt.get(i).timetable;
+                    if (tempTimetable.objFunc < timetable.objFunc)
+                        timetable = new Timetable(tempTimetable);
+                    }
+                ilsmmt.clear();
+                updateBest(timetable, "many move");
+            }
 
             for (int i = 0; i < threadsSwap; i++)
                 ilsst.add(new ILS.ILSSwapThread(timetable, plateau, timer, startTime));
@@ -118,10 +136,11 @@ public class ILS {
                 countReset = 0;
                 System.out.println("Timetable Reset!");
             }
-            move = ilsm.generatesNeighbourMovingExam(timetable);
-            timetable.doSwitchExamWithoutConflicts(move);
+            move = timetable.generatesNeighbourMovingExam(false);
+            timetable.moveExamWithoutConflicts(move);
 //            swap = ilss.generatesNeighbourSwappingExam(timetable);
 //            timetable.doSwap(swap);
+//            timetable.moveManyExam(2);
             timetable = ilsk.kempeChain(timetable, 2, 5);
             updateBest(timetable, "kempe");
             elapsedTime = System.currentTimeMillis() - startTime;
@@ -156,12 +175,12 @@ public class ILS {
                 Move temp;
                 int counterStop = 0;
                 long elapsedTime = 0;
-                double penaltyMin = Double.MAX_VALUE;
 
                 move = new Move(0,0,0);
+                move.penalty = Double.MAX_VALUE;
                 for (int j = 0; j < iter && elapsedTime < timer && counterStop < 20; j++) {
-                    temp = generatesNeighbourMovingExam(timetable);
-                    if (temp.penalty < penaltyMin) {
+                    temp = timetable.generatesNeighbourMovingExam(false);
+                    if (temp.penalty < move.penalty) {
                         move.idExam = temp.idExam;
                         move.destinationTimeSlot = temp.destinationTimeSlot;
                         move.sourceTimeSlot = temp.sourceTimeSlot;
@@ -174,39 +193,38 @@ public class ILS {
                 System.out.println("Move Thread error");
             }
         }
+    }
 
-        /**
-         * Method that generates a move
-         * */
-        private Move generatesNeighbourMovingExam(Timetable timetable) {
+    static public class ILSManyMoveThread extends Thread {
 
-            Move moving;
+        public Timetable timetable;
+        public int iter, nMove;
+        public long timer;
+        public long startTimer;
 
-            for(;;) {
+        public ILSManyMoveThread(Timetable timetable, int iter, long timer, long startTimer, int nMove) {
+            this.timetable = new Timetable(timetable);
+            this.iter = iter;
+            this.timer = timer;
+            this.startTimer = startTimer;
+            this.nMove = nMove;
+        }
 
-                int timeslotSource = ThreadLocalRandom.current().nextInt(timetable.timeSlots.size());
-                int timeslotDestination = ThreadLocalRandom.current().nextInt(timetable.timeSlots.size());
+        public void run() {
+            try {
+                Timetable temp = new Timetable(timetable);
+                int counterStop = 0;
+                long elapsedTime = 0;
 
-                if(timeslotSource==timeslotDestination ||
-                        timetable.timeSlots.get(timeslotSource).size()==0)
-                    continue;
-
-                int conflictSelected = ThreadLocalRandom.current().nextInt(timetable.timeSlots.get(timeslotSource).size());
-
-                int examSelected = timetable.timeSlots.get(timeslotSource).get(conflictSelected);
-
-                moving = new Move(examSelected, timeslotSource, timeslotDestination);
-                int conflictNumber = timetable.evaluatesSwitch(examSelected,timeslotSource,timeslotDestination);
-
-                if (conflictNumber > 0)
-                    continue;
-
-                moving.penalty = timetable.evaluateOF(examSelected, timeslotDestination);
-
-                break;
+                for (int j = 0; j < iter && elapsedTime < timer && counterStop < 20; j++) {
+                    temp.moveManyExam(nMove);
+                    if (temp.objFunc < timetable.objFunc)
+                        timetable = new Timetable(temp);
+                    elapsedTime = System.currentTimeMillis() - startTimer;
+                }
+            } catch (Exception e) {
+                System.out.println("Move Thread error");
             }
-
-            return moving;
         }
     }
 
