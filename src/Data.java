@@ -37,11 +37,6 @@ public class Data {
      * Matrix of students (STUD/EXAM)
      */
     int[][] studentExams;
-    
-    /**
-     * List of Exams for each slot ---> final solution
-     */
-    public ArrayList<ArrayList<Integer>> timeSlots;
 
     /**
      * Objective function value ---> penalty to minimize
@@ -56,15 +51,7 @@ public class Data {
 		this.examsMap  		= new HashMap<>();
 		this.conflictExams 	= null;
 		this.studentExams	= null;
-		this.timeSlots 		= new ArrayList<ArrayList<Integer>>();
 		this.objFunc		= Integer.MAX_VALUE;
-	}
-
-	public Exam getExam(int examId) {
-		if (this.examsMap.containsKey(examId))
-			return this.examsMap.get(examId);
-		else
-			return null;
 	}
 
 	public void addExam(Exam exam) {

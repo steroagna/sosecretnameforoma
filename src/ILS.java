@@ -6,30 +6,29 @@ public class ILS {
 
     Timetable bestTimetableG;
     int countbk = 0, countbm = 0, countbs = 0, countReset = 0;
-    int threadsMoveG = 50;
 
     public Timetable ILST(Timetable timetable, Data data, long timer, long startTime) throws Exception {
 
         ArrayList<ILSMoveThread> ilsmt = new ArrayList<>();
         ArrayList<ILSSwapThread> ilsst = new ArrayList<>();
         ArrayList<ILSKempeThread> ilskt = new ArrayList<>();
-        ILS.ILSMoveThread ilsm = new ILS.ILSMoveThread(timetable,0,0,0);
-        ILS.ILSSwapThread ilss = new ILS.ILSSwapThread(timetable,0,0,0);
         ILS.ILSKempeThread ilsk = new ILS.ILSKempeThread(timetable,0,0);
         Timetable tempTimetable;
+        TabuList tabulist   = new TabuList(10);
         bestTimetableG      = new Timetable(timetable);
         Move move, bestMove = new Move(0,0,0);
         Swap swap, bestSwap = new Swap();
-        int plateau         = data.examsNumber/20;
-        int threadsMove     = 50;
-        int threadsSwap     = 50;
-        int threadsKempe    = 15;
+        TabuMove t1, t2;
+        int plateau         = data.examsNumber/2;
+        int threadsMove     = timetable.timeSlots.size();
+        int threadsSwap     = timetable.timeSlots.size();
+        int threadsKempe    = 25;
         long elapsedTime    = 0;
 
         while (elapsedTime < timer) {
 
             for (int i = 0; i < threadsMove; i++)
-                ilsmt.add(new ILS.ILSMoveThread(timetable, plateau, timer, startTime));
+                ilsmt.add(new ILS.ILSMoveThread(timetable, i, plateau, timer, startTime));
 
             for (int i = 0; i < threadsMove; i++)
                 ilsmt.get(i).start();
@@ -46,18 +45,21 @@ public class ILS {
                 }
             }
 
-            if (bestMove.penalty < timetable.objFunc) {
-                timetable.doSwitchExamWithoutConflicts(bestMove);
-                updateBest(timetable, "exam move");
-            } else {
-                countbm++;
-                threadsMove--;
+            t1 = new TabuMove(bestMove.idExam, bestMove.sourceTimeSlot, bestMove.destinationTimeSlot);
+            if (tabulist.getTabuList().contains(t1))
+                System.out.println("tabu");
+            if (!tabulist.getTabuList().contains(t1) || bestMove.penalty < bestTimetableG.objFunc) {
+//                if (bestMove.penalty < timetable.objFunc) {
+                    timetable.doSwitchExamWithoutConflicts(bestMove);
+                    tabulist.addTabuItem(t1);
+                    updateBest(timetable, "exam move");
+//                } else
+//                    countbm++;
             }
-
             ilsmt.clear();
 
             for (int i = 0; i < threadsSwap; i++)
-                ilsst.add(new ILS.ILSSwapThread(timetable, plateau, timer, startTime));
+                ilsst.add(new ILS.ILSSwapThread(timetable, i, plateau, timer, startTime));
 
             for (int i = 0; i < threadsSwap; i++)
                 ilsst.get(i).start();
@@ -73,11 +75,18 @@ public class ILS {
                 }
             }
 
-            if (bestSwap.penalty < timetable.objFunc) {
-                timetable.doSwap(bestSwap);
-                updateBest(timetable, "exam swap");
-            } else
-                countbs++;
+            t1 = new TabuMove(bestSwap.m1.idExam,bestSwap.m1.sourceTimeSlot, bestSwap.m1.destinationTimeSlot);
+            t2 = new TabuMove(bestSwap.m2.idExam,bestSwap.m2.sourceTimeSlot, bestSwap.m2.destinationTimeSlot);
+            if ((!tabulist.getTabuList().contains(t1) && !tabulist.getTabuList().contains(t2))
+                    || bestSwap.penalty < bestTimetableG.objFunc) {
+//                if (bestSwap.penalty < timetable.objFunc) {
+                    timetable.doSwap(bestSwap);
+                    tabulist.addTabuItem(t1);
+                    tabulist.addTabuItem(t2);
+                    updateBest(timetable, "exam swap");
+//                } else
+//                    countbs++;
+            }
             ilsst.clear();
 
             for (int i = 0; i < threadsKempe; i++)
@@ -105,7 +114,6 @@ public class ILS {
                     countbm = 0;
                     countbs = 0;
                     countbk = 0;
-                    threadsMove = threadsMoveG;
                     countReset++;
                 } else {
                     timetable.repopulateMovedExam();
@@ -118,12 +126,8 @@ public class ILS {
                 countReset = 0;
                 System.out.println("Timetable Reset!");
             }
-            move = ilsm.generatesNeighbourMovingExam(timetable);
-            timetable.doSwitchExamWithoutConflicts(move);
-//            swap = ilss.generatesNeighbourSwappingExam(timetable);
-//            timetable.doSwap(swap);
-            timetable = ilsk.kempeChain(timetable, 2, 5);
-            updateBest(timetable, "kempe");
+//            timetable = ilsk.kempeChain(timetable, timetable.timeSlots.size()/2, 20);
+//            updateBest(timetable, "kempe");
             elapsedTime = System.currentTimeMillis() - startTime;
         }
 
@@ -139,16 +143,17 @@ public class ILS {
     static public class ILSMoveThread extends Thread {
 
         public Timetable timetable;
-        public int iter;
+        public int iter, timeslot;
         public long timer;
         public long startTimer;
         public Move move;
 
-        public ILSMoveThread(Timetable timetable, int iter, long timer, long startTimer) {
+        public ILSMoveThread(Timetable timetable, int timeslot, int iter, long timer, long startTimer) {
             this.timetable = timetable;
             this.iter = iter;
             this.timer = timer;
             this.startTimer = startTimer;
+            this.timeslot = timeslot;
         }
 
         public void run() {
@@ -156,16 +161,18 @@ public class ILS {
                 Move temp;
                 int counterStop = 0;
                 long elapsedTime = 0;
-                double penaltyMin = Double.MAX_VALUE;
 
                 move = new Move(0,0,0);
+                move.penalty = Double.MAX_VALUE;
                 for (int j = 0; j < iter && elapsedTime < timer && counterStop < 20; j++) {
-                    temp = generatesNeighbourMovingExam(timetable);
-                    if (temp.penalty < penaltyMin) {
-                        move.idExam = temp.idExam;
-                        move.destinationTimeSlot = temp.destinationTimeSlot;
-                        move.sourceTimeSlot = temp.sourceTimeSlot;
-                        move.penalty = temp.penalty;
+                    temp = generatesNeighbourMovingExam(timetable, timeslot);
+                    if (temp.penalty < Double.MAX_VALUE) {
+                        if (temp.penalty < move.penalty) {
+                            move.idExam = temp.idExam;
+                            move.destinationTimeSlot = temp.destinationTimeSlot;
+                            move.sourceTimeSlot = temp.sourceTimeSlot;
+                            move.penalty = temp.penalty;
+                        }
                     } else
                         counterStop++;
                     elapsedTime = System.currentTimeMillis() - startTimer;
@@ -178,51 +185,45 @@ public class ILS {
         /**
          * Method that generates a move
          * */
-        private Move generatesNeighbourMovingExam(Timetable timetable) {
+        private Move generatesNeighbourMovingExam(Timetable timetable, int timeslotSource) {
 
-            Move moving;
+            move = new Move(0,0,0);
+            move.penalty = Double.MAX_VALUE;
 
-            for(;;) {
-
-                int timeslotSource = ThreadLocalRandom.current().nextInt(timetable.timeSlots.size());
+            for(int i = 0; i < iter; i++) {
                 int timeslotDestination = ThreadLocalRandom.current().nextInt(timetable.timeSlots.size());
-
                 if(timeslotSource==timeslotDestination ||
                         timetable.timeSlots.get(timeslotSource).size()==0)
                     continue;
-
                 int conflictSelected = ThreadLocalRandom.current().nextInt(timetable.timeSlots.get(timeslotSource).size());
-
                 int examSelected = timetable.timeSlots.get(timeslotSource).get(conflictSelected);
-
-                moving = new Move(examSelected, timeslotSource, timeslotDestination);
                 int conflictNumber = timetable.evaluatesSwitch(examSelected,timeslotSource,timeslotDestination);
-
-                if (conflictNumber > 0)
+                if (conflictNumber > 0) {
                     continue;
-
-                moving.penalty = timetable.evaluateOF(examSelected, timeslotDestination);
-
+                }
+                move = new Move(examSelected, timeslotSource, timeslotDestination);
+                move.penalty = timetable.evaluateOF(examSelected, timeslotDestination);
                 break;
             }
 
-            return moving;
+            return move;
         }
     }
 
     static public class ILSSwapThread extends Thread {
 
         public Timetable timetable;
-        public int iter;
+        public int iter, timeslot;
         public long timer;
         public long startTimer;
         public Swap swap;
 
-        public ILSSwapThread(Timetable timetable, int iter, long timer, long startTimer) {
+        public ILSSwapThread(Timetable timetable, int timeslot, int iter, long timer, long startTimer) {
             this.timetable = timetable;
             this.iter = iter;
             this.timer = timer;
             this.startTimer = startTimer;
+            this.timeslot = timeslot;
         }
 
         public void run() {
@@ -233,13 +234,16 @@ public class ILS {
 
                 swap = new Swap();
                 for (int j = 0; j < iter && elapsedTime < timer && counterStop < 20; j++) {
-                    temp = generatesNeighbourSwappingExam(timetable);
-                    if (temp.penalty < swap.penalty) {
-                        swap.m1 = temp.m1;
-                        swap.m2 = temp.m2;
-                        swap.penalty = temp.penalty;
-                    } else
-                        counterStop++;
+                    temp = generatesNeighbourSwappingExam(timetable, timeslot);
+                    if (temp.penalty < Double.MAX_VALUE) {
+                        if (temp.penalty < swap.penalty) {
+                            swap.m1 = temp.m1;
+                            swap.m2 = temp.m2;
+                            swap.penalty = temp.penalty;
+                        }
+                    } else {
+                            counterStop++;
+                    }
                     elapsedTime = System.currentTimeMillis() - startTimer;
                 }
             } catch (Exception e) {
@@ -250,13 +254,12 @@ public class ILS {
         /**
          * Method that generates a move
          * */
-        private Swap generatesNeighbourSwappingExam(Timetable timetable) {
+        private Swap generatesNeighbourSwappingExam(Timetable timetable, int timeslotSource) {
 
-            Swap swap;
+            Swap swap = new Swap();
             int examSelected2 = 0;
 
-            for(;;) {
-                int timeslotSource = ThreadLocalRandom.current().nextInt(timetable.timeSlots.size());
+            for(int i = 0; i < iter; i++) {
                 int timeslotDestination = ThreadLocalRandom.current().nextInt(timetable.timeSlots.size());
                 if(timeslotSource==timeslotDestination ||
                         timetable.timeSlots.get(timeslotSource).size()==0)

@@ -2,7 +2,7 @@
  * Class which rapresents a forbidden moving.
  * */
 public class TabuMove {
-	
+
 	public int sourceTimeSlot;
 	public int destinationTimeSlot;
 	public int idExam;
