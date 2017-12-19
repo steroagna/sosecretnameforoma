@@ -143,10 +143,11 @@ public class Timetable implements Cloneable {
 	/**
 	 * Evaluates total number of conflicts after applying specified move.
 	 * */
-    public int evaluatesSwitch(int examSelected, int timeslotSource, int timeslotDestination) {
+    public int evaluatesMove(int examSelected, int timeslotDestination) {
     	
     	int currentLocalConflict=0;
     	int potentialLocalConflict =0;
+		int timeslotSource = positions.get(examSelected);
     	
     	for(Iterator<Tuple> it=this.timeSlotsConflict.get(timeslotSource).iterator();it.hasNext();) {
     		Tuple conflict = it.next();
@@ -202,7 +203,7 @@ public class Timetable implements Cloneable {
 		this.examMoved.remove(examSelected);
 	}
 
-	public void doSwap(Swap swap) {
+	public void doSwap(Swap swap, boolean permutation) {
 		int exam1 = swap.m1.idExam;
 		int exam2 = swap.m2.idExam;
 		int timeslotDestination1 = swap.m1.destinationTimeSlot;
@@ -212,13 +213,20 @@ public class Timetable implements Cloneable {
 		this.removeExam(exam2);
 		this.addExam(timeslotDestination1,exam1);
 		this.addExam(timeslotDestination2,exam2);
-		this.objFunc = swap.penalty;
+		if (!permutation)
+			this.objFunc = swap.penalty;
 		this.examMoved.remove(exam1);
 		this.examMoved.remove(exam2);
 	}
 
+	public void doPermutation(Permutation permutation) {
+		doSwap(permutation.s1, true);
+		doSwap(permutation.s2, true);
+		this.objFunc = permutation.penalty;
+	}
+
 	public int perturbation() {
-		int numberOfMove = data.examsNumber/10, count = 0;
+		int numberOfMove = 5, count = 0;
 		Move move[] = new Move[numberOfMove], bestMove[] = new Move[numberOfMove];
 		int examSelected, timeslotSource, timeslotDestination, i;
 		boolean moved = false;
@@ -244,7 +252,7 @@ public class Timetable implements Cloneable {
 				if (timeslotDestination == timeslotSource)
 					continue;
 				move[i] = new Move(examSelected, timeslotSource, timeslotDestination);
-				int conflictNumber = evaluatesSwitch(examSelected, timeslotSource, timeslotDestination);
+				int conflictNumber = evaluatesMove(examSelected, timeslotDestination);
 				if (conflictNumber > 0) {
 					continue;
 				} else {
@@ -263,7 +271,7 @@ public class Timetable implements Cloneable {
 		}
 		for (i = 0; i < numberOfMove; i++) {
 			if (move[i] != null) {
-				int conflictNumber = evaluatesSwitch(bestMove[i].idExam, bestMove[i].sourceTimeSlot, bestMove[i].destinationTimeSlot);
+				int conflictNumber = evaluatesMove(bestMove[i].idExam, bestMove[i].destinationTimeSlot);
 				if (conflictNumber > 0) {
 					continue;
 				}

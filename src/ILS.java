@@ -12,6 +12,7 @@ public class ILS {
 
         ArrayList<ILSMoveThread> ilsmt = new ArrayList<>();
         ArrayList<ILSSwapThread> ilsst = new ArrayList<>();
+        ArrayList<ILSPermThread> ilspt = new ArrayList<>();
         ArrayList<ILSKempeThread> ilskt = new ArrayList<>();
         ILS.ILSMoveThread ilsm = new ILS.ILSMoveThread(timetable,0,0,0);
         ILS.ILSSwapThread ilss = new ILS.ILSSwapThread(timetable,0,0,0);
@@ -20,9 +21,11 @@ public class ILS {
         bestTimetableG      = new Timetable(timetable);
         Move move, bestMove = new Move(0,0,0);
         Swap swap, bestSwap = new Swap();
+        Permutation perm, bestPermutation = new Permutation();
         int plateau         = data.examsNumber/20;
         int threadsMove     = 50;
         int threadsSwap     = 50;
+        int threadsPerm     = 0;
         int threadsKempe    = 15;
         long elapsedTime    = 0;
 
@@ -74,11 +77,39 @@ public class ILS {
             }
 
             if (bestSwap.penalty < timetable.objFunc) {
-                timetable.doSwap(bestSwap);
+                timetable.doSwap(bestSwap, false);
                 updateBest(timetable, "exam swap");
             } else
                 countbs++;
             ilsst.clear();
+
+            for (int i = 0; i < threadsPerm; i++)
+                ilspt.add(new ILS.ILSPermThread(timetable, plateau, timer, startTime));
+
+            for (int i = 0; i < threadsPerm; i++)
+                ilspt.get(i).start();
+
+            bestPermutation.penalty = Double.MAX_VALUE;
+            for (int i = 0; i < threadsPerm; i++) {
+                ilspt.get(i).join();
+                perm = ilspt.get(i).perm;
+                if (perm.penalty < bestPermutation.penalty){
+                    bestPermutation.s1 = perm.s1;
+                    bestPermutation.s2 = perm.s2;
+                    bestPermutation.penalty = perm.penalty;
+                    bestPermutation.caso = perm.caso;
+                }
+            }
+
+            if (bestPermutation.penalty < timetable.objFunc) {
+                timetable.doPermutation(bestPermutation);
+                updateBest(timetable, "exam permutation");
+                System.out.println("caso : " + bestPermutation.caso);
+                timetable.setPenality();
+                System.out.println(timetable.objFunc / timetable.data.studentsNumber);
+            } else
+                countbs++;
+            ilspt.clear();
 
             for (int i = 0; i < threadsKempe; i++)
                 ilskt.add(new ILS.ILSKempeThread(timetable, timer, startTime));
@@ -97,14 +128,22 @@ public class ILS {
             updateBest(timetable, "kempe");
             ilskt.clear();
 
+            if (countReset == 5) {
+                timetable = new Timetable(bestTimetableG);
+                countbm = -10;
+                countbs = -20;
+                countbk = -100;
+                countReset = 0;
+                System.out.println("Timetable Reset!");
+            }
             if (countbm > 10 && countbs > 20 && countbk > 100) {
                 if (!timetable.examMoved.isEmpty()) {
                     int moved = timetable.perturbation();
                     System.out.println("Perturbation moved " + moved + " exams");
                     updateBest(timetable, "perturbation");
-                    countbm = 0;
-                    countbs = 0;
-                    countbk = 0;
+                    countbm = -10;
+                    countbs = -20;
+                    countbk = -100;
                     threadsMove = threadsMoveG;
                     countReset++;
                 } else {
@@ -113,17 +152,13 @@ public class ILS {
                     System.out.println("All exams moved!");
                 }
             }
-            if (countReset == 5) {
-                timetable = new Timetable(bestTimetableG);
-                countReset = 0;
-                System.out.println("Timetable Reset!");
-            }
             move = ilsm.generatesNeighbourMovingExam(timetable);
             timetable.doSwitchExamWithoutConflicts(move);
-//            swap = ilss.generatesNeighbourSwappingExam(timetable);
-//            timetable.doSwap(swap);
             timetable = ilsk.kempeChain(timetable, 2, 5);
             updateBest(timetable, "kempe");
+
+//            if (Main.debug)
+//                System.out.println("current tt: " + timetable.objFunc / data.studentsNumber);
             elapsedTime = System.currentTimeMillis() - startTime;
         }
 
@@ -196,7 +231,7 @@ public class ILS {
                 int examSelected = timetable.timeSlots.get(timeslotSource).get(conflictSelected);
 
                 moving = new Move(examSelected, timeslotSource, timeslotDestination);
-                int conflictNumber = timetable.evaluatesSwitch(examSelected,timeslotSource,timeslotDestination);
+                int conflictNumber = timetable.evaluatesMove(examSelected, timeslotDestination);
 
                 if (conflictNumber > 0)
                     continue;
@@ -263,14 +298,14 @@ public class ILS {
                     continue;
                 int conflictSelected = ThreadLocalRandom.current().nextInt(timetable.timeSlots.get(timeslotSource).size());
                 int examSelected = timetable.timeSlots.get(timeslotSource).get(conflictSelected);
-                int conflictNumber = timetable.evaluatesSwitch(examSelected,timeslotSource,timeslotDestination);
+                int conflictNumber = timetable.evaluatesMove(examSelected, timeslotDestination);
                 if (conflictNumber == 1) {
                     for(Iterator<Integer> it = timetable.timeSlots.get(timeslotDestination).iterator(); it.hasNext();) {
                         examSelected2 = it.next();
                         if(timetable.data.conflictExams[examSelected][examSelected2]!=0)
                             break;
                     }
-                    conflictNumber = timetable.evaluatesSwitch(examSelected2, timeslotDestination, timeslotSource);
+                    conflictNumber = timetable.evaluatesMove(examSelected2, timeslotSource);
                     if (conflictNumber == 1) {
                         swap = new Swap(timetable, timeslotSource, timeslotDestination, examSelected, examSelected2);
                         break;
@@ -279,6 +314,159 @@ public class ILS {
                     continue;
             }
             return swap;
+        }
+    }
+
+    static public class ILSPermThread extends Thread {
+
+        public Timetable timetable;
+        public int iter;
+        public long timer;
+        public long startTimer;
+        public Permutation perm;
+
+        public ILSPermThread(Timetable timetable, int iter, long timer, long startTimer) {
+            this.timetable = timetable;
+            this.iter = iter;
+            this.timer = timer;
+            this.startTimer = startTimer;
+        }
+
+        public void run() {
+            try {
+                Permutation temp;
+                int counterStop = 0;
+                long elapsedTime = 0;
+
+                perm = new Permutation();
+                for (int j = 0; j < iter && elapsedTime < timer && counterStop < 20; j++) {
+                    temp = generatesNeighbourPermutingExam(timetable, 1000);
+                    if (temp != null) {
+                        if (temp.penalty < perm.penalty) {
+                            perm.s1 = temp.s1;
+                            perm.s2 = temp.s2;
+                            perm.penalty = temp.penalty;
+                            perm.caso = temp.caso;
+                        }
+                    } else {
+                        counterStop++;
+                    }
+                    elapsedTime = System.currentTimeMillis() - startTimer;
+                }
+            } catch (Exception e) {
+                System.out.println("Swap Thread error: " + e.getCause().toString());
+            }
+        }
+
+        /**
+         * Method that generates a move
+         * */
+        private Permutation generatesNeighbourPermutingExam(Timetable timetable, int rep) {
+
+            Permutation perm = null;
+            int examSelected2 = 0, examSelected3 = 0, conflictNumber3, conflictNumber4;
+            boolean found = false;
+
+            for(int i = 0; i < rep; i++) {
+                int timeslot1 = ThreadLocalRandom.current().nextInt(timetable.timeSlots.size());
+                int timeslot2 = ThreadLocalRandom.current().nextInt(timetable.timeSlots.size());
+                int timeslot3 = ThreadLocalRandom.current().nextInt(timetable.timeSlots.size());
+                if(timeslot1==timeslot2
+                        || timeslot2==timeslot3
+                        || timeslot3==timeslot1
+                        || timetable.timeSlots.get(timeslot1).size()==0)
+                    continue;
+                int conflictSelected = ThreadLocalRandom.current().nextInt(timetable.timeSlots.get(timeslot1).size());
+                int examSelected1 = timetable.timeSlots.get(timeslot1).get(conflictSelected);
+                int conflictNumber1 = timetable.evaluatesMove(examSelected1, timeslot2);
+                int conflictNumber2 = timetable.evaluatesMove(examSelected1, timeslot3);
+                if (conflictNumber1 > 1 || conflictNumber2 > 1)
+                    continue;
+                int conflictNumber = conflictNumber1 + conflictNumber2;
+                switch (conflictNumber) {
+                    case 0:
+                        conflictSelected = ThreadLocalRandom.current().nextInt(timetable.timeSlots.get(timeslot2).size());
+                        examSelected2 = timetable.timeSlots.get(timeslot2).get(conflictSelected);
+                        conflictSelected = ThreadLocalRandom.current().nextInt(timetable.timeSlots.get(timeslot3).size());
+                        examSelected3 = timetable.timeSlots.get(timeslot3).get(conflictSelected);
+                        conflictNumber1 = timetable.evaluatesMove(examSelected2, timeslot1);
+                        conflictNumber2 = timetable.evaluatesMove(examSelected3, timeslot1);
+                        conflictNumber3 = timetable.evaluatesMove(examSelected2, timeslot3);
+                        conflictNumber4 = timetable.evaluatesMove(examSelected3, timeslot2);
+                        if ((conflictNumber3 == 1 && conflictNumber4 == 1 && timetable.data.conflictExams[examSelected2][examSelected3] != 0)
+                                && conflictNumber1 == 0 && conflictNumber2 == 0) {
+                            perm = new Permutation(timetable, timeslot1, timeslot2, timeslot3, examSelected1, examSelected2, examSelected3, 0);
+                            found = true;
+                        }
+                        break;
+                    case 1:
+                        if (conflictNumber1 == 1) {
+                            for(Iterator<Integer> it = timetable.timeSlots.get(timeslot2).iterator(); it.hasNext();) {
+                                examSelected2 = it.next();
+                                if(timetable.data.conflictExams[examSelected1][examSelected2]!=0) {
+                                    break;
+                                }
+                            }
+                            conflictSelected = ThreadLocalRandom.current().nextInt(timetable.timeSlots.get(timeslot3).size());
+                            examSelected3 = timetable.timeSlots.get(timeslot3).get(conflictSelected);
+                            conflictNumber1 = timetable.evaluatesMove(examSelected2, timeslot1);
+                            conflictNumber2 = timetable.evaluatesMove(examSelected3, timeslot1);
+                            conflictNumber3 = timetable.evaluatesMove(examSelected2, timeslot3);
+                            conflictNumber4 = timetable.evaluatesMove(examSelected3, timeslot2);
+                            if (((conflictNumber3 == 1 && conflictNumber4 == 1 && timetable.data.conflictExams[examSelected2][examSelected3] != 0)
+                                    || (conflictNumber3 == 0 && conflictNumber4 == 0)) && conflictNumber1 == 1 && conflictNumber2 == 0) {
+                                perm = new Permutation(timetable, timeslot1, timeslot2, timeslot3, examSelected1, examSelected2, examSelected3, 11);
+                                found = true;
+                            }
+                        } else {
+                            conflictSelected = ThreadLocalRandom.current().nextInt(timetable.timeSlots.get(timeslot2).size());
+                            examSelected2 = timetable.timeSlots.get(timeslot2).get(conflictSelected);
+                            for(Iterator<Integer> it = timetable.timeSlots.get(timeslot3).iterator(); it.hasNext();) {
+                                examSelected3 = it.next();
+                                if(timetable.data.conflictExams[examSelected1][examSelected3]!=0) {
+                                    break;
+                                }
+                            }
+                            conflictNumber1 = timetable.evaluatesMove(examSelected2, timeslot1);
+                            conflictNumber2 = timetable.evaluatesMove(examSelected3, timeslot1);
+                            conflictNumber3 = timetable.evaluatesMove(examSelected2, timeslot3);
+                            conflictNumber4 = timetable.evaluatesMove(examSelected3, timeslot2);
+                            if (((conflictNumber3 == 1 && conflictNumber4 == 1 && timetable.data.conflictExams[examSelected2][examSelected3] != 0)
+                                    || (conflictNumber3 == 0 && conflictNumber4 == 0)) && conflictNumber1 == 0 && conflictNumber2 == 1) {
+                                perm = new Permutation(timetable, timeslot1, timeslot2, timeslot3, examSelected1, examSelected2, examSelected3, 12);
+                                found = true;
+                            }
+                        }
+                        break;
+                    case 2:
+                        for(Iterator<Integer> it = timetable.timeSlots.get(timeslot2).iterator(); it.hasNext();) {
+                            examSelected2 = it.next();
+                            if(timetable.data.conflictExams[examSelected1][examSelected2]!=0) {
+                                break;
+                            }
+                        }
+                        for(Iterator<Integer> it = timetable.timeSlots.get(timeslot3).iterator(); it.hasNext();) {
+                            examSelected3 = it.next();
+                            if(timetable.data.conflictExams[examSelected1][examSelected3]!=0) {
+                                break;
+                            }
+                        }
+                        conflictNumber1 = timetable.evaluatesMove(examSelected2, timeslot1);
+                        conflictNumber2 = timetable.evaluatesMove(examSelected3, timeslot1);
+                        conflictNumber3 = timetable.evaluatesMove(examSelected2, timeslot3);
+                        conflictNumber4 = timetable.evaluatesMove(examSelected3, timeslot2);
+                        if (conflictNumber1 == 1 && conflictNumber2 == 1 && conflictNumber3 == 1 && conflictNumber4 == 1
+                                && timetable.data.conflictExams[examSelected2][examSelected3] != 0) {
+                            perm = new Permutation(timetable, timeslot1, timeslot2, timeslot3, examSelected1, examSelected2, examSelected3, 2);
+                            found = true;
+                        }
+                        break;
+                }
+                if (found)
+                    break;
+            }
+
+            return perm;
         }
     }
 

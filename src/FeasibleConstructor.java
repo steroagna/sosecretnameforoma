@@ -104,7 +104,7 @@ public class FeasibleConstructor {
 
 				TabuMove move = generatesNeighbour(timetable,tabulist,bestConflictNumber,randConflict,randExam,randTimeslot);
 
-				int conflictNumber = timetable.evaluatesSwitch(move.idExam,move.sourceTimeSlot,move.destinationTimeSlot);
+				int conflictNumber = timetable.evaluatesMove(move.idExam, move.destinationTimeSlot);
 
 				/*
 				 * Check for aspiration level.
@@ -178,7 +178,7 @@ public class FeasibleConstructor {
 				//		.timeSlotsConflict.get(timeslotSource).get(conflictSelected).e1;
 
 				moving = new TabuMove(examSelected, timeslotSource, timeslotDestination);
-				int conflictNumber = timetable.evaluatesSwitch(examSelected,timeslotSource,timeslotDestination);
+				int conflictNumber = timetable.evaluatesMove(examSelected, timeslotDestination);
 				/*
 				 * Check if moving is already in the tabulist: if true try with another neighbour.
 				 * */
