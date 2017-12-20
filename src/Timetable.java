@@ -276,6 +276,31 @@ public class Timetable implements Cloneable {
 		return count;
 	}
 
+	public void perturbation2() {
+		int t1 = ThreadLocalRandom.current().nextInt(timeSlots.size());
+		int t2 = ThreadLocalRandom.current().nextInt(timeSlots.size());
+		ArrayList<Integer> slot1 = timeSlots.get(t1), slot2 = timeSlots.get(t2),
+				temp1 = new ArrayList<>(), temp2 = new ArrayList<>();
+
+		while (slot1.size() > 0) {
+			temp1.add(slot1.get(0));
+			removeExam(slot1.get(0));
+		}
+		while (slot2.size() > 0) {
+			temp2.add(slot2.get(0));
+			removeExam(slot2.get(0));
+		}
+
+		for (int i = 0; i < temp1.size(); i++) {
+			addExam(t2, temp1.get(i));
+		}
+		for (int i = 0; i < temp2.size(); i++) {
+			addExam(t1, temp2.get(i));
+		}
+
+		setPenality();
+	}
+
     public String toString(String filename) {
 
     	StringBuffer out = new StringBuffer();

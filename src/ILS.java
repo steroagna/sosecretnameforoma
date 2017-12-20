@@ -21,6 +21,7 @@ public class ILS {
         Move move, bestMove = new Move(0,0,0);
         Swap swap, bestSwap = new Swap();
         int plateau         = data.examsNumber/20;
+        int kKempe          = timetable.timeSlots.size() / 2;
         int threadsMove     = 50;
         int threadsSwap     = 50;
         int threadsKempe    = 15;
@@ -97,7 +98,8 @@ public class ILS {
             updateBest(timetable, "kempe");
             ilskt.clear();
 
-            if (countbm > 10 && countbs > 20 && countbk > 100) {
+            if (countbs > 20 && countbk > 100) {
+                timetable.perturbation2();
                 if (!timetable.examMoved.isEmpty()) {
                     int moved = timetable.perturbation();
                     System.out.println("Perturbation moved " + moved + " exams");
@@ -113,17 +115,17 @@ public class ILS {
                     System.out.println("All exams moved!");
                 }
             }
-            if (countReset == 5) {
+            if (countReset == 7) {
                 timetable = new Timetable(bestTimetableG);
                 countReset = 0;
                 System.out.println("Timetable Reset!");
             }
-            move = ilsm.generatesNeighbourMovingExam(timetable);
-            timetable.doSwitchExamWithoutConflicts(move);
-//            swap = ilss.generatesNeighbourSwappingExam(timetable);
-//            timetable.doSwap(swap);
-            timetable = ilsk.kempeChain(timetable, 2, 5);
-            updateBest(timetable, "kempe");
+//            move = ilsm.generatesNeighbourMovingExam(timetable);
+//            if (move.penalty < bestTimetableG.objFunc*1.05)
+//                timetable.doSwitchExamWithoutConflicts(move);
+//            tempTimetable = ilsk.kempeChain(timetable, kKempe, 10);
+//            if (tempTimetable.objFunc < bestTimetableG.objFunc*1.05)
+//                timetable = new Timetable(tempTimetable);
             elapsedTime = System.currentTimeMillis() - startTime;
         }
 
