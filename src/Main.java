@@ -1,3 +1,5 @@
+import com.sun.org.apache.bcel.internal.generic.POP;
+
 import java.io.FileNotFoundException;
 
 public class Main {
@@ -11,24 +13,27 @@ public class Main {
             ReaderWriter rw = new ReaderWriter();
             Data data = rw.readInputFiles(args[0]);
             ILS ils = new ILS();
+            filename = args[0];
+            FeasibleConstructor fb = new FeasibleConstructor();
+            //Parametri prima parte
+            int populationSize = 10; //generati ognuno con un thread
             int neighborNumberFeasibleConstructor = 10;
             int neighborLS = 120;
-            filename = args[0];
 
-            FeasibleConstructor.FeasibleConstructorThread fb = new FeasibleConstructor.FeasibleConstructorThread(data, 0, neighborNumberFeasibleConstructor, neighborLS);
-            Timetable timetable = fb.makeFeasibleGraphColoringWithTabu(data, null, neighborNumberFeasibleConstructor);
+
+            Population population = fb.makeFeasiblePopulation(data, populationSize, neighborNumberFeasibleConstructor, neighborLS);
+
             elapsedTime = System.currentTimeMillis() - startTime;
+            System.out.println("Population created in time: " + elapsedTime);
             System.out.println("Feasible created in time: " + elapsedTime);
-            timetable.setPenality();
-            System.out.println("OF with set: " + timetable.objFunc / data.studentsNumber);
-            Timetable bestTimetable = ils.ILST(timetable, data, 120000, startTime);
+
+            Timetable bestTimetable = ils.ILSWithThread(population, data, 120000, startTime);
+
             elapsedTime = System.currentTimeMillis() - startTime;
-//            System.out.println(timetable.toString(args[0]));
-            System.out.println("Feasable: "+ timetable.feasibilityChecker());
-            System.out.println("Elapsed time: " + elapsedTime);
-            System.out.println("OF Last TT after SA: " + bestTimetable.objFunc / data.studentsNumber);
+//            System.out.println(bestTimetable.toString(args[0]));
+            System.out.println("Feasable: "+ bestTimetable.feasibilityChecker());
+            System.out.println("OF Last TT after ILS: " + bestTimetable.objFunc / data.studentsNumber);
             bestTimetable.setPenality();
-            System.out.println("OF with set: " + bestTimetable.objFunc / data.studentsNumber);
 
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block

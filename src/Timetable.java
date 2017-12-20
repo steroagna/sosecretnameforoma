@@ -30,7 +30,10 @@ public class Timetable implements Cloneable {
 	public static <K, V extends Comparable<V>> Map<K, V> sortByValues(final Map<K, V> map) {
 		Comparator<K> valueComparator = new Comparator<K>() {
 			public int compare(K k1, K k2) {
-				return map.get(k2).compareTo(map.get(k1));
+				if (ThreadLocalRandom.current().nextDouble() < 0.5)
+					return -1;
+				else
+					return 1;
 			}
 		};
 
@@ -218,7 +221,7 @@ public class Timetable implements Cloneable {
 	}
 
 	public int perturbation() {
-		int numberOfMove = data.examsNumber/10, count = 0;
+		int numberOfMove = data.examsNumber/4, count = 0;
 		Move move[] = new Move[numberOfMove], bestMove[] = new Move[numberOfMove];
 		int examSelected, timeslotSource, timeslotDestination, i;
 		boolean moved = false;
@@ -249,7 +252,7 @@ public class Timetable implements Cloneable {
 					continue;
 				} else {
 					move[i].penalty = evaluateOF(examSelected, timeslotDestination);
-					if (move[i].penalty < bestMove[i].penalty && ThreadLocalRandom.current().nextDouble() < 0.85) {
+					if (move[i].penalty < bestMove[i].penalty) {
 						bestMove[i].idExam = move[i].idExam;
 						bestMove[i].destinationTimeSlot = move[i].destinationTimeSlot;
 						bestMove[i].sourceTimeSlot = move[i].sourceTimeSlot;

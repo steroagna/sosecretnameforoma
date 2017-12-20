@@ -5,6 +5,33 @@ import java.util.Random;
 
 public class FeasibleConstructor {
 
+	public Population makeFeasiblePopulation(Data data, int populationSize, int neighborNumber, int neighborLS) throws Exception{
+
+		long startTime = System.currentTimeMillis(), elapsedTime;
+		double bestOF = Integer.MAX_VALUE;
+		Timetable t, best = null;
+		ArrayList<Timetable> population = new ArrayList<>();
+		List<FeasibleConstructorThread> fcts = new ArrayList<>();
+
+		for (int i = 0; i < populationSize; i++)
+			fcts.add(new FeasibleConstructor.FeasibleConstructorThread(data, neighborNumber, neighborLS));
+
+		for (int i = 0; i < populationSize; i++)
+			fcts.get(i).start();
+
+		for (int i = 0; i < populationSize; i++) {
+			fcts.get(i).join();
+			t = fcts.get(i).timetable;
+			t.setPenality();
+			if ( t.objFunc < bestOF) {
+				bestOF = t.objFunc;
+				best = new Timetable(t);
+			}
+			population.add(t);
+		}
+
+		return new Population(population, best, bestOF);
+	}
 	/**
 	 * Internal class useful to generate more
 	 * than one feasible solutions in parallel
@@ -13,14 +40,12 @@ public class FeasibleConstructor {
 	static public class FeasibleConstructorThread extends Thread{
 
 		public Data data;
-		public long timer;
 		public int neighborNumber;
 		public int neighborLS;
 		public Timetable timetable;
 
-		public FeasibleConstructorThread(Data data, long timer, int neighborNumber, int neighborLS) {
+		public FeasibleConstructorThread(Data data, int neighborNumber, int neighborLS) {
 			this.data = data;
-			this.timer = timer;
 			this.neighborNumber = neighborNumber;
 			this.neighborLS = neighborLS;
 		}
