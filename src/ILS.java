@@ -156,12 +156,11 @@ public class ILS {
                 Move temp;
                 int counterStop = 0;
                 long elapsedTime = 0;
-                double penaltyMin = Double.MAX_VALUE;
-
-                move = new Move(0,0,0);
+                move = new Move(0, 0, 0);
+                move.penalty = Double.MAX_VALUE;
                 for (int j = 0; j < iter && elapsedTime < timer && counterStop < 20; j++) {
                     temp = generatesNeighbourMovingExam(timetable);
-                    if (temp.penalty < penaltyMin) {
+                    if (temp.penalty < move.penalty) {
                         move.idExam = temp.idExam;
                         move.destinationTimeSlot = temp.destinationTimeSlot;
                         move.sourceTimeSlot = temp.sourceTimeSlot;
