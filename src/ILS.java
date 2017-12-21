@@ -6,7 +6,6 @@ public class ILS {
 
     Timetable bestTimetableG;
     int countbk = 0, countbm = 0, countbs = 0, countReset = 0;
-    int threadsMoveG = 50;
 
     public Timetable ILST(Timetable timetable, Data data, long timer, long startTime) throws Exception {
 
@@ -51,7 +50,6 @@ public class ILS {
                 updateBest(timetable, "exam move");
             } else {
                 countbm++;
-                threadsMove--;
             }
 
             ilsmt.clear();
@@ -97,6 +95,15 @@ public class ILS {
             updateBest(timetable, "kempe");
             ilskt.clear();
 
+
+            if (countReset == 5) {
+                timetable = new Timetable(bestTimetableG);
+                countReset = 0;
+                countbm = 0;
+                countbs = 0;
+                countbk = 0;
+                System.out.println("Timetable Reset!");
+            }
             if (countbm > 10 && countbs > 20 && countbk > 100) {
                 if (!timetable.examMoved.isEmpty()) {
                     int moved = timetable.perturbation();
@@ -105,7 +112,6 @@ public class ILS {
                     countbm = 0;
                     countbs = 0;
                     countbk = 0;
-                    threadsMove = threadsMoveG;
                     countReset++;
                 } else {
                     timetable.repopulateMovedExam();
@@ -113,15 +119,8 @@ public class ILS {
                     System.out.println("All exams moved!");
                 }
             }
-            if (countReset == 5) {
-                timetable = new Timetable(bestTimetableG);
-                countReset = 0;
-                System.out.println("Timetable Reset!");
-            }
             move = ilsm.generatesNeighbourMovingExam(timetable);
             timetable.doSwitchExamWithoutConflicts(move);
-//            swap = ilss.generatesNeighbourSwappingExam(timetable);
-//            timetable.doSwap(swap);
             timetable = ilsk.kempeChain(timetable, 2, 5);
             updateBest(timetable, "kempe");
             elapsedTime = System.currentTimeMillis() - startTime;

@@ -276,6 +276,42 @@ public class Timetable implements Cloneable {
 		return count;
 	}
 
+	public void perturbationShuffleTimeslots() {
+
+		ArrayList<Integer> slot1 = timeSlots.get(0),
+				slotk, temp = new ArrayList<>();//, temp2 = new ArrayList<>();
+		int e;
+		Integer[] shuffleVector = new Integer[timeSlots.size()];
+		for (int j = 0; j < timeSlots.size(); j++){
+			shuffleVector[j] = j;
+		}
+		Collections.shuffle(Arrays.asList(shuffleVector));
+
+		while (slot1.size() > 0) {
+			temp.add(slot1.get(0));
+			removeExam(slot1.get(0));
+		}
+
+		int x = 0;
+
+		while (shuffleVector[x] != 0){
+			slotk = timeSlots.get(shuffleVector[x]);
+			while (slotk.size() > 0) {
+				e = slotk.get(0);
+				removeExam(e);
+				addExam(x, e);
+			}
+			x = shuffleVector[x];
+
+		}
+
+		for (int i = 0; i < temp.size(); i++) {
+			addExam(x, temp.get(i));
+		}
+
+		setPenality();
+	}
+
     public String toString(String filename) {
 
     	StringBuffer out = new StringBuffer();
