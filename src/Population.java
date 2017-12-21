@@ -2,6 +2,7 @@ import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 
 public class Population {
@@ -48,17 +49,24 @@ public class Population {
     public Timetable copulate() {
 
         Timetable A,timetable1 = null,timetable2 = null;
+        double x;
+
         while (timetable1 == timetable2) {
             timetable1 = this.chooseParent();
             timetable2 = this.chooseParent();
         }
         Timetable newGen = new Timetable(this.parent1);
-        ArrayList exams = new ArrayList<Integer>(parent1.data.examsMap.keySet());
+        ArrayList exams = new ArrayList<>(parent1.data.examsMap.keySet());
         int exam, timeslot, index = 0;
+
+        if (timetable1.objFunc > timetable2.objFunc)
+            x = 0.25;
+        else
+            x = 0.75;
 
         for(Iterator<Integer> itExam=exams.iterator();itExam.hasNext();) {
             exam = itExam.next();
-            if (index%2 == 0) {
+            if (ThreadLocalRandom.current().nextDouble() < x) {
                 A = timetable1;
             } else {
                 A = timetable2;

@@ -11,12 +11,13 @@ public class ILS {
         Timetable t, best = null, newGen;
         int populationSize = population.population.size();
         List<ILS.ILSTThread> ilst = new ArrayList<>();
+        FeasibleConstructor.FeasibleConstructorThread fb = new FeasibleConstructor.FeasibleConstructorThread(null,0,0);
         long elapsedTime = 0, startTimeThread;
 
         while (elapsedTime < timer) {
             startTimeThread = System.currentTimeMillis();
             for (int i = 0; i < populationSize; i++)
-                ilst.add(new ILS.ILSTThread(population.population.get(i), data, 10000, startTimeThread));
+                ilst.add(new ILS.ILSTThread(population.population.get(i), data, 5000, startTimeThread));
 
             for (int i = 0; i < populationSize; i++)
                 ilst.get(i).start();
@@ -24,13 +25,14 @@ public class ILS {
             for (int i = 0; i < populationSize; i++) {
                 ilst.get(i).join();
                 t = ilst.get(i).bestTimetableG;
-                population.population.set(i, t);
-                newGen = population.copulate();
-                population.updatePopulation(newGen);
                 if (t.objFunc < bestOF) {
                     bestOF = t.objFunc;
                     best = new Timetable(t);
                 }
+                population.population.set(i, t);
+                newGen = population.copulate();
+                fb.makeFeasibleGraphColoringWithTabu(newGen.data, newGen, 120);
+                population.updatePopulation(newGen);
             }
             ilst.clear();
             elapsedTime = System.currentTimeMillis() - startTime;
@@ -45,7 +47,6 @@ public class ILS {
         Data data;
         long timer;
         long startTime;
-//        int countbk = 0, countbm = 0, countbs = 0, countReset = 0;
 
         public ILSTThread(Timetable timetable, Data data, long timer, long startTime) {
             this.timetable = timetable;
@@ -67,120 +68,80 @@ public class ILS {
                 Move move, bestMove = new Move(0, 0, 0);
                 Swap swap, bestSwap = new Swap();
                 int plateau = data.examsNumber / 20;
-//                int kKempe = timetable.timeSlots.size() / 2;
-                int threadsMove = 50;
-                int threadsSwap = 50;
-                int threadsKempe = 25;
+                int threadsMove = 5;
+                int threadsSwap = 5;
+                int threadsKempe = 2;
                 long elapsedTime = 0;
 
                 while (elapsedTime < timer) {
+                    switch (ThreadLocalRandom.current().nextInt(3)) {
+                        case 0:
+                            for (int i = 0; i < threadsMove; i++)
+                                ilsmt.add(new ILS.ILSTThread.ILSMoveThread(timetable, plateau, timer, startTime));
 
-                    for (int i = 0; i < threadsMove; i++)
-                        ilsmt.add(new ILS.ILSTThread.ILSMoveThread(timetable, plateau, timer, startTime));
+                            for (int i = 0; i < threadsMove; i++)
+                                ilsmt.get(i).start();
 
-                    for (int i = 0; i < threadsMove; i++)
-                        ilsmt.get(i).start();
+                            bestMove.penalty = Double.MAX_VALUE;
+                            for (int i = 0; i < threadsMove; i++) {
+                                ilsmt.get(i).join();
+                                move = ilsmt.get(i).move;
+                                if (move.penalty < bestMove.penalty) {
+                                    bestMove.idExam = move.idExam;
+                                    bestMove.destinationTimeSlot = move.destinationTimeSlot;
+                                    bestMove.sourceTimeSlot = move.sourceTimeSlot;
+                                    bestMove.penalty = move.penalty;
+                                }
+                            }
 
-                    bestMove.penalty = Double.MAX_VALUE;
-                    for (int i = 0; i < threadsMove; i++) {
-                        ilsmt.get(i).join();
-                        move = ilsmt.get(i).move;
-                        if (move.penalty < bestMove.penalty) {
-                            bestMove.idExam = move.idExam;
-                            bestMove.destinationTimeSlot = move.destinationTimeSlot;
-                            bestMove.sourceTimeSlot = move.sourceTimeSlot;
-                            bestMove.penalty = move.penalty;
-                        }
+                            if (bestMove.penalty < timetable.objFunc) {
+                                timetable.doSwitchExamWithoutConflicts(bestMove);
+                                updateBest(timetable, "exam move");
+                            }
+                            ilsmt.clear();
+                            break;
+                        case 1:
+                            for (int i = 0; i < threadsSwap; i++)
+                                ilsst.add(new ILS.ILSTThread.ILSSwapThread(timetable, plateau, timer, startTime));
+
+                            for (int i = 0; i < threadsSwap; i++)
+                                ilsst.get(i).start();
+
+                            bestSwap.penalty = Double.MAX_VALUE;
+                            for (int i = 0; i < threadsSwap; i++) {
+                                ilsst.get(i).join();
+                                swap = ilsst.get(i).swap;
+                                if (swap.penalty < bestSwap.penalty) {
+                                    bestSwap.m1 = swap.m1;
+                                    bestSwap.m2 = swap.m2;
+                                    bestSwap.penalty = swap.penalty;
+                                }
+                            }
+
+                            if (bestSwap.penalty < timetable.objFunc) {
+                                timetable.doSwap(bestSwap);
+                                updateBest(timetable, "exam swap");
+                            }
+                            ilsst.clear();
+                            break;
+                        case 2:
+                            for (int i = 0; i < threadsKempe; i++)
+                                ilskt.add(new ILS.ILSTThread.ILSKempeThread(timetable, timer, startTime));
+
+                            for (int i = 0; i < threadsKempe; i++)
+                                ilskt.get(i).start();
+
+                            for (int i = 0; i < threadsKempe; i++) {
+                                ilskt.get(i).join();
+                                tempTimetable = ilskt.get(i).timetable;
+                                if (tempTimetable.objFunc < timetable.objFunc)
+                                    timetable = new Timetable(tempTimetable);
+                            }
+                            updateBest(timetable, "kempe");
+                            ilskt.clear();
+                            break;
                     }
-
-                    if (bestMove.penalty < timetable.objFunc) {
-                        timetable.doSwitchExamWithoutConflicts(bestMove);
-                        updateBest(timetable, "exam move");
-                    }
-//                    else {
-//                        countbm++;
-//                        threadsMove--;
-//                    }
-
-                    ilsmt.clear();
-
-                    for (int i = 0; i < threadsSwap; i++)
-                        ilsst.add(new ILS.ILSTThread.ILSSwapThread(timetable, plateau, timer, startTime));
-
-                    for (int i = 0; i < threadsSwap; i++)
-                        ilsst.get(i).start();
-
-                    bestSwap.penalty = Double.MAX_VALUE;
-                    for (int i = 0; i < threadsSwap; i++) {
-                        ilsst.get(i).join();
-                        swap = ilsst.get(i).swap;
-                        if (swap.penalty < bestSwap.penalty) {
-                            bestSwap.m1 = swap.m1;
-                            bestSwap.m2 = swap.m2;
-                            bestSwap.penalty = swap.penalty;
-                        }
-                    }
-
-                    if (bestSwap.penalty < timetable.objFunc) {
-                        timetable.doSwap(bestSwap);
-                        updateBest(timetable, "exam swap");
-                    }
-//                    else
-//                        countbs++;
-                    ilsst.clear();
-
-                    for (int i = 0; i < threadsKempe; i++)
-                        ilskt.add(new ILS.ILSTThread.ILSKempeThread(timetable, timer, startTime));
-
-                    for (int i = 0; i < threadsKempe; i++)
-                        ilskt.get(i).start();
-
-                    for (int i = 0; i < threadsKempe; i++) {
-                        ilskt.get(i).join();
-                        tempTimetable = ilskt.get(i).timetable;
-                        if (tempTimetable.objFunc < timetable.objFunc)
-                            timetable = new Timetable(tempTimetable);
-//                        else
-//                            countbk++;
-                    }
-                    updateBest(timetable, "kempe");
-                    ilskt.clear();
-
-//                    if (countReset == 15) {
-//                        timetable = new Timetable(bestTimetableG);
-//                        countReset = 0;
-//                        System.out.println("Timetable Reset!");
-//                    }
-//                    if (countbs > 50 && countbk > 200) {
-//                        if (!timetable.examMoved.isEmpty()) {
-//                            int moved = timetable.perturbation();
-//                            System.out.println("Perturbation moved " + moved + " exams");
-//                            updateBest(timetable, "perturbation");
-//                            countbm = 0;
-//                            countbs = 0;
-//                            countbk = 0;
-//                            countReset++;
-//                        } else {
-//                            timetable.repopulateMovedExam();
-//                            timetable.setPenality();
-//                            System.out.println("All exams moved!");
-//                        }
-//                    }
-
-    //            move = ilsm.generatesNeighbourMovingExam(timetable);
-    //            if (move.penalty < timetable.objFunc*1.05)
-    //                timetable.doSwitchExamWithoutConflicts(move);
-    //            tempTimetable = ilsk.kempeChain(timetable, kKempe, 10);
-    //            if (tempTimetable.objFunc < timetable.objFunc*1.05)
-    //                timetable = new Timetable(tempTimetable);
-    //            updateBest(timetable, "kempe");
-                    elapsedTime = System.currentTimeMillis() - startTime;
                 }
-
-//                System.out.println("*** ILS *** ");
-//                System.out.println("Elapsed time: " + elapsedTime);
-//                System.out.println("OF --> " + bestTimetableG.objFunc / timetable.data.studentsNumber + " final");
-
             } catch (Exception e) {
                 System.out.println("Main Thread error");
             }
@@ -216,6 +177,7 @@ public class ILS {
                             move.destinationTimeSlot = temp.destinationTimeSlot;
                             move.sourceTimeSlot = temp.sourceTimeSlot;
                             move.penalty = temp.penalty;
+//                            break;
                         } else
                             counterStop++;
                         elapsedTime = System.currentTimeMillis() - startTimer;
@@ -288,6 +250,7 @@ public class ILS {
                             swap.m1 = temp.m1;
                             swap.m2 = temp.m2;
                             swap.penalty = temp.penalty;
+//                            break;
                         } else
                             counterStop++;
                         elapsedTime = System.currentTimeMillis() - startTimer;
@@ -440,8 +403,6 @@ public class ILS {
                 if (Main.debug) {
                     System.out.println("OF --> " + timetable.objFunc / timetable.data.studentsNumber + " " + flag);
                 }
-//                countbs = 0;
-//                countbk = 0;
                 return true;
             }
             return false;
