@@ -21,7 +21,7 @@ public class Main {
             System.out.println("Feasible created in time: " + elapsedTime);
             timetable.setPenality();
             System.out.println("OF with set: " + timetable.objFunc / data.studentsNumber);
-            Timetable bestTimetable = hc.hillClimbing(timetable,120000, startTime);
+            Timetable bestTimetable = hc.hillClimbing(timetable,300000, startTime);
             elapsedTime = System.currentTimeMillis() - startTime;
 //            System.out.println(timetable.toString(args[0]));
             System.out.println("Feasable: "+ timetable.feasibilityChecker());

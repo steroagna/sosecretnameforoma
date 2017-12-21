@@ -4,7 +4,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class HillClimbing {
 
     Timetable bestTimetableG;
-    int count = 0;
+    int count = 0, nMoves;
 
     public Timetable hillClimbing(Timetable timetable, long timer, long startTime) {
 
@@ -13,9 +13,9 @@ public class HillClimbing {
         Swap swap;
         bestTimetableG = new Timetable(timetable);
         long elapsedTime = 0;
-        int kKempe = timetable.timeSlots.size() / 2;
+        int kKempe = timetable.timeSlots.size() / 4;
         int iteration = 0, actual;
-        int costListSize = 5000;
+        int costListSize = 1500;
         Double[] penaltyList = new Double[costListSize];
 
         for (int i = 0; i < costListSize; i++)
@@ -38,17 +38,16 @@ public class HillClimbing {
                     updateBest(tempTimetable, "exam swap");
                     break;
                 case 2:
-                    tempTimetable.perturbation2();
+                    tempTimetable.swapTimeslot();
                     updateBest(tempTimetable, "timeslot swap");
                     break;
                 case 3:
-                    tempTimetable = tempTimetable.kempeChain(kKempe, 2);
+                    tempTimetable = tempTimetable.kempeChain(kKempe, 7);
                     updateBest(tempTimetable, "kempe hard");
                     break;
             }
             actual = iteration % costListSize;
-            if (tempTimetable.objFunc < penaltyList[actual]
-                    || tempTimetable.objFunc <= timetable.objFunc)
+            if (tempTimetable.objFunc < penaltyList[actual] || tempTimetable.objFunc <= timetable.objFunc)
                 timetable = new Timetable(tempTimetable);
             if (tempTimetable.objFunc < penaltyList[actual]) {
                 penaltyList[actual] = timetable.objFunc;
