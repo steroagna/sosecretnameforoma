@@ -48,7 +48,7 @@ public class ILS {
             }
 
             if (bestMove.penalty < timetable.objFunc) {
-                timetable.doSwitchExamWithoutConflicts(bestMove);
+                timetable.moveExamWithoutConflicts(bestMove);
                 updateBest(timetable, "exam move");
             } else {
                 countbm++;
@@ -98,8 +98,16 @@ public class ILS {
             updateBest(timetable, "kempe");
             ilskt.clear();
 
+            if (countReset == 7) {
+                timetable = new Timetable(bestTimetableG);
+                countReset = 0;
+                countbm = 0;
+                countbs = 0;
+                countbk = 0;
+                System.out.println("Timetable Reset!");
+            }
             if (countbs > 20 && countbk > 100) {
-                timetable.perturbation2();
+//                timetable.perturbation2();
                 if (!timetable.examMoved.isEmpty()) {
                     int moved = timetable.perturbation();
                     System.out.println("Perturbation moved " + moved + " exams");
@@ -115,17 +123,10 @@ public class ILS {
                     System.out.println("All exams moved!");
                 }
             }
-            if (countReset == 7) {
-                timetable = new Timetable(bestTimetableG);
-                countReset = 0;
-                System.out.println("Timetable Reset!");
-            }
-//            move = ilsm.generatesNeighbourMovingExam(timetable);
-//            if (move.penalty < bestTimetableG.objFunc*1.05)
-//                timetable.doSwitchExamWithoutConflicts(move);
-//            tempTimetable = ilsk.kempeChain(timetable, kKempe, 10);
-//            if (tempTimetable.objFunc < bestTimetableG.objFunc*1.05)
-//                timetable = new Timetable(tempTimetable);
+
+            move = ilsm.generatesNeighbourMovingExam(timetable);
+            timetable.moveExamWithoutConflicts(move);
+            timetable = ilsk.kempeChain(timetable, 2, 5);
             elapsedTime = System.currentTimeMillis() - startTime;
         }
 
