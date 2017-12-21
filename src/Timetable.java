@@ -193,7 +193,7 @@ public class Timetable implements Cloneable {
 	/**
 	 * Applies the specified move.
 	 * */
-	public void doSwitchExamWithoutConflicts(Move move) {
+	public void moveExamWithoutConflicts(Move move) {
 		int examSelected = move.idExam, timeslotDestination = move.destinationTimeSlot;
 
 		this.removeExam(examSelected);
@@ -215,6 +215,182 @@ public class Timetable implements Cloneable {
 		this.objFunc = swap.penalty;
 		this.examMoved.remove(exam1);
 		this.examMoved.remove(exam2);
+	}
+
+	/**
+	 * Method that generates a move
+	 * */
+	public Move generatesNeighbourMovingExam() {
+
+		Move moving;
+
+		for(;;) {
+
+			int timeslotSource = ThreadLocalRandom.current().nextInt(timeSlots.size());
+			int timeslotDestination = ThreadLocalRandom.current().nextInt(timeSlots.size());
+
+			if(timeslotSource==timeslotDestination ||
+					timeSlots.get(timeslotSource).size()==0)
+				continue;
+
+			int conflictSelected = ThreadLocalRandom.current().nextInt(timeSlots.get(timeslotSource).size());
+
+			int examSelected = timeSlots.get(timeslotSource).get(conflictSelected);
+
+			moving = new Move(examSelected, timeslotSource, timeslotDestination);
+			int conflictNumber = evaluatesSwitch(examSelected,timeslotSource,timeslotDestination);
+
+			if (conflictNumber > 0)
+				continue;
+
+			moving.penalty = evaluateOF(examSelected, timeslotDestination);
+
+			break;
+		}
+
+		return moving;
+	}
+
+	/**
+	 * Method that generates a move
+	 * */
+	public Move generatesNeighbourMovingExamWithKempe() {
+
+		Move moving = null;
+
+		for(;;) {
+			int timeslotSource = ThreadLocalRandom.current().nextInt(timeSlots.size());
+			int timeslotDestination = ThreadLocalRandom.current().nextInt(timeSlots.size());
+			if(timeslotSource==timeslotDestination ||
+					timeSlots.get(timeslotSource).size()==0)
+				continue;
+			int conflictSelected = ThreadLocalRandom.current().nextInt(timeSlots.get(timeslotSource).size());
+			int examSelected = timeSlots.get(timeslotSource).get(conflictSelected);
+			int conflictNumber = evaluatesSwitch(examSelected,timeslotSource,timeslotDestination);
+			if (conflictNumber == 0) {
+				moving = new Move(examSelected, timeslotSource, timeslotDestination);
+				moving.penalty = evaluateOF(examSelected, timeslotDestination);
+			}
+			else
+				kempeMove(timeslotSource, timeslotDestination, examSelected);
+			break;
+		}
+		return moving;
+	}
+
+	/**
+	 * Method that generates a move
+	 * */
+	public Swap generatesNeighbourSwappingExam() {
+
+		Swap swap;
+		int examSelected2 = 0;
+
+		for(;;) {
+			int timeslotSource = ThreadLocalRandom.current().nextInt(timeSlots.size());
+			int timeslotDestination = ThreadLocalRandom.current().nextInt(timeSlots.size());
+			if(timeslotSource==timeslotDestination ||
+					timeSlots.get(timeslotSource).size()==0)
+				continue;
+			int conflictSelected = ThreadLocalRandom.current().nextInt(timeSlots.get(timeslotSource).size());
+			int examSelected = timeSlots.get(timeslotSource).get(conflictSelected);
+			int conflictNumber = evaluatesSwitch(examSelected,timeslotSource,timeslotDestination);
+			if (conflictNumber == 1) {
+				for(Iterator<Integer> it = timeSlots.get(timeslotDestination).iterator(); it.hasNext();) {
+					examSelected2 = it.next();
+					if(data.conflictExams[examSelected][examSelected2]!=0)
+						break;
+				}
+				conflictNumber = evaluatesSwitch(examSelected2, timeslotDestination, timeslotSource);
+				if (conflictNumber == 1) {
+					swap = new Swap(this, timeslotSource, timeslotDestination, examSelected, examSelected2);
+					break;
+				}
+			} else
+				continue;
+		}
+		return swap;
+	}
+
+	public Timetable kempeChain(int k, int iter) {
+
+		int randomSlot1, randomSlot2;
+		boolean[] visited;
+		Timetable tempTimetable;
+		Timetable bestTimetable = new Timetable(this);
+		bestTimetable.objFunc = Double.MAX_VALUE;
+
+		for (int i = 0; i < iter; i++) {
+			tempTimetable = new Timetable(this);
+			visited = new boolean[timeSlots.size()]; // todo creare lista invece di array in cui inserire solo i non visited
+			randomSlot1 = 0;
+			randomSlot2 = 0;
+			for (int j = 0; j < k; j++) {
+				while (randomSlot1 == randomSlot2 ) {
+					if (visited[randomSlot1] && !visited[randomSlot2]) {
+						randomSlot1 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+					} else if (visited[randomSlot2] && !visited[randomSlot1]) {
+						randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+					} else if (visited[randomSlot2] && !visited[randomSlot1]) {
+						randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+					}else {
+						randomSlot1 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+						randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+					}
+				}
+				visited[randomSlot1] = true;
+				visited[randomSlot2] = true;
+				int randomExam = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.get(randomSlot1).size());
+				int exam = tempTimetable.timeSlots.get(randomSlot1).get(randomExam);
+				tempTimetable.kempeMove(randomSlot1, randomSlot2, exam);
+				if (tempTimetable.objFunc < bestTimetable.objFunc) {
+					bestTimetable = new Timetable(tempTimetable);
+//                        break;
+				}
+			}
+		}
+
+		return bestTimetable;
+	}
+
+	public void kempeMove(int slot1, int slot2, int exam) {
+
+		int departureSlot, arrivalSlot, i = 0, exam2;
+		ArrayList<Integer> examsMoved = new ArrayList<>();
+
+		updateOF(exam, positions.get(exam), false);
+		removeExam(exam);
+		addExam(slot2,exam);
+		updateOF(exam, positions.get(exam), true);
+		examsMoved.add(exam);
+
+		while (conflictNumber > 0) {
+			if ( i%2 == 0 ) {
+				departureSlot = slot2;
+				arrivalSlot = slot1;
+			}
+			else {
+				departureSlot = slot1;
+				arrivalSlot = slot2;
+			}
+
+			while (timeSlotsConflict.get(departureSlot).size() != 0) {
+				Tuple tupla = timeSlotsConflict.get(departureSlot).get(0);
+				if (examsMoved.contains(tupla.e1)) {
+					exam2 = tupla.e2;
+				}
+				else
+					exam2 = tupla.e1;
+
+				examsMoved.add(exam2);
+				updateOF(exam2, positions.get(exam2), false);
+				removeExam(exam2);
+				addExam(arrivalSlot,exam2);
+				updateOF(exam2, arrivalSlot, true);
+			}
+			i++;
+		}
+
 	}
 
 	public int perturbation() {
@@ -268,7 +444,7 @@ public class Timetable implements Cloneable {
 					continue;
 				}
 				bestMove[i].penalty = evaluateOF(bestMove[i].idExam, bestMove[i].destinationTimeSlot);
-				doSwitchExamWithoutConflicts(bestMove[i]);
+				moveExamWithoutConflicts(bestMove[i]);
 				count++;
 			} else
 				break;
@@ -277,25 +453,24 @@ public class Timetable implements Cloneable {
 	}
 
 	public void perturbation2() {
-		int t1 = ThreadLocalRandom.current().nextInt(timeSlots.size());
+		int t1 = ThreadLocalRandom.current().nextInt(timeSlots.size()), e;
 		int t2 = ThreadLocalRandom.current().nextInt(timeSlots.size());
 		ArrayList<Integer> slot1 = timeSlots.get(t1), slot2 = timeSlots.get(t2),
-				temp1 = new ArrayList<>(), temp2 = new ArrayList<>();
+				temp = new ArrayList<>();
 
 		while (slot1.size() > 0) {
-			temp1.add(slot1.get(0));
+			temp.add(slot1.get(0));
 			removeExam(slot1.get(0));
 		}
+
 		while (slot2.size() > 0) {
-			temp2.add(slot2.get(0));
-			removeExam(slot2.get(0));
+			e = slot2.get(0);
+			removeExam(e);
+			addExam(t1, e);
 		}
 
-		for (int i = 0; i < temp1.size(); i++) {
-			addExam(t2, temp1.get(i));
-		}
-		for (int i = 0; i < temp2.size(); i++) {
-			addExam(t1, temp2.get(i));
+		for (int i = 0; i < temp.size(); i++) {
+			addExam(t2, temp.get(i));
 		}
 
 		setPenality();

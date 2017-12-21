@@ -10,9 +10,9 @@ public class Main {
         try {
             ReaderWriter rw = new ReaderWriter();
             Data data = rw.readInputFiles(args[0]);
-            ILS ils = new ILS();
             int neighborNumberFeasibleConstructor = 10;
             int neighborLS = 120;
+            HillClimbing hc = new HillClimbing();
             filename = args[0];
 
             FeasibleConstructor.FeasibleConstructorThread fb = new FeasibleConstructor.FeasibleConstructorThread(data, 0, neighborNumberFeasibleConstructor, neighborLS);
@@ -21,7 +21,7 @@ public class Main {
             System.out.println("Feasible created in time: " + elapsedTime);
             timetable.setPenality();
             System.out.println("OF with set: " + timetable.objFunc / data.studentsNumber);
-            Timetable bestTimetable = ils.ILST(timetable, data, 120000, startTime);
+            Timetable bestTimetable = hc.hillClimbing(timetable,120000, startTime);
             elapsedTime = System.currentTimeMillis() - startTime;
 //            System.out.println(timetable.toString(args[0]));
             System.out.println("Feasable: "+ timetable.feasibilityChecker());
