@@ -15,7 +15,7 @@ public class HillClimbing {
         long elapsedTime = 0;
         int kKempe = timetable.timeSlots.size() / 4;
         int iteration = 0, actual;
-        int costListSize = 1500;
+        int costListSize = 500;
         Double[] penaltyList = new Double[costListSize];
 
         for (int i = 0; i < costListSize; i++)
@@ -44,6 +44,10 @@ public class HillClimbing {
                 case 3:
                     tempTimetable = tempTimetable.kempeChain(kKempe, 7);
                     updateBest(tempTimetable, "kempe hard");
+                    break;
+                case 4:
+                    tempTimetable.manyMovesWorstExams();
+                    updateBest(tempTimetable, "worsts of random moves");
                     break;
             }
             actual = iteration % costListSize;
