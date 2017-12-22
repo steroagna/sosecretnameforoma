@@ -206,7 +206,7 @@ public class Timetable implements Cloneable {
 
 		this.removeExam(examSelected);
 		this.addExam(timeslotDestination,examSelected);
-		this.objFunc = move.penalty;
+		this.objFunc = objFunc + move.penalty;
 		this.examMoved.remove(examSelected);
 	}
 

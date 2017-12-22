@@ -3,23 +3,28 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class HillClimbing {
 
-    Timetable bestTimetableG;
-    int count = 0, nMoves;
+    Timetable bestTimetableG, startingTimetable;
+    int count, nMoves;
+    int costListSize;
+    Double[] penaltyList;
+
+    public HillClimbing(Timetable timetableBest, Timetable timetableCost) {
+        startingTimetable = new Timetable(timetableCost);
+        costListSize = 5000;
+        penaltyList = new Double[costListSize];
+        bestTimetableG = new Timetable(timetableBest);
+        for (int i = 0; i < costListSize; i++)
+            penaltyList[i] = timetableCost.objFunc*1.05;
+    }
 
     public Timetable hillClimbing(Timetable timetable, long timer, long startTime) {
 
         Timetable tempTimetable;
         Move move;
         Swap swap;
-        bestTimetableG = new Timetable(timetable);
         long elapsedTime = 0;
         int kKempe = timetable.timeSlots.size() / 4;
         int iteration = 0, actual;
-        int costListSize = 500;
-        Double[] penaltyList = new Double[costListSize];
-
-        for (int i = 0; i < costListSize; i++)
-            penaltyList[i] = timetable.objFunc;
 
         while (elapsedTime < timer) {
             tempTimetable = new Timetable(timetable);
