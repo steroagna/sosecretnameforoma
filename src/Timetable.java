@@ -61,10 +61,10 @@ public class Timetable implements Cloneable {
 		this.data = data;
 		this.timeSlots = new ArrayList<>();
 		for(int i=0;i<k;i++)
-			this.timeSlots.add(new ArrayList<>());
+			this.timeSlots.add(new ArrayList<Integer>());
 		this.timeSlotsConflict = new ArrayList<>();
 		for(int i=0;i<k;i++)
-			this.timeSlotsConflict.add(new ArrayList<>());
+			this.timeSlotsConflict.add(new ArrayList<Tuple>());
 
 		this.penaltyTimeSlots = new ArrayList<>();
 		this.examMoved = new TreeMap<>();
@@ -207,7 +207,6 @@ public class Timetable implements Cloneable {
 		this.removeExam(examSelected);
 		this.addExam(timeslotDestination,examSelected);
 		this.objFunc = move.penalty;
-		this.examMoved.remove(examSelected);
 	}
 
 	public void doSwap(Swap swap) {
@@ -221,8 +220,6 @@ public class Timetable implements Cloneable {
 		this.addExam(timeslotDestination1,exam1);
 		this.addExam(timeslotDestination2,exam2);
 		this.objFunc = swap.penalty;
-		this.examMoved.remove(exam1);
-		this.examMoved.remove(exam2);
 	}
 
 	/**
@@ -408,13 +405,14 @@ public class Timetable implements Cloneable {
 		TreeMap<Integer, Double> miniExamMoved = new TreeMap<>();
 
 		for (i = 0; i < numberOfMove; i++) {
-			examSelected = ThreadLocalRandom.current().nextInt(data.examsNumber);
+			examSelected = 1 + ThreadLocalRandom.current().nextInt(data.examsNumber);
 			miniExamMoved.put(
 					examSelected,
 					examMoved.get(examSelected)
 			);
 		}
 
+		@SuppressWarnings("rawtypes")
 		Map sortedMap = sortByValues(miniExamMoved);
 		Set set = sortedMap.entrySet();
 		Iterator it = set.iterator();
@@ -429,7 +427,7 @@ public class Timetable implements Cloneable {
 			int conflictNumber = evaluatesSwitch(examSelected, timeslotSource, timeslotDestination);
 			if (conflictNumber == 0) {
 				move = new Move(examSelected, timeslotSource, timeslotDestination);
-				move.penalty = evaluateOF(examSelected, timeslotDestination);
+				move.penalty = objFunc + evaluateOF(examSelected, timeslotDestination);
 				moveExamWithoutConflicts(move);
 			} else
 				kempeMove(timeslotSource, timeslotDestination, examSelected);
