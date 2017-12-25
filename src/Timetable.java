@@ -345,6 +345,8 @@ public class Timetable implements Cloneable {
 				}
 				visited[randomSlot1] = true;
 				visited[randomSlot2] = true;
+				if (tempTimetable.timeSlots.get(randomSlot1).size() == 0 )
+					continue;
 				int randomExam = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.get(randomSlot1).size());
 				int exam = tempTimetable.timeSlots.get(randomSlot1).get(randomExam);
 				tempTimetable.kempeMove(randomSlot1, randomSlot2, exam);
@@ -398,8 +400,8 @@ public class Timetable implements Cloneable {
 
 	}
 
-	public void manyMovesWorstExams() {
-		int numberOfMove = (int) (data.examsNumber * 0.1);
+	public void manyMovesWorstExams(double percentage) {
+		int numberOfMove = (int) (data.examsNumber * percentage);
 		Move move;
 		int examSelected, timeslotSource, timeslotDestination, i;
 		TreeMap<Integer, Double> miniExamMoved = new TreeMap<>();
