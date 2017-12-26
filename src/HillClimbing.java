@@ -119,6 +119,19 @@ public class HillClimbing {
 	                break;
 	        }
         	
+            actual = iteration % costListSize[actualList];
+            if (tempTimetable.objFunc < actualCostList.get(actual) 
+            		|| tempTimetable.objFunc <= timetable.objFunc) {
+                timetable = new Timetable(tempTimetable);
+            } else 
+            	count++;
+
+            for (int j = actualList; j < step; j++) {
+            	actual = iteration % costListSize[j];
+            	if (tempTimetable.objFunc < penaltyLists.get(j).get(actual))
+            		penaltyLists.get(j).set(actual, timetable.objFunc);
+            }
+
             if (count == 2*costListSize[actualList] && actualList < step - 1) {
             	
 //            	for (int i = 0; i < costListSize[actualList]; i++)
@@ -129,20 +142,8 @@ public class HillClimbing {
             	actualCostList = penaltyLists.get(actualList);
             	System.out.println("list: " + (actualList+1));
             }
-
-            actual = iteration % costListSize[actualList];
-            if (tempTimetable.objFunc < actualCostList.get(actual) 
-            		|| tempTimetable.objFunc <= timetable.objFunc) {
-                timetable = new Timetable(tempTimetable);
-            } else 
-            	count++;
-
-            for (int j = actualList; j < step; j++) {
-            	actual = iteration % costListSize[j];
-//            	if (tempTimetable.objFunc < penaltyLists.get(j).get(actual))
-            		penaltyLists.get(j).set(actual, timetable.objFunc);
-            }
             
+//            actualCostList.set(actual, timetable.objFunc);
             iteration++;
             elapsedTime = System.currentTimeMillis() - startTime;
         }
