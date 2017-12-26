@@ -35,9 +35,9 @@ public class HillClimbing {
         ArrayList<Double> actualCostList = penaltyLists.get(actualList);
         while (elapsedTime < timer) {
         	tempTimetable = new Timetable(timetable);
-        	choice =ThreadLocalRandom.current().nextInt(5);
+        	choice =ThreadLocalRandom.current().nextInt(4);
         	if (count > 2*costListSizeMax) {
-        		choice =ThreadLocalRandom.current().nextInt(12);
+        		choice = ThreadLocalRandom.current().nextInt(12);
         	}
 	        switch (choice) {
 	            case 0:
@@ -54,12 +54,12 @@ public class HillClimbing {
 	                updateBest(tempTimetable, "exam swap");
 	                break;
 	            case 2:
-	                tempTimetable.swapTimeslot();
-	                updateBest(tempTimetable, "timeslot swap");
-	                break;
-	            case 3:
 	                tempTimetable = tempTimetable.kempeChain(kKempe, 7);
 	                updateBest(tempTimetable, "kempe hard");
+	                break;
+	            case 3:
+	                tempTimetable.swapTimeslot();
+	                updateBest(tempTimetable, "timeslot swap");
 	                break;
 	            case 4:
 	                tempTimetable.manyMovesWorstExams(0.1);
