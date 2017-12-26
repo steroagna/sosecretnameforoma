@@ -5,7 +5,7 @@ public class HillClimbing {
 
     Timetable bestTimetableG;
     int count = 0, nMoves;
-    int costListMaxDim = 500;
+    int costListMaxDim = 150;
     int costListMinDim = 150;
     int examNumberMin = 70;
     int step = 10, actualList;
