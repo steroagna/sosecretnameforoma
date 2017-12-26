@@ -5,10 +5,10 @@ public class HillClimbing {
 
     Timetable bestTimetableG;
     int count = 0, nMoves;
-    int costListMaxDim = 5000;
+    int costListMaxDim = 500;
     int costListMinDim = 150;
     int examNumberMin = 70;
-    int step = 20, actualList;
+    int step = 10, actualList;
 
     public Timetable hillClimbing(Timetable timetable, long timer, long startTime) {
 
@@ -18,16 +18,15 @@ public class HillClimbing {
         bestTimetableG = new Timetable(timetable);
         long elapsedTime = 0;
         int kKempe = timetable.timeSlots.size() / 4;
-        int iteration = 0, actual;
+        int iteration = 0, actual, choice;
         actualList = 0;
-//        int costListSizeMax = examNumberMin * costListMaxDim / timetable.data.examsNumber;
+        int costListSizeMax = examNumberMin * costListMaxDim / timetable.data.examsNumber;
         int[] costListSize = new int[step];
         ArrayList<ArrayList<Double>> penaltyLists = new ArrayList<>();
         
         for (int j = 0; j < step; j++) {
-        	costListSize[j] = costListMaxDim * (j+1) / step;
-//        	costListSize[j] = costListMinDim;
-//        	costListMinDim  = costListMinDim * 2;
+        	costListSize[j] = costListSizeMax;
+        	costListSizeMax += costListSizeMax;
         	System.out.println("list " + (j+1) + " size: " + (costListSize[j])); 
         	penaltyLists.add(new ArrayList<Double>());
 	        for (int i = 0; i < costListSize[j]; i++)
@@ -37,7 +36,11 @@ public class HillClimbing {
         ArrayList<Double> actualCostList = penaltyLists.get(actualList);
         while (elapsedTime < timer) {
         	tempTimetable = new Timetable(timetable);
-	        switch (ThreadLocalRandom.current().nextInt(5)) {
+        	choice =ThreadLocalRandom.current().nextInt(5);
+        	if (count > 2*costListSizeMax) {
+        		choice =ThreadLocalRandom.current().nextInt(12);
+        	}
+	        switch (choice) {
 	            case 0:
 	                move = tempTimetable.generatesNeighbourMovingExamWithKempe();
 	                if (move != null) {
