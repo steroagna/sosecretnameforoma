@@ -14,15 +14,4 @@ public class Move {
 		this.idExam = idExam;
 		this.penalty = 0;
 	}
-	
-	@Override
-	public boolean equals(Object o) {
-		
-		if(o instanceof Move) {
-			Move ti = (Move)o;
-			if(ti.idExam==this.idExam && this.penalty==ti.penalty)
-				return true;
-		}
-		return false;
-	}
 }

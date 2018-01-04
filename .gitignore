@@ -5,3 +5,6 @@
 /build
 *.class
 *.sol
+instance*
+.classpath
+.project

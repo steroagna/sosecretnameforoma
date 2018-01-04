@@ -17,8 +17,4 @@ public class Tuple implements Cloneable {
 		}
 		return false;
 	}
-	
-	public Object clone() throws CloneNotSupportedException {
-		return super.clone();
-	}
 }

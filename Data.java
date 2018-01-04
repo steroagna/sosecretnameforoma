@@ -2,50 +2,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Data {
-
-	/**
-     * Number of conflicts among exams
-     */
 	public int totalConflicts = 0;
-	
-	/**
-     * Number of exams value
-     */
     public int examsNumber = 0;
-    
-    /**
-     * Number of students value
-     */
     public int studentsNumber = 0;
-    
-    /**
-     * Slot value
-     */
     public int slotsNumber;
-
-    /**
-     * HashMap of Exams
-     */
     public HashMap<Integer, Exam> examsMap;
-    
-    /**
-     * Matrix of conflicts (EXAM/EXAM)
-     */
     int[][] conflictExams;
-    
-    /**
-     * Matrix of students (STUD/EXAM)
-     */
     int[][] studentExams;
-    
-    /**
-     * List of Exams for each slot ---> final solution
-     */
     public ArrayList<ArrayList<Integer>> timeSlots;
-
-    /**
-     * Objective function value ---> penalty to minimize
-     */
     public int objFunc;
 
 	public Data() {
@@ -60,16 +24,8 @@ public class Data {
 		this.objFunc		= Integer.MAX_VALUE;
 	}
 
-	public Exam getExam(int examId) {
-		if (this.examsMap.containsKey(examId))
-			return this.examsMap.get(examId);
-		else
-			return null;
-	}
-
 	public void addExam(Exam exam) {
-		this.examsMap.put(exam.getId(), exam);
+		this.examsMap.put(exam.id, exam);
 		return;
 	}
-
 }

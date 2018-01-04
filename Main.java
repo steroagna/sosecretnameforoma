@@ -10,18 +10,12 @@ public class Main {
         try {
             ReaderWriter rw = new ReaderWriter();
             Data data = rw.readInputFiles(args[0]);
-            int neighborNumberFeasibleConstructor = 10;
-            int neighborLS = 1200;
+            FeasibleConstructor fb = new FeasibleConstructor();
             GreatDeluge gd = new GreatDeluge();
-            VNS v = new VNS();
             filename = args[0];
 
-            FeasibleConstructor.FeasibleConstructorThread fb = new FeasibleConstructor.FeasibleConstructorThread(data, 0, neighborNumberFeasibleConstructor, neighborLS);
-            Timetable timetable = fb.makeFeasibleGraphColoringWithTabu(data, null, neighborNumberFeasibleConstructor);
-            elapsedTime = System.currentTimeMillis() - startTime;
-            System.out.println("Feasible created in time: " + elapsedTime);
+            Timetable timetable = fb.makeFeasibleGraphColoringWithTabu(data, null, 10);
             timetable.setPenality();
-            System.out.println("OF with set: " + timetable.objFunc / data.studentsNumber);
             Timetable bestTimetable = gd.greatDeluge(timetable,300000, startTime);
             elapsedTime = System.currentTimeMillis() - startTime;
             System.out.println("Feasable: "+ timetable.feasibilityChecker());
