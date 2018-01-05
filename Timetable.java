@@ -232,42 +232,41 @@ public class Timetable implements Cloneable {
 		return swap;
 	}
 
-	public Timetable kempeChain(int k, int iter) {
-		int randomSlot1, randomSlot2, j, i, exam, randomExam;
+	public Timetable kempeChain(int k) {
+		int randomSlot1, randomSlot2, j, exam, randomExam;
 		boolean[] visited;
 		Timetable tempTimetable;
 		Timetable bestTimetable = new Timetable(this);
 		bestTimetable.objFunc = Double.MAX_VALUE;
 
-		for (i = 0; i < iter; i++) {
-			tempTimetable = new Timetable(this);
-			visited = new boolean[timeSlots.size()]; // todo creare lista invece di array in cui inserire solo i non visited
-			randomSlot1 = 0;
-			randomSlot2 = 0;
-			for (j = 0; j < k; j++) {
-				while (randomSlot1 == randomSlot2 ) {
-					if (visited[randomSlot1] && !visited[randomSlot2]) {
-						randomSlot1 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
-					} else if (visited[randomSlot2] && !visited[randomSlot1]) {
-						randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
-					} else if (visited[randomSlot2] && !visited[randomSlot1]) {
-						randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
-					}else {
-						randomSlot1 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
-						randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
-					}
+		tempTimetable = new Timetable(this);
+		visited = new boolean[timeSlots.size()]; // todo creare lista invece di array in cui inserire solo i non visited
+		randomSlot1 = 0;
+		randomSlot2 = 0;
+		for (j = 0; j < k; j++) {
+			while (randomSlot1 == randomSlot2 ) {
+				if (visited[randomSlot1] && !visited[randomSlot2]) {
+					randomSlot1 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+				} else if (visited[randomSlot2] && !visited[randomSlot1]) {
+					randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+				} else if (visited[randomSlot2] && !visited[randomSlot1]) {
+					randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+				} else {
+					randomSlot1 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
+					randomSlot2 = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.size());
 				}
-				visited[randomSlot1] = true;
-				visited[randomSlot2] = true;
-				if (tempTimetable.timeSlots.get(randomSlot1).size() == 0 )
-					continue;
-				randomExam = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.get(randomSlot1).size());
-				exam = tempTimetable.timeSlots.get(randomSlot1).get(randomExam);
-				tempTimetable.kempeMove(randomSlot1, randomSlot2, exam);
-				if (tempTimetable.objFunc < bestTimetable.objFunc)
-					bestTimetable = new Timetable(tempTimetable);
 			}
+			visited[randomSlot1] = true;
+			visited[randomSlot2] = true;
+			if (tempTimetable.timeSlots.get(randomSlot1).size() == 0 )
+				continue;
+			randomExam = ThreadLocalRandom.current().nextInt(tempTimetable.timeSlots.get(randomSlot1).size());
+			exam = tempTimetable.timeSlots.get(randomSlot1).get(randomExam);
+			tempTimetable.kempeMove(randomSlot1, randomSlot2, exam);
+			if (tempTimetable.objFunc < bestTimetable.objFunc)
+				bestTimetable = new Timetable(tempTimetable);
 		}
+
 		return bestTimetable;
 	}
 
@@ -342,8 +341,9 @@ public class Timetable implements Cloneable {
 				move = new Move(examSelected, timeslotSource, timeslotDestination);
 				move.penalty = objFunc + evaluateOF(examSelected, timeslotDestination);
 				moveExamWithoutConflicts(move);
-			} else
-				kempeMove(timeslotSource, timeslotDestination, examSelected);
+			}
+//			else
+//				kempeMove(timeslotSource, timeslotDestination, examSelected);
 		}
 		return;
 	}
