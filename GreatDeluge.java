@@ -11,7 +11,7 @@ public class GreatDeluge {
         Swap swap;
         bestTimetableG = new Timetable(timetable);
         long elapsedTime = 0;
-        int kKempe = timetable.timeSlots.size() / 4, iterNoMovement = 0, nMoves = 8;
+        int iteration = 0, kKempe = timetable.timeSlots.size() / 4, iterNoMovement = 0, nMoves = 8;
         double level, initialLevel = timetable.objFunc, p;
         double reductionLevel = timetable.data.examsNumber * 0.0000006513 - 0.00004432;
         if (reductionLevel < 0.00005)
@@ -22,60 +22,56 @@ public class GreatDeluge {
             tempTimetable = new Timetable(timetable);
             switch (ThreadLocalRandom.current().nextInt(nMoves)) {
                 case 0:
-                    move = tempTimetable.generatesNeighbourMovingExamWithKempe();
-                    if (move != null) {
-                        tempTimetable.moveExamWithoutConflicts(move);
-                        updateBest(tempTimetable, "exam move 1");
-                    } else
-                    	updateBest(tempTimetable, "kempe simple 1");
-                    break;
-                case 1:
                     swap = tempTimetable.generatesNeighbourSwappingExam();
                     tempTimetable.doSwap(swap);
                     updateBest(tempTimetable, "exam swap 1");
                     break;
-                case 2:
+                case 1:
                     tempTimetable = tempTimetable.kempeChain(kKempe, 7);
                     updateBest(tempTimetable, "kempe hard 1");
-                    break;                    
-                case 3:
-                    tempTimetable.swapTimeslot();
-                    updateBest(tempTimetable, "timeslot swap 1");
                     break;
-                case 4:
-	                for (int i = 0; i < 2; i++) {
-		            	move = tempTimetable.generatesNeighbourMovingExamWithKempe();
-		                if (move != null) {
-		                    tempTimetable.moveExamWithoutConflicts(move);
-		                    updateBest(tempTimetable, "exam move 2");
-		                } else
-		                    updateBest(tempTimetable, "kempe simple 2");
-	                }
-	                break;
-	            case 5:
+                case 2:
 	            	for (int i = 0; i < 2; i++) {
 		                swap = tempTimetable.generatesNeighbourSwappingExam();
 		                tempTimetable.doSwap(swap);
 		                updateBest(tempTimetable, "exam swap 2");
 	            	}
 	            	break;
-	            case 6:
-	                for (int i = 0; i < 3; i++) {
-		            	move = tempTimetable.generatesNeighbourMovingExamWithKempe();
-		                if (move != null) {
-		                    tempTimetable.moveExamWithoutConflicts(move);
-		                    updateBest(tempTimetable, "exam move 3");
-		                } else
-		                    updateBest(tempTimetable, "kempe simple 3");
-	                }
-	                break;
-	            case 7:
+	            case 3:
 	            	for (int i = 0; i < 3; i++) {
 		                swap = tempTimetable.generatesNeighbourSwappingExam();
 		                tempTimetable.doSwap(swap);
 		                updateBest(tempTimetable, "exam swap 3");
 	            	}
 	            	break;
+                case 4:
+                    for (int i = 0; i < 4; i++) {
+                        swap = tempTimetable.generatesNeighbourSwappingExam();
+                        tempTimetable.doSwap(swap);
+                        updateBest(tempTimetable, "exam swap 4");
+                    }
+                    break;
+                case 5:
+                    for (int i = 0; i < 5; i++) {
+                        swap = tempTimetable.generatesNeighbourSwappingExam();
+                        tempTimetable.doSwap(swap);
+                        updateBest(tempTimetable, "exam swap 5");
+                    }
+                    break;
+                case 6:
+                    for (int i = 0; i < 6; i++) {
+                        swap = tempTimetable.generatesNeighbourSwappingExam();
+                        tempTimetable.doSwap(swap);
+                        updateBest(tempTimetable, "exam swap 6");
+                    }
+                    break;
+                case 7:
+                    for (int i = 0; i < 7; i++) {
+                        swap = tempTimetable.generatesNeighbourSwappingExam();
+                        tempTimetable.doSwap(swap);
+                        updateBest(tempTimetable, "exam swap 7");
+                    }
+                    break;
             }
 
             if (tempTimetable.objFunc < level || tempTimetable.objFunc < timetable.objFunc){//
@@ -84,12 +80,14 @@ public class GreatDeluge {
             } else
             	iterNoMovement++;
 
-            if(iterNoMovement >= 3000){
+            if(iterNoMovement >= 1000){
                 timetable = new Timetable(bestTimetableG);
             	iterNoMovement = 0;
+                System.out.println("Reset");
             }
 
-            level -= (level - bestTimetableG.objFunc) * reductionLevel;
+            if (iteration % 2 == 0)
+                level -= (level - bestTimetableG.objFunc) * reductionLevel;
             if (level - bestTimetableG.objFunc < 0.0001 * bestTimetableG.objFunc){
         		p = ThreadLocalRandom.current().nextDouble();
         		level += (initialLevel - level) * p;
@@ -99,10 +97,12 @@ public class GreatDeluge {
         	}
 
         	// Just for print
-            if (iterNoMovement == 2999){
+            if (iteration % 50000 == 0){
                 System.out.println("Level: " + level / timetable.data.studentsNumber);
                 System.out.println("Actual OF: " + timetable.objFunc / timetable.data.studentsNumber);
             }
+
+            iteration++;
             elapsedTime = System.currentTimeMillis() - startTime;
         }
 
