@@ -9,18 +9,19 @@ public class GreatDeluge {
     public Timetable greatDeluge(Timetable timetable, long timer, long startTime) throws Exception {
         ArrayList<GDKempeThread> ilskt = new ArrayList<>();
         Timetable tempTimetable, tempTimetableKempe;
+        Move move;
         Swap swap;
         bestTimetableG = new Timetable(timetable);
         deltaLevel = 0.0001 * bestTimetableG.objFunc;
         long elapsedTime = 0;
         int iteration = 0, kKempe = timetable.timeSlots.size() / 4, iterNoMovement = 0,
-                nMoves, nMovesMax = 17, nExamsMax = 600, nSwap, constSwap = 5,
-                countReset = 0, i, threadsKempe = 20;
+                nMoves, nMovesMax = 18, nExamsMax = 600,
+                nSwap, constSwap = 5, i, threadsKempe = 30;
         nMoves = timetable.data.examsNumber * nMovesMax / nExamsMax;
-        if (nMoves < 4)
-            nMoves = 4;
-        if (nMoves > 17)
-            nMoves = 17;
+        if (nMoves < 5)
+            nMoves = 5;
+        if (nMoves > 18)
+            nMoves = 18;
         System.out.println("nMoves: " + nMoves);
         double level, initialLevel = timetable.objFunc, p;
         double reductionConstInitial = timetable.data.examsNumber * 0.0000006513 - 0.00004432;
@@ -36,8 +37,18 @@ public class GreatDeluge {
             tempTimetable = new Timetable(timetable);
             switch (ThreadLocalRandom.current().nextInt(nMoves)) {
                 case 0:
-//                    tempTimetable = tempTimetable.kempeChain(kKempe, 5);
-
+                    move = tempTimetable.generatesNeighbourMovingExamWithKempe();
+                    if (move != null) {
+                        tempTimetable.moveExamWithoutConflicts(move);
+                        if (updateBest(tempTimetable, "exam move 1")){
+                            reductionConst *= 1.001;
+                        }
+                    } else
+                    if (updateBest(tempTimetable, "kempe simple 1")){
+                        reductionConst *= 1.001;
+                    }
+                    break;
+                case 1:
                     for (i = 0; i < threadsKempe; i++)
                         ilskt.add(new GreatDeluge.GDKempeThread(tempTimetable, kKempe));
 
@@ -53,166 +64,149 @@ public class GreatDeluge {
                     ilskt.clear();
 
                     if (updateBest(tempTimetable, "kempe hard 1")) {
-                        reductionConst *= 1.01;
-                        countReset = 0;
+                        reductionConst *= 1.001;
                     }
                     break;
-                case 1:
+                case 2:
                     swap = tempTimetable.generatesNeighbourSwappingExam();
                     tempTimetable.doSwap(swap);
                     if (updateBest(tempTimetable, "exam swap 1")) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
-                        }
+                        reductionConst *= 1.001;
+                    }
                     break;
-                case 2:
-	            	for (i = 0; i < 2; i++) {
-		                swap = tempTimetable.generatesNeighbourSwappingExam();
-		                tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 2")) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
-                        }
-	            	}
-	            	break;
-	            case 3:
-	            	for (i = 0; i < 3; i++) {
-		                swap = tempTimetable.generatesNeighbourSwappingExam();
-		                tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 3")) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
-                        }
-	            	}
-	            	break;
-                case 4:
-                    for (i = 0; i < 4; i++) {
+                case 3:
+                    for (i = 0; i < 2; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 4")) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
+                        if (updateBest(tempTimetable, "exam swap 2")) {
+                            reductionConst *= 1.001;
+                        }
+                    }
+                    break;
+                case 4:
+                    for (i = 0; i < 3; i++) {
+                        swap = tempTimetable.generatesNeighbourSwappingExam();
+                        tempTimetable.doSwap(swap);
+                        if (updateBest(tempTimetable, "exam swap 3")) {
+                            reductionConst *= 1.001;
                         }
                     }
                     break;
                 case 5:
-                    for (i = 0; i < 5; i++) {
+                    for (i = 0; i < 4; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 5")) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
+                        if (updateBest(tempTimetable, "exam swap 4")) {
+                            reductionConst *= 1.001;
                         }
                     }
                     break;
                 case 6:
-                    for (i = 0; i < 6; i++) {
+                    for (i = 0; i < 5; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 6")) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
+                        if (updateBest(tempTimetable, "exam swap 5")) {
+                            reductionConst *= 1.001;
                         }
                     }
                     break;
                 case 7:
-                    for (i = 0; i < 7; i++) {
+                    for (i = 0; i < 6; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 7")) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
+                        if (updateBest(tempTimetable, "exam swap 6")) {
+                            reductionConst *= 1.001;
                         }
                     }
                     break;
                 case 8:
-                    for (i = 0; i < 8; i++) {
+                    for (i = 0; i < 7; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 8")) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
+                        if (updateBest(tempTimetable, "exam swap 7")) {
+                            reductionConst *= 1.001;
                         }
                     }
                     break;
                 case 9:
-                    for (i = 0; i < 9; i++) {
+                    for (i = 0; i < 8; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 9")) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
+                        if (updateBest(tempTimetable, "exam swap 8")) {
+                            reductionConst *= 1.001;
                         }
                     }
                     break;
                 case 10:
+                    for (i = 0; i < 9; i++) {
+                        swap = tempTimetable.generatesNeighbourSwappingExam();
+                        tempTimetable.doSwap(swap);
+                        if (updateBest(tempTimetable, "exam swap 9")) {
+                            reductionConst *= 1.001;
+                        }
+                    }
+                    break;
+                case 11:
                     for (i = 0; i < 10; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
                         if (updateBest(tempTimetable, "exam swap 10")) {
                             reductionConst *= 1.01;
-                            countReset = 0;
-                        }
-                    }
-                    break;
-                case 11:
-                    for (i = 0; i < 11; i++) {
-                        swap = tempTimetable.generatesNeighbourSwappingExam();
-                        tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 11")) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
                         }
                     }
                     break;
                 case 12:
-                    for (i = 0; i < 12; i++) {
+                    for (i = 0; i < 11; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 12")) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
+                        if (updateBest(tempTimetable, "exam swap 11")) {
+                            reductionConst *= 1.001;
                         }
                     }
                     break;
                 case 13:
-                    for (i = 0; i < 13; i++) {
+                    for (i = 0; i < 12; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 13")) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
+                        if (updateBest(tempTimetable, "exam swap 12")) {
+                            reductionConst *= 1.001;
                         }
                     }
                     break;
                 case 14:
-                    for (i = 0; i < 14; i++) {
+                    for (i = 0; i < 13; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 14")) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
+                        if (updateBest(tempTimetable, "exam swap 13")) {
+                            reductionConst *= 1.001;
                         }
                     }
                     break;
                 case 15:
-                    for (i = 0; i < 15; i++) {
+                    for (i = 0; i < 14; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 15")) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
+                        if (updateBest(tempTimetable, "exam swap 14")) {
+                            reductionConst *= 1.001;
                         }
                     }
                     break;
                 case 16:
+                    for (i = 0; i < 15; i++) {
+                        swap = tempTimetable.generatesNeighbourSwappingExam();
+                        tempTimetable.doSwap(swap);
+                        if (updateBest(tempTimetable, "exam swap 15")) {
+                            reductionConst *= 1.001;
+                        }
+                    }
+                    break;
+                case 17:
                     nSwap = ThreadLocalRandom.current().nextInt(constSwap) + 16;
                     for (i = 0; i < nSwap; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
                         if (updateBest(tempTimetable, "exam swap " + nSwap)) {
-                            reductionConst *= 1.01;
-                            countReset = 0;
+                            reductionConst *= 1.001;
                         }
                     }
                     break;
@@ -226,26 +220,27 @@ public class GreatDeluge {
             } else
                 iterNoMovement++;
 
-            if(iterNoMovement >= 200){
+            if(iterNoMovement >= 3000){
                 timetable = new Timetable(bestTimetableG);
-                countReset++;
-            	iterNoMovement = 0;
+//                countReset++;
+                reductionConst = reductionConstInitial;
+                iterNoMovement = 0;
                 System.out.println("Reset");
                 System.out.println(" |-> Level: " + level / timetable.data.studentsNumber);
                 System.out.println(" |-> Actual OF temp: " + tempTimetable.objFunc / timetable.data.studentsNumber);
                 System.out.println(" |-> Actual OF: " + timetable.objFunc / timetable.data.studentsNumber);
                 System.out.println();
-                if (countReset == 5) {
-                    reductionConst /= 2;
-                    countReset = 0;
-                	System.out.println("Slowly Baby!!1!1!");
-                	System.out.println(" |-> Reduction Const: " + reductionConst);
-                }
+//                if (countReset == 2) {
+//                    reductionConst /= 2;
+//                    countReset = 0;
+//                    System.out.println("Slowly Baby!!1!1!");
+//                    System.out.println(" |-> Reduction Const: " + reductionConst);
+//                }
             }
 
             level -= (level - bestTimetableG.objFunc) * reductionConst;
             if (level - bestTimetableG.objFunc < deltaLevel) {
-                reductionConst *= 1.01;
+//                reductionConst *= 1.05;
                 p = ThreadLocalRandom.current().nextDouble();
                 level = bestTimetableG.objFunc + (initialLevel - level) * p;
                 while (level < timetable.objFunc) {
@@ -254,9 +249,9 @@ public class GreatDeluge {
                 }
                 System.out.println();
                 System.out.println("New Level: " + level / timetable.data.studentsNumber);
-        	}
+            }
 
-        	// Just for print
+            // Just for print
             if (iteration % 5000 == 0){
                 System.out.println();
                 System.out.println("Level: " + level / timetable.data.studentsNumber);
