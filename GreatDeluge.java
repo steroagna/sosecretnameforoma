@@ -17,15 +17,15 @@ public class GreatDeluge {
         deltaLevel = 0.0001 * bestTimetableG.objFunc;
         long elapsedTime = 0;
         int iteration = 0, kKempe = timetable.timeSlots.size() / 4, iterNoMovement = 0,
-                nMoves, nMovesMax = 8, nExamsMax = 600, moved, nIterMin = 1000,
+                nMoves, nMovesMax = 8, nExamsMax = 600, moved,
                 i, countManyMoves = 1, plateau = 50;
         int threadsMove  = 50;
         int threadsSwap  = 50;
         int threadsKempe = 8;
-        nMoves = timetable.data.examsNumber * nMovesMax / nExamsMax;
-        if (nMoves < 5)
-            nMoves = 5;
-        if (nMoves > 8)
+//        nMoves = timetable.data.examsNumber * nMovesMax / nExamsMax;
+//        if (nMoves < 5)
+//            nMoves = 5;
+//        if (nMoves > 8)
             nMoves = 8;
         System.out.println("nMoves: " + nMoves);
         double level, initialLevel = timetable.objFunc, p;
@@ -213,8 +213,6 @@ public class GreatDeluge {
                 }
                 reductionConst = reductionConstInitial;
                 countManyMoves++;
-                nIterMin += 500;
-                System.out.println("Limit: " + nIterMin);
                 iterNoMovement = 0;
                 System.out.println("After Reset");
                 System.out.println(" |-> Level: " + level / timetable.data.studentsNumber);
