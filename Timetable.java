@@ -177,6 +177,28 @@ public class Timetable implements Cloneable {
 		this.objFunc = swap.penalty;
 	}
 
+	public Move generatesNeighbourMovingExam() {
+		int timeslotSource, timeslotDestination, conflictSelected, examSelected, conflictNumber;
+		Move moving = null;
+
+		for(;;) {
+			timeslotSource = ThreadLocalRandom.current().nextInt(timeSlots.size());
+			timeslotDestination = ThreadLocalRandom.current().nextInt(timeSlots.size());
+			if(timeslotSource==timeslotDestination ||
+					timeSlots.get(timeslotSource).size()==0)
+				continue;
+			conflictSelected = ThreadLocalRandom.current().nextInt(timeSlots.get(timeslotSource).size());
+			examSelected = timeSlots.get(timeslotSource).get(conflictSelected);
+			conflictNumber = evaluatesSwitch(examSelected,timeslotSource,timeslotDestination);
+			if (conflictNumber == 0) {
+				moving = new Move(examSelected, timeslotSource, timeslotDestination);
+				moving.penalty = objFunc + evaluateOF(examSelected, timeslotDestination);
+				break;
+			}
+		}
+		return moving;
+	}
+
 	public Move generatesNeighbourMovingExamWithKempe() {
 		int timeslotSource, timeslotDestination, conflictSelected, examSelected, conflictNumber;
 		Move moving = null;
