@@ -17,24 +17,16 @@ public class GreatDeluge {
         deltaLevel = 0.0001 * bestTimetableG.objFunc;
         long elapsedTime = 0;
         int iteration = 0, kKempe = timetable.timeSlots.size() / 4, iterNoMovement = 0,
-                nMoves, nMovesMax = 8, nExamsMax = 600, moved,
-                i, countManyMoves = 1, plateau = 50;
+                nMoves, i, countManyMoves = 1, plateau = 50;
         int threadsMove  = 50;
         int threadsSwap  = 50;
         int threadsKempe = 8;
-//        nMoves = timetable.data.examsNumber * nMovesMax / nExamsMax;
-//        if (nMoves < 5)
-//            nMoves = 5;
-//        if (nMoves > 8)
-            nMoves = 8;
-        System.out.println("nMoves: " + nMoves);
+        nMoves = 8;
         double level, initialLevel = timetable.objFunc, p;
         double reductionConstInitial = timetable.data.examsNumber * 0.0000006513 - 0.00004432;
         if (reductionConstInitial < 0.00005)
             reductionConstInitial = 0.00005;
         double reductionConst = reductionConstInitial;
-
-        System.out.println("Reduction Const: " + reductionConst);
         level = initialLevel;
 
         while (elapsedTime < timer) {
@@ -55,14 +47,14 @@ public class GreatDeluge {
                     }
                     ilskt.clear();
 
-                    if (updateBest(tempTimetable, "kempe hard 1")) {
+                    if (updateBest(tempTimetable)) {
                         reductionConst *= 1.002;
                     }
                     break;
                 case 1:
                     swap = tempTimetable.generatesNeighbourSwappingExam();
                     tempTimetable.doSwap(swap);
-                    if (updateBest(tempTimetable, "exam swap 1")) {
+                    if (updateBest(tempTimetable)) {
                         reductionConst *= 1.002;
                     }
                     break;
@@ -70,7 +62,7 @@ public class GreatDeluge {
                     for (i = 0; i < 2; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 2")) {
+                        if (updateBest(tempTimetable)) {
                             reductionConst *= 1.002;
                         }
                     }
@@ -79,7 +71,7 @@ public class GreatDeluge {
                     for (i = 0; i < 3; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 3")) {
+                        if (updateBest(tempTimetable)) {
                             reductionConst *= 1.002;
                         }
                     }
@@ -88,7 +80,7 @@ public class GreatDeluge {
                     for (i = 0; i < 4; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 4")) {
+                        if (updateBest(tempTimetable)) {
                             reductionConst *= 1.002;
                         }
                     }
@@ -97,7 +89,7 @@ public class GreatDeluge {
                     for (i = 0; i < 5; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 5")) {
+                        if (updateBest(tempTimetable)) {
                             reductionConst *= 1.002;
                         }
                     }
@@ -106,7 +98,7 @@ public class GreatDeluge {
                     for (i = 0; i < 6; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 6")) {
+                        if (updateBest(tempTimetable)) {
                             reductionConst *= 1.002;
                         }
                     }
@@ -115,7 +107,7 @@ public class GreatDeluge {
                     for (i = 0; i < 7; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
-                        if (updateBest(tempTimetable, "exam swap 7")) {
+                        if (updateBest(tempTimetable)) {
                             reductionConst *= 1.002;
                         }
                     }
@@ -131,14 +123,8 @@ public class GreatDeluge {
                 iterNoMovement++;
 
             if(iterNoMovement >= 1000){
-                System.out.println();
-                System.out.println("Before Reset");
-                System.out.println(" |-> Level: " + level / timetable.data.studentsNumber);
-                System.out.println(" |-> Actual OF: " + timetable.objFunc / timetable.data.studentsNumber);
-                System.out.println(" |-> Actual OF temp: " + tempTimetable.objFunc / timetable.data.studentsNumber);
                 timetable = new Timetable(bestTimetableG);
                 if (countManyMoves % 3 == 1) {
-                    System.out.println("Trying Bests with Thread");
                     for (i = 0; i < threadsMove; i++)
                         ilsmt.add(new GDMoveThread(timetable, plateau, timer, startTime));
 
@@ -159,7 +145,7 @@ public class GreatDeluge {
 
                     if (bestMove.penalty < timetable.objFunc) {
                         timetable.moveExamWithoutConflicts(bestMove);
-                        updateBest(timetable, "exam move");
+                        updateBest(timetable);
                     }
                     ilsmt.clear();
 
@@ -182,7 +168,7 @@ public class GreatDeluge {
 
                     if (bestSwap.penalty < timetable.objFunc) {
                         timetable.doSwap(bestSwap);
-                        updateBest(timetable, "exam swap");
+                        updateBest(timetable);
                     }
                     ilsst.clear();
 
@@ -200,10 +186,8 @@ public class GreatDeluge {
                     }
                     ilskt.clear();
                 } else if (countManyMoves % 3 == 2) {
-                    moved = timetable.manyMovesWorstExams(0.35);
-                    System.out.println("Moved: " + moved + " exams");
-                    moved = timetable.manyMovesWorstExams(0.35);
-                    System.out.println("Moved: " + moved + " exams");
+                    timetable.manyMovesWorstExams(0.35);
+                    timetable.manyMovesWorstExams(0.35);
                     if (level < timetable.objFunc) {
                         level = timetable.objFunc;
                         if (initialLevel < level) {
@@ -214,11 +198,6 @@ public class GreatDeluge {
                 reductionConst = reductionConstInitial;
                 countManyMoves++;
                 iterNoMovement = 0;
-                System.out.println("After Reset");
-                System.out.println(" |-> Level: " + level / timetable.data.studentsNumber);
-                System.out.println(" |-> Actual OF: " + timetable.objFunc / timetable.data.studentsNumber);
-                System.out.println(" |-> Actual OF temp: " + tempTimetable.objFunc / timetable.data.studentsNumber);
-                System.out.println();
             }
 
             if (iteration % 2 == 0)
@@ -227,21 +206,10 @@ public class GreatDeluge {
                 reductionConst = reductionConstInitial;
                 p = ThreadLocalRandom.current().nextDouble();
                 level += (initialLevel - level) * p;
-                System.out.println();
-                System.out.println("New Level: " + level / timetable.data.studentsNumber);
-                System.out.println("Actual OF: " + timetable.objFunc / timetable.data.studentsNumber);
                 while (level < timetable.objFunc) {
                     p = ThreadLocalRandom.current().nextDouble();
                     level += (initialLevel - level) * p;
                 }
-            }
-
-            // Just for print
-            if (iteration % 10000 == 0){
-                System.out.println();
-                System.out.println("Level: " + level / timetable.data.studentsNumber);
-                System.out.println("Actual OF: " + timetable.objFunc / timetable.data.studentsNumber);
-                System.out.println("Actual OF temp: " + tempTimetable.objFunc / timetable.data.studentsNumber);
             }
 
             iteration++;
@@ -347,14 +315,11 @@ public class GreatDeluge {
         }
     }
 
-    public boolean updateBest(Timetable timetable, String flag) {
+    public boolean updateBest(Timetable timetable) {
         if (timetable.objFunc < bestTimetableG.objFunc) {
             bestTimetableG = new Timetable(timetable);
             deltaLevel = 0.0001 * bestTimetableG.objFunc;
             bestTimetableG.toString(Main.filename);
-            if (Main.debug) {
-                System.out.println("OF --> " + timetable.objFunc / timetable.data.studentsNumber + " " + flag  + " <--");
-            }
             return true;
         }
         return false;
