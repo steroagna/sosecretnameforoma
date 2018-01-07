@@ -9,19 +9,18 @@ public class GreatDeluge {
     public Timetable greatDeluge(Timetable timetable, long timer, long startTime) throws Exception {
         ArrayList<GDKempeThread> ilskt = new ArrayList<>();
         Timetable tempTimetable, tempTimetableKempe;
-        Move move;
         Swap swap;
         bestTimetableG = new Timetable(timetable);
         deltaLevel = 0.0001 * bestTimetableG.objFunc;
         long elapsedTime = 0;
         int iteration = 0, kKempe = timetable.timeSlots.size() / 4, iterNoMovement = 0,
-                nMoves, nMovesMax = 18, nExamsMax = 600,
-                nSwap, constSwap = 5, i, threadsKempe = 30;
+                nMoves, nMovesMax = 18, nExamsMax = 600, moved, nIterMin = 1500,
+                nSwap, constSwap = 5, i, threadsKempe = 12;
         nMoves = timetable.data.examsNumber * nMovesMax / nExamsMax;
-        if (nMoves < 5)
-            nMoves = 5;
-        if (nMoves > 18)
-            nMoves = 18;
+        if (nMoves < 4)
+            nMoves = 4;
+        if (nMoves > 17)
+            nMoves = 17;
         System.out.println("nMoves: " + nMoves);
         double level, initialLevel = timetable.objFunc, p;
         double reductionConstInitial = timetable.data.examsNumber * 0.0000006513 - 0.00004432;
@@ -37,18 +36,6 @@ public class GreatDeluge {
             tempTimetable = new Timetable(timetable);
             switch (ThreadLocalRandom.current().nextInt(nMoves)) {
                 case 0:
-                    move = tempTimetable.generatesNeighbourMovingExamWithKempe();
-                    if (move != null) {
-                        tempTimetable.moveExamWithoutConflicts(move);
-                        if (updateBest(tempTimetable, "exam move 1")){
-                            reductionConst *= 1.001;
-                        }
-                    } else
-                    if (updateBest(tempTimetable, "kempe simple 1")){
-                        reductionConst *= 1.001;
-                    }
-                    break;
-                case 1:
                     for (i = 0; i < threadsKempe; i++)
                         ilskt.add(new GreatDeluge.GDKempeThread(tempTimetable, kKempe));
 
@@ -67,14 +54,14 @@ public class GreatDeluge {
                         reductionConst *= 1.001;
                     }
                     break;
-                case 2:
+                case 1:
                     swap = tempTimetable.generatesNeighbourSwappingExam();
                     tempTimetable.doSwap(swap);
                     if (updateBest(tempTimetable, "exam swap 1")) {
                         reductionConst *= 1.001;
                     }
                     break;
-                case 3:
+                case 2:
                     for (i = 0; i < 2; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
@@ -83,7 +70,7 @@ public class GreatDeluge {
                         }
                     }
                     break;
-                case 4:
+                case 3:
                     for (i = 0; i < 3; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
@@ -92,7 +79,7 @@ public class GreatDeluge {
                         }
                     }
                     break;
-                case 5:
+                case 4:
                     for (i = 0; i < 4; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
@@ -101,7 +88,7 @@ public class GreatDeluge {
                         }
                     }
                     break;
-                case 6:
+                case 5:
                     for (i = 0; i < 5; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
@@ -110,7 +97,7 @@ public class GreatDeluge {
                         }
                     }
                     break;
-                case 7:
+                case 6:
                     for (i = 0; i < 6; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
@@ -119,7 +106,7 @@ public class GreatDeluge {
                         }
                     }
                     break;
-                case 8:
+                case 7:
                     for (i = 0; i < 7; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
@@ -128,7 +115,7 @@ public class GreatDeluge {
                         }
                     }
                     break;
-                case 9:
+                case 8:
                     for (i = 0; i < 8; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
@@ -137,7 +124,7 @@ public class GreatDeluge {
                         }
                     }
                     break;
-                case 10:
+                case 9:
                     for (i = 0; i < 9; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
@@ -146,16 +133,16 @@ public class GreatDeluge {
                         }
                     }
                     break;
-                case 11:
+                case 10:
                     for (i = 0; i < 10; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
                         if (updateBest(tempTimetable, "exam swap 10")) {
-                            reductionConst *= 1.01;
+                            reductionConst *= 1.001;
                         }
                     }
                     break;
-                case 12:
+                case 11:
                     for (i = 0; i < 11; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
@@ -164,7 +151,7 @@ public class GreatDeluge {
                         }
                     }
                     break;
-                case 13:
+                case 12:
                     for (i = 0; i < 12; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
@@ -173,7 +160,7 @@ public class GreatDeluge {
                         }
                     }
                     break;
-                case 14:
+                case 13:
                     for (i = 0; i < 13; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
@@ -182,7 +169,7 @@ public class GreatDeluge {
                         }
                     }
                     break;
-                case 15:
+                case 14:
                     for (i = 0; i < 14; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
@@ -191,7 +178,7 @@ public class GreatDeluge {
                         }
                     }
                     break;
-                case 16:
+                case 15:
                     for (i = 0; i < 15; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
                         tempTimetable.doSwap(swap);
@@ -200,7 +187,7 @@ public class GreatDeluge {
                         }
                     }
                     break;
-                case 17:
+                case 16:
                     nSwap = ThreadLocalRandom.current().nextInt(constSwap) + 16;
                     for (i = 0; i < nSwap; i++) {
                         swap = tempTimetable.generatesNeighbourSwappingExam();
@@ -212,50 +199,64 @@ public class GreatDeluge {
                     break;
             }
 
-            if (timetable.objFunc > level && tempTimetable.objFunc > level) {
-                iterNoMovement++;
-            } else if (tempTimetable.objFunc < level || tempTimetable.objFunc < timetable.objFunc){
+            if (tempTimetable.objFunc < level || tempTimetable.objFunc < timetable.objFunc){
                 timetable = new Timetable(tempTimetable);
+                reductionConst *= 1.0002;
                 iterNoMovement = 0;
             } else
                 iterNoMovement++;
 
-            if(iterNoMovement >= 3000){
-                timetable = new Timetable(bestTimetableG);
-//                countReset++;
-                reductionConst = reductionConstInitial;
-                iterNoMovement = 0;
-                System.out.println("Reset");
-                System.out.println(" |-> Level: " + level / timetable.data.studentsNumber);
-                System.out.println(" |-> Actual OF temp: " + tempTimetable.objFunc / timetable.data.studentsNumber);
-                System.out.println(" |-> Actual OF: " + timetable.objFunc / timetable.data.studentsNumber);
+            if(iterNoMovement >= nIterMin){
                 System.out.println();
-//                if (countReset == 2) {
-//                    reductionConst /= 2;
-//                    countReset = 0;
-//                    System.out.println("Slowly Baby!!1!1!");
-//                    System.out.println(" |-> Reduction Const: " + reductionConst);
-//                }
+                System.out.println("Before Reset");
+                System.out.println(" |-> Level: " + level / timetable.data.studentsNumber);
+                System.out.println(" |-> Actual OF: " + timetable.objFunc / timetable.data.studentsNumber);
+                System.out.println(" |-> Actual OF temp: " + tempTimetable.objFunc / timetable.data.studentsNumber);
+                timetable = new Timetable(bestTimetableG);
+                moved = timetable.manyMovesWorstExams(0.25);
+                System.out.println("Moved: " + moved + " exams" );
+                moved = timetable.manyMovesWorstExams(0.25);
+                System.out.println("Moved: " + moved + " exams" );
+                moved = timetable.manyMovesWorstExams(0.25);
+                System.out.println("Moved: " + moved + " exams" );
+                moved = timetable.manyMovesWorstExams(0.25);
+                System.out.println("Moved: " + moved + " exams" );
+                if (level < timetable.objFunc) {
+                    level = timetable.objFunc;
+                    if (initialLevel < level)
+                        initialLevel = level;
+                }
+                reductionConst = reductionConstInitial;
+                nIterMin += 500;
+                System.out.println("Limit: " + nIterMin);
+                iterNoMovement = 0;
+                System.out.println("After Reset");
+                System.out.println(" |-> Level: " + level / timetable.data.studentsNumber);
+                System.out.println(" |-> Actual OF: " + timetable.objFunc / timetable.data.studentsNumber);
+                System.out.println(" |-> Actual OF temp: " + tempTimetable.objFunc / timetable.data.studentsNumber);
+                System.out.println();
             }
 
             level -= (level - bestTimetableG.objFunc) * reductionConst;
             if (level - bestTimetableG.objFunc < deltaLevel) {
-//                reductionConst *= 1.05;
+                reductionConst = reductionConstInitial;
                 p = ThreadLocalRandom.current().nextDouble();
-                level = bestTimetableG.objFunc + (initialLevel - level) * p;
-                while (level < timetable.objFunc) {
-                    p = ThreadLocalRandom.current().nextDouble();
-                    level = bestTimetableG.objFunc + (initialLevel - level) * p;
-                }
+                level += (initialLevel - level) * p;
                 System.out.println();
                 System.out.println("New Level: " + level / timetable.data.studentsNumber);
+                System.out.println("Actual OF: " + timetable.objFunc / timetable.data.studentsNumber);
+                while (level < timetable.objFunc) {
+                    p = ThreadLocalRandom.current().nextDouble();
+                    level += (initialLevel - level) * p;
+                }
             }
 
             // Just for print
-            if (iteration % 5000 == 0){
+            if (iteration % 10000 == 0){
                 System.out.println();
                 System.out.println("Level: " + level / timetable.data.studentsNumber);
                 System.out.println("Actual OF: " + timetable.objFunc / timetable.data.studentsNumber);
+                System.out.println("Actual OF temp: " + tempTimetable.objFunc / timetable.data.studentsNumber);
             }
 
             iteration++;

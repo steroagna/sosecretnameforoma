@@ -310,12 +310,13 @@ public class Timetable implements Cloneable {
 
 	}
 
-	public void manyMovesWorstExams(double percentage) {
-		int numberOfMove = (int) (data.examsNumber * percentage);
+	public int manyMovesWorstExams(double percentage) {
+		int numberOfMove = (int) (data.examsNumber * percentage), count = 0;
 		Move move;
 		int examSelected, timeslotSource, timeslotDestination, i;
 		TreeMap<Integer, Double> miniExamMoved = new TreeMap<>();
 
+		System.out.println("Tryng to move: " + numberOfMove + " exams" );
 		for (i = 0; i < numberOfMove; i++) {
 			examSelected = 1 + ThreadLocalRandom.current().nextInt(data.examsNumber);
 			miniExamMoved.put(
@@ -341,11 +342,12 @@ public class Timetable implements Cloneable {
 				move = new Move(examSelected, timeslotSource, timeslotDestination);
 				move.penalty = objFunc + evaluateOF(examSelected, timeslotDestination);
 				moveExamWithoutConflicts(move);
+				count++;
 			}
 //			else
 //				kempeMove(timeslotSource, timeslotDestination, examSelected);
 		}
-		return;
+		return count;
 	}
 
 	public void swapTimeslot() {
